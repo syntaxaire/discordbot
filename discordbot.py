@@ -27,16 +27,19 @@ async def do_send_message(channel,message,cooldown=None):
     await client.send_message(channel,message)
 
 
-shit_post_words=['bot','brand','cloud','anime','elevator','tool','backpack','hammer','lasso','twilight','mana']
+shit_post_words=['bot','brand','cloud','anime','elevator','tool','backpack','hammer','lasso','twilight','mana','cat']
 
 async def eval_shit_post(channel,message):
     for s in shit_post_words:
         if is_word_in_text(s,message):
             #found it
+            #people want this to spew garbage so give the garbage to the people
             if ('shitpost' not in used or time.time() - used['shitpost'] > min_call_freq):
                 used['shitpost'] = time.time()
-                await do_send_message(channel, message.replace(s,'butt'),2)
-
+                for t in shit_post_words: #replace everything aaaaaaa
+                    message=message.replace(t,'butt')
+                await do_send_message(channel, message,2)
+                break
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
