@@ -8,6 +8,7 @@ from random import *
 from secretkey import * #dont post this to github you moron
 
 min_call_freq = 15  # RIP/F cooldown in seconds
+shitpost_call_freq=30
 used = {}  # stores last used time of RIP/F
 
 
@@ -30,16 +31,17 @@ async def do_send_message(channel,message,cooldown=None):
 shit_post_words=['bot','brand','cloud','anime','elevator','tool','backpack','hammer','lasso','twilight','mana','cat']
 
 async def eval_shit_post(channel,message):
-    for s in shit_post_words:
-        if is_word_in_text(s,message):
-            #found it
-            #people want this to spew garbage so give the garbage to the people
-            if ('shitpost' not in used or time.time() - used['shitpost'] > min_call_freq):
-                used['shitpost'] = time.time()
-                for t in shit_post_words: #replace everything aaaaaaa
-                    message=message.replace(t,'butt')
-                await do_send_message(channel, message,2)
-                break
+    if randint(1,5)==3:
+        for s in shit_post_words:
+            if is_word_in_text(s,message):
+                #found it
+                #people want this to spew garbage so give the garbage to the people
+                if ('shitpost' not in used or time.time() - used['shitpost'] > shitpost_call_freq):
+                    used['shitpost'] = time.time()
+                    for t in shit_post_words: #replace everything aaaaaaa
+                        message=message.replace(t,'butt')
+                    await do_send_message(channel, message,2)
+                    break
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
