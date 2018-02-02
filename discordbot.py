@@ -10,13 +10,33 @@ from secretkey import * #dont post this to github you moron
 min_call_freq = 15  # RIP/F cooldown in seconds
 shitpost_call_freq=30
 used = {}  # stores last used time of RIP/F
-
+deaths = {}
 
 def is_word_in_text(word, text):
     pattern = r'(^|[^\w]){}([^\w]|$)'.format(word)
     pattern = re.compile(pattern, re.IGNORECASE)
     matches = re.search(pattern, text)
     return bool(matches)
+
+def do_record_death(message):
+    m=message.partition(' ')
+    if m[0] not in deaths:
+        deaths[m[0]]=0
+    deaths[m[0]]=deaths[m[0]]+1
+
+async def do_death_report(channel):
+    i=1
+    cmsg=''
+    for d in sorted(deaths.items(), key=lambda x: x[1],reverse=True):
+        if i==10:
+            break
+        else:
+            if i!=1 and i!=9:
+                cmsg=cmsg+ ', '
+
+            cmsg=cmsg + d[0] + '('+str(d[1])+')'
+            i=i+1
+    await do_send_message(channel,cmsg,2)
 
 
 async def do_send_message(channel,message,cooldown=None):
@@ -50,14 +70,10 @@ async def on_ready():
     print('Logged in as ' + client.user.name + ' (ID:' + client.user.id + ') | Connected to ' + str(
         len(client.servers)) + ' servers | Connected to ' + str(len(set(client.get_all_members()))) + ' users')
     print('--------')
-  #  print('Current Discord.py Version: {} | Current Python Version: {}'.format(discord.__version__,
-    #                                                                           platform.python_version()))
-    print('--------')
     print('Use this link to invite {}:'.format(client.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     print('--------')
-    print(
-        'You are running FartBot V1')  # Do not change this. This will really help us support you, if you need support.
+    print('You are running FartBot V1.0.5')
     print('Created by Poop Poop')
 
 @client.event
@@ -83,6 +99,10 @@ async def on_message(message):
                 await do_send_message(message.channel,'suck my dick F under cooldown')
             else:
                 print('suck my dick F under cooldown')
+    elif is_word_in_text('test died',message.content):
+            do_record_death(message.content)
+    elif is_word_in_text('!ouchies',message.content):
+            await do_death_report(message.channel)
     else:
         #here's where im going to evaluate all other sentences for shitposting
         await eval_shit_post(message.channel,message.content)
