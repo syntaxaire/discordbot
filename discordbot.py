@@ -6,51 +6,20 @@ import re
 import time
 from random import *
 from secretkey import * #dont post this to github you moron
-import json
-
+from ouchies import *
 
 min_call_freq = 15  # RIP/F cooldown in seconds
 shitpost_call_freq=30
 ouchies_call_freq=60
 used = {}  # stores last used time of RIP/F
-deaths = {}
+ouch = Oww()
+
 
 def is_word_in_text(word, text):
     pattern = r'(^|[^\w]){}([^\w]|$)'.format(word)
     pattern = re.compile(pattern, re.IGNORECASE)
     matches = re.search(pattern, text)
     return bool(matches)
-
-async def do_record_death(message):
-    m=message.partition(' ')
-    if m[0] not in deaths:
-        deaths[m[0]]=0
-    deaths[m[0]]=deaths[m[0]]+1
-    await write_ouchies()
-
-async def write_ouchies():
-    with open('ouchies.txt', 'w') as f:
-        json.dump(deaths, f, ensure_ascii=False)
-
-def load_ouchies():
-    with open('ouchies.txt') as f:
-        global deaths
-        deaths=json.load(f)
-
-async def do_ouchies(channel):
-    i=1
-    cmsg=''
-    for d in sorted(deaths.items(), key=lambda x: x[1],reverse=True):
-        if i==10:
-            break
-        else:
-            if i!=1 and i!=9:
-                cmsg=cmsg+ ', '
-
-            cmsg=cmsg + d[0] + '('+str(d[1])+')'
-            i=i+1
-    await do_send_message(channel,cmsg,2)
-
 
 async def do_send_message(channel,message,cooldown=None):
     #this shit sends the messages to the peeps
@@ -89,9 +58,9 @@ async def on_ready():
     print('You are running FartBot V1.0.5')
     print('Created by Poop Poop')
     print('--------')
-    load_ouchies()
+
     print('loaded ouchies.txt')
-    print (deaths)
+    print (ouch.msg())
 
 @client.event
 async def on_message(message):
@@ -117,11 +86,11 @@ async def on_message(message):
             else:
                 print('suck my dick F under cooldown')
     elif is_word_in_text('test died',message.content):
-            await do_record_death(message.content)
+            ouch.record(message.content)
     elif is_word_in_text('!ouchies',message.content):
        # if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
             used['ouchies'] = time.time()
-            await do_ouchies(message.channel)
+            await do_send_message(message.channel,ouch.msg())
     else:
         #here's where im going to evaluate all other sentences for shitposting
         await eval_shit_post(message.channel,message.content)
