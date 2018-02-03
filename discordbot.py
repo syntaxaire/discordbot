@@ -1,11 +1,9 @@
 import asyncio
 from discord.ext.commands import Bot
-from discord.ext import commands
-import platform
 import re
 import time
 from random import *
-from secretkey import * #dont post this to github you moron
+from secretkey import *  #dont post this to github you moron
 from ouchies import *
 
 min_call_freq = 15  # RIP/F cooldown in seconds
@@ -69,12 +67,19 @@ async def on_message(message):
         return
 
     if is_word_in_text("rip", message.content) == True:
-        print('rip message')
-        if ('rip' not in used or time.time() - used['rip'] > min_call_freq):
-            used['rip'] = time.time()
-            await do_send_message(message.channel,'Ya, RIP',randint(2,5))
+        if str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:':
+            print('heres where we would process a death message')
+            ouch.record(message.content)
         else:
-            print('suck my dick RIP under cooldown')
+            print('rip message')
+            if ('rip' not in used or time.time() - used['rip'] > min_call_freq):
+                used['rip'] = time.time()
+                if randint(1,20)==5:
+                    await do_send_message(message.channel,'Ya, butts',randint(2,5))
+                else:
+                    await do_send_message(message.channel,'Ya, RIP',randint(2,5))
+            else:
+                print('suck my dick RIP under cooldown')
     elif is_word_in_text("F", message.content) == True:
         print('rip message')
         if ('f' not in used or time.time() - used['f'] > min_call_freq):
@@ -85,12 +90,10 @@ async def on_message(message):
                 await do_send_message(message.channel,'suck my dick F under cooldown')
             else:
                 print('suck my dick F under cooldown')
-    elif is_word_in_text('test died',message.content):
-            ouch.record(message.content)
-    elif is_word_in_text('!ouchies',message.content):
-       # if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
+    elif is_word_in_text('ouchies?',message.content):
+        if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
             used['ouchies'] = time.time()
-            await do_send_message(message.channel,ouch.msg())
+            await do_send_message(message.channel,'Top 10 ouchies: '+ouch.msg())
     else:
         #here's where im going to evaluate all other sentences for shitposting
         await eval_shit_post(message.channel,message.content)
