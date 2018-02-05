@@ -1,16 +1,14 @@
 import asyncio
 from discord.ext.commands import Bot
-import re
-import time
-from random import *
-from secretkey import *  #dont post this to github you moron
+from config import *  #dont post this to github you moron
 from ouchies import *
+from wordreplacer import *
 
-min_call_freq = 15  # RIP/F cooldown in seconds
-shitpost_call_freq=30
-ouchies_call_freq=60
+
 used = {}  # stores last used time of RIP/F
 ouch = Oww()
+shitpost=WordReplacer()
+shitpost.config(shitpost_call_freq)
 
 
 def is_word_in_text(word, text):
@@ -28,20 +26,6 @@ async def do_send_message(channel,message,cooldown=None):
     await client.send_message(channel,message)
 
 
-shit_post_words=['bot','brand','cloud','anime','elevator','tool','backpack','hammer','lasso','twilight','mana','cat']
-
-async def eval_shit_post(channel,message):
-    if randint(1,5)==3:
-        for s in shit_post_words:
-            if is_word_in_text(s,message):
-                #found it
-                #people want this to spew garbage so give the garbage to the people
-                if ('shitpost' not in used or time.time() - used['shitpost'] > shitpost_call_freq):
-                    used['shitpost'] = time.time()
-                    for t in shit_post_words: #replace everything aaaaaaa
-                        message=message.replace(t,'butt')
-                    await do_send_message(channel, message,2)
-                    break
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
@@ -90,12 +74,19 @@ async def on_message(message):
                 await do_send_message(message.channel,'suck my dick F under cooldown')
             else:
                 print('suck my dick F under cooldown')
-    elif is_word_in_text('ouchies?',message.content):
+    elif message.content[:8]=='ouchies?':
         if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
             used['ouchies'] = time.time()
             await do_send_message(message.channel,'Top 10 ouchies: '+ouch.msg())
+    elif message.content[:9]=='&buttword':
+        print (message.author)
+        if str(message.author) == 'Hobo Joe#9724' or str(message.author) == '💩💩#4048':
+            shitpost.addword(message.content[10:])
+            await do_send_message(message.channel,'ok fine, '+message.content[10:])
     else:
         #here's where im going to evaluate all other sentences for shitposting
-        await eval_shit_post(message.channel,message.content)
+         rshitpost=shitpost.eval(message.content)
+         if rshitpost:
+            await do_send_message(message.channel,rshitpost)
 
 client.run(secretkey)

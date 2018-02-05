@@ -26,10 +26,10 @@ class Oww:
         cmsg=''
         if self.dt.items is not None:
             for d in sorted(self.dt.items(), key=lambda x: x[1],reverse=True):
-                if i==10:
+                if i==11:
                     break
                 else:
-                    if i!=1 and i!=9:
+                    if i!=1:
                         cmsg=cmsg+ ', '
                     cmsg=cmsg + d[0] + '('+str(d[1])+')'
                     i=i+1
