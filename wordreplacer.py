@@ -27,16 +27,40 @@ class WordReplacer:
             pass
 
     def addword(self,word):
-        self.wlist.append(word)
-        self.save()
+        pass
 
     def save(self):
         with open('wordlist.txt', 'w') as f:
             json.dump(self.wlist, f, ensure_ascii=False)
 
 
+
+    def buttword(self,command,arg):
+        if command=='add':
+            self.wlist.append(arg)
+            self.save()
+            return 'ok fine, '+arg
+
+        if command=='remove':
+            self.wlist.remove(arg)
+            self.save()
+            return 'ok fuck '+arg
+
+        if command=='list':
+            i = 1
+            cmsg = ''
+
+            if self.wlist is not None:
+                for d in self.wlist:
+                    if i != 1:
+                        cmsg = cmsg + ', '
+                    cmsg = cmsg + d
+                    i = i + 1
+                return cmsg
+
+
     def eval(self, message):
-        if randint(3, 3) == 3:
+        if randint(1, 5) == 3:
             print ('wordreplace::evaling shitpost')
             for s in self.wlist:
                 print(s)
@@ -50,4 +74,16 @@ class WordReplacer:
                         for t in self.wlist:  # replace everything aaaaaaa
                             message = message.replace(t, 'butt')
                         return message
+
+    def rspeval(self, message):
+        print('reverseshitpost:: got it')
+        if randint(1, 5) == 3:
+            print ('reverseshitpost::evaling shitpost')
+            if ('reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer):
+                print('reverseshitpost::timer threshhold met')
+                self.used['reverseshitpost'] = time.time()
+                for t in self.wlist:  # replace everything aaaaaaa
+                    message = message.replace('butt',self.wlist[randint(0,len(self.wlist)-1)],1)
+                return message
+
 

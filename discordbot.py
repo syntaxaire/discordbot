@@ -74,15 +74,41 @@ async def on_message(message):
                 await do_send_message(message.channel,'suck my dick F under cooldown')
             else:
                 print('suck my dick F under cooldown')
-    elif message.content[:8]=='ouchies?':
+    elif message.content[:8] == 'ouchies?' or (str(message.author) == 'Progress#6064' and is_word_in_text('ouchies\?',message.content) == True):
         if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
             used['ouchies'] = time.time()
             await do_send_message(message.channel,'Top 10 ouchies: '+ouch.msg())
     elif message.content[:9]=='&buttword':
-        print (message.author)
         if str(message.author) == 'Hobo Joe#9724' or str(message.author) == '💩💩#4048':
-            shitpost.addword(message.content[10:])
-            await do_send_message(message.channel,'ok fine, '+message.content[10:])
+            if message.content[9:]:
+                #maybe we have an arg?
+                buttcmd=message.content.split(' ')
+                print('buttword: '+str(buttcmd))
+                if buttcmd[1] == 'list':
+                    returnz = shitpost.buttword(buttcmd[1],'')
+                    if returnz:
+                        print('buttword:: return from arg')
+                        await do_send_message(message.channel, returnz)
+                    else:
+                        print('buttword:: no return from function')
+                elif buttcmd[1] and buttcmd[2]:
+                    returnz=shitpost.buttword(buttcmd[1],buttcmd[2])
+                    if returnz:
+                        print('buttword:: return from arg')
+                        await do_send_message(message.channel, returnz)
+                    else:
+                        print('buttword:: no return from function')
+                else:
+                    await do_send_message(message.channel, 'add remove list')
+
+            else:
+                await do_send_message(message.channel, 'add remove list')
+
+    elif is_word_in_text('butt', message.content)==True:
+        print('we have a butt here')
+        rshitpost=shitpost.rspeval(message.content)
+        if rshitpost:
+            await do_send_message(message.channel,rshitpost)
     else:
         #here's where im going to evaluate all other sentences for shitposting
          rshitpost=shitpost.eval(message.content)
