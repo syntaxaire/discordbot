@@ -54,7 +54,7 @@ class Oww:
     def profile(self,player):
         reasonlist={}
         try:
-            person=self.player[player]
+            person=self.player[player.lower()] #case insensitivity support
             for k, i in person.items():
                 if k not in reasonlist:
                     reasonlist[k]=0
@@ -90,6 +90,7 @@ class Oww:
 
     def record(self, message):
         m = message.split()
+        m[1] = m[1].lower()  #case insensitivity support
         if m[1] not in self.player:
             self.player[m[1]] = {}
 
