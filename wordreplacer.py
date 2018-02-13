@@ -61,6 +61,7 @@ class WordReplacer:
 
     def eval(self, message):
         if randint(1, 5) == 3:
+            message = message.lower()
             print ('wordreplace::evaling shitpost')
             for s in self.wlist:
                 print(s)
@@ -78,6 +79,7 @@ class WordReplacer:
     def rspeval(self, message):
         print('reverseshitpost:: got it')
         if randint(1, 5) == 3:
+            message = message.lower()
             print ('reverseshitpost::evaling shitpost')
             if ('reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer):
                 print('reverseshitpost::timer threshhold met')

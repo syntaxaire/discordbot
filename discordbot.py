@@ -51,7 +51,7 @@ async def on_message(message):
         return
 
     if is_word_in_text("rip", message.content) == True:
-        if str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:':
+        if (str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:') or (str(message.author)=='💩💩#4048' and message.content[:4] == 'RIP:'):
             print('heres where we would process a death message')
             ouch.record(message.content)
         else:
@@ -74,10 +74,22 @@ async def on_message(message):
                 await do_send_message(message.channel,'suck my dick F under cooldown')
             else:
                 print('suck my dick F under cooldown')
+
+    elif message.content[:9] == 'howchies?' or message.content[:9] == '&howchies' or message.content[:12] == 'how ouchies?' or (str(message.author) == 'Progress#6064' and is_word_in_text('how ouchies\?', message.content) == True) or message.content[:13] == 'what ouchies?' or (str(message.author) == 'Progress#6064' and is_word_in_text('what ouchies\?', message.content) == True) or (str(message.author) == 'Progress#6064' and is_word_in_text('howchies', message.content) == True): #fuck you kurr
+        if ('howouchies' not in used or time.time() - used['howouchies'] > ouchies_call_freq):
+            used['howouchies'] = time.time()
+            await do_send_message(message.channel, 'Heres whats killing you: ' + ouch.reasonmsg())
+
+
     elif message.content[:8] == 'ouchies?' or (str(message.author) == 'Progress#6064' and is_word_in_text('ouchies\?',message.content) == True):
         if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
             used['ouchies'] = time.time()
             await do_send_message(message.channel,'Top 10 ouchies: '+ouch.msg())
+
+
+
+
+
     elif message.content[:9]=='&buttword':
         if str(message.author) == 'Hobo Joe#9724' or str(message.author) == '💩💩#4048':
             if message.content[9:]:
