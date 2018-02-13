@@ -42,15 +42,81 @@ async def on_ready():
     print('--------')
 
     print('loaded ouchies.txt')
-    print (ouch.msg())
+#    print (ouch.msg())
 
 @client.event
 async def on_message(message):
     print('getting messages ' + message.content)
     if message.author == client.user:
         return
+    try:
+        command=message.content.split("&",1)[1]
+    except IndexError:
+        # finally:
+        command=''
 
-    if is_word_in_text("rip", message.content) == True:
+    if command:
+        print("main::command::found command")
+        c2=command.split(' ')
+        if c2[0] == "buttword":
+            print("main::command:buttword ")
+            #buttword is restricted so lets check the author
+            if str(message.author) in channel_admins:
+                print("main::command::buttword::author in admins")
+                #passes admin test. process here
+                try:
+                    if c2[1] == 'list':
+                        returnz = shitpost.buttword('list', '')
+                        if returnz:
+                            print('buttword:: return from arg')
+                            await do_send_message(message.channel, returnz)
+                        else:
+                            print('buttword:: no return from function')
+                    elif c2[1] and c2[2]:
+                        returnz = shitpost.buttword(c2[1], c2[2])
+                        if returnz:
+                            print('buttword:: return from arg')
+                            await do_send_message(message.channel, returnz)
+                        else:
+                            print('buttword:: no return from function')
+                    else:
+                        await do_send_message(message.channel, 'add remove list')
+                except IndexError:
+                    print("main::buttword::caught index exception")
+                    await do_send_message(message.channel, 'add remove list')
+
+            else:
+                print('main::command::buttword::author NOT in admins: '+str(message.author))
+                #pass #here is the end of the admin check test.
+
+        elif c2[0]=="howchies":
+            if ('howouchies' not in used or time.time() - used['howouchies'] > ouchies_call_freq):
+                used['howouchies'] = time.time()
+                await do_send_message(message.channel, 'Heres whats killing you: ' + ouch.top10reasons())
+
+        elif c2[0]=="ouchies":
+            try:
+                if c2[1]:
+                    #personal profile
+                    await do_send_message(message.channel,"Deaths for "+c2[1]+": "+ouch.profile(c2[1]))
+
+
+
+            except IndexError:
+                if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
+                    used['ouchies'] = time.time()
+                    await do_send_message(message.channel, 'Top 10 ouchies: ' + ouch.top10deaths())
+
+        elif c2[0]=="commands" or c2[0]=="help":
+            await do_send_message(message.channel,'ouchies, howchies, buttword (but only if ur a cool kid)')
+
+
+
+#shitposting follows
+
+
+
+    elif is_word_in_text("rip", message.content) == True:
         if (str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:') or (str(message.author)=='💩💩#4048' and message.content[:4] == 'RIP:'):
             print('heres where we would process a death message')
             ouch.record(message.content)
@@ -64,6 +130,7 @@ async def on_message(message):
                     await do_send_message(message.channel,'Ya, RIP',randint(2,5))
             else:
                 print('suck my dick RIP under cooldown')
+
     elif is_word_in_text("F", message.content) == True:
         print('rip message')
         if ('f' not in used or time.time() - used['f'] > min_call_freq):
@@ -75,46 +142,7 @@ async def on_message(message):
             else:
                 print('suck my dick F under cooldown')
 
-    elif message.content[:9] == 'howchies?' or message.content[:9] == '&howchies' or message.content[:12] == 'how ouchies?' or (str(message.author) == 'Progress#6064' and is_word_in_text('how ouchies\?', message.content) == True) or message.content[:13] == 'what ouchies?' or (str(message.author) == 'Progress#6064' and is_word_in_text('what ouchies\?', message.content) == True) or (str(message.author) == 'Progress#6064' and is_word_in_text('howchies', message.content) == True): #fuck you kurr
-        if ('howouchies' not in used or time.time() - used['howouchies'] > ouchies_call_freq):
-            used['howouchies'] = time.time()
-            await do_send_message(message.channel, 'Heres whats killing you: ' + ouch.reasonmsg())
 
-
-    elif message.content[:8] == 'ouchies?' or (str(message.author) == 'Progress#6064' and is_word_in_text('ouchies\?',message.content) == True):
-        if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
-            used['ouchies'] = time.time()
-            await do_send_message(message.channel,'Top 10 ouchies: '+ouch.msg())
-
-
-
-
-
-    elif message.content[:9]=='&buttword':
-        if str(message.author) == 'Hobo Joe#9724' or str(message.author) == '💩💩#4048':
-            if message.content[9:]:
-                #maybe we have an arg?
-                buttcmd=message.content.split(' ')
-                print('buttword: '+str(buttcmd))
-                if buttcmd[1] == 'list':
-                    returnz = shitpost.buttword(buttcmd[1],'')
-                    if returnz:
-                        print('buttword:: return from arg')
-                        await do_send_message(message.channel, returnz)
-                    else:
-                        print('buttword:: no return from function')
-                elif buttcmd[1] and buttcmd[2]:
-                    returnz=shitpost.buttword(buttcmd[1],buttcmd[2])
-                    if returnz:
-                        print('buttword:: return from arg')
-                        await do_send_message(message.channel, returnz)
-                    else:
-                        print('buttword:: no return from function')
-                else:
-                    await do_send_message(message.channel, 'add remove list')
-
-            else:
-                await do_send_message(message.channel, 'add remove list')
 
     elif is_word_in_text('butt', message.content)==True:
         print('we have a butt here')

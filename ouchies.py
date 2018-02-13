@@ -4,78 +4,102 @@ import json
 class Oww:
 
     def load(self):
-        self.dt={}
+        self.player={}
         try:
             with open('ouchies.txt') as f:
                 return json.load(f)
         except Exception:
                 pass
 
-    def loadthereason(self):
-        self.deathreason = {}
-        try:
-            with open('deathreason.txt') as f:
-                return json.load(f)
-        except Exception:
-            pass
-
     def __init__(self):
-        self.dt=self.load()
-        self.deathreason=self.loadthereason()
+        self.player=self.load()
+
 
 
     def save(self):
         with open('ouchies.txt', 'w') as f:
-            json.dump(self.dt, f, ensure_ascii=False)
-
-        with open('deathreason.txt', 'w') as f:
-            json.dump(self.deathreason, f, ensure_ascii=False)
+            json.dump(self.player, f, ensure_ascii=False)
 
 
-    def msg(self):
-        i=1
-        cmsg=''
-        if self.dt.items is not None:
-            for d in sorted(self.dt.items(), key=lambda x: x[1],reverse=True):
-                if i==11:
-                    break
-                else:
-                    if i!=1:
-                        cmsg=cmsg+ ', '
-                    cmsg=cmsg + d[0] + '('+str(d[1])+')'
-                    i=i+1
-            return cmsg
+    def top10deaths(self):
+        deathlist={}
 
-    def reasonmsg(self):
-        i=1
-        cmsg=''
-        if self.deathreason.items is not None:
-            for d in sorted(self.deathreason.items(), key=lambda x: x[1],reverse=True):
-                if i==11:
-                    break
-                else:
-                    if i!=1:
-                        cmsg=cmsg+ ', '
-                    cmsg=cmsg + d[0] + '('+str(d[1])+')'
-                    i=i+1
-            return cmsg
+        #unpack each person's death count.
+        for key,items in self.player.items():
+            totaldeaths=0
+            for k,i in items.items():
+                totaldeaths=totaldeaths+i
+
+            deathlist[key]=totaldeaths
+
+        #sort this shit
+        return self.sort10(deathlist)
+
+    def top10reasons(self):
+        reasonlist = {}
+
+        # unpack each person's death count.
+        for key, items in self.player.items():
+            #this time though we are going to count death reasons up, ignoring the person
+
+            for k, i in items.items():
+                if k not in reasonlist:
+                    reasonlist[k]=0
+                reasonlist[k] = reasonlist[k] + i
+        return self.sort10(reasonlist)
+
+
+
+
+    def profile(self,player):
+        reasonlist={}
+        try:
+            person=self.player[player]
+            for k, i in person.items():
+                if k not in reasonlist:
+                    reasonlist[k]=0
+                reasonlist[k] = reasonlist[k] + i
+
+            return(self.sortunlimited(reasonlist))
+        except KeyError:
+            return("No deaths recorded")
+
+    def sortunlimited(self,reasonlist):
+        i = 1
+        cmsg = ''
+        for d in sorted(reasonlist.items(), key=lambda x: x[1], reverse=True):
+            if i != 1:
+                cmsg = cmsg + ', '
+            cmsg = cmsg + d[0] + '(' + str(d[1]) + ')'
+            i = i + 1
+        return cmsg
+
+    def sort10(self,reasonlist):
+        i = 1
+        cmsg = ''
+        for d in sorted(reasonlist.items(), key=lambda x: x[1], reverse=True):
+            if i == 11:
+                break
+            else:
+                if i != 1:
+                    cmsg = cmsg + ', '
+                cmsg = cmsg + d[0] + '(' + str(d[1]) + ')'
+                i = i + 1
+        return cmsg
 
 
     def record(self, message):
         m = message.split()
-        if m[1] not in self.dt:
-            self.dt[m[1]] = 0
-        self.dt[m[1]] = self.dt[m[1]] + 1
+        if m[1] not in self.player:
+            self.player[m[1]] = {}
 
         #now i need to combine the death reason into a string, which will be words in positions 2-n of the death message 'm'
         dmsg=''
         for i in m[2:]:
             dmsg=dmsg+" "+i
-
-        print('dmsg::'+dmsg)
         dmsg=dmsg.strip()
-        if dmsg not in self.deathreason:
-            self.deathreason[dmsg] = 0
-        self.deathreason[dmsg] = self.deathreason[dmsg] + 1
+        if dmsg not in self.player[m[1]]:
+            self.player[m[1]][dmsg] = 0
+        self.player[m[1]][dmsg] = self.player[m[1]][dmsg] + 1
 
         self.save()
