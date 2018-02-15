@@ -1,14 +1,18 @@
 import asyncio
 from discord.ext.commands import Bot
 from config import *  #dont post this to github you moron
-from ouchies import *
 from wordreplacer import *
+import urllib.request, json
+from vacuum import *
+
+
 
 
 used = {}  # stores last used time of RIP/F
 ouch = Oww()
 shitpost=WordReplacer()
 shitpost.config(shitpost_call_freq)
+vacuum=Vacuum()
 
 
 def is_word_in_text(word, text):
@@ -92,20 +96,18 @@ async def on_message(message):
         elif c2[0]=="howchies":
             if ('howouchies' not in used or time.time() - used['howouchies'] > ouchies_call_freq):
                 used['howouchies'] = time.time()
-                await do_send_message(message.channel, 'Heres whats killing you: ' + ouch.top10reasons())
+                await do_send_message(message.channel, 'Heres whats killing you: ' + vacuum.top_10_death_reasons())
 
         elif c2[0]=="ouchies":
             try:
                 if c2[1]:
                     #personal profile
-                    await do_send_message(message.channel,"Deaths for "+c2[1]+": "+ouch.profile(c2[1]))
-
-
+                    await do_send_message(message.channel,"Deaths for "+c2[1]+": "+vacuum.ouchies_profile(c2[1]))
 
             except IndexError:
                 if ('ouchies' not in used or time.time() - used['ouchies'] > ouchies_call_freq):
                     used['ouchies'] = time.time()
-                    await do_send_message(message.channel, 'Top 10 ouchies: ' + ouch.top10deaths())
+                    await do_send_message(message.channel, 'Top 10 ouchies: ' + vacuum.top_10_deaths())
 
         elif c2[0]=="commands" or c2[0]=="help":
             await do_send_message(message.channel,'ouchies, howchies, buttword (but only if ur a cool kid)')
@@ -115,11 +117,18 @@ async def on_message(message):
 #shitposting follows
 
 
+    elif is_word_in_text("test",message.content):
+
+        with urllib.request.urlopen("http://136.33.144.178:8123/up/world/DIM-11/") as url:
+            data = json.loads(url.read().decode())
+            pl=data['players']
+            for p in pl:
+                await do_send_message(message.channel,p['name'])
 
     elif is_word_in_text("rip", message.content) == True:
         if (str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:') or (str(message.author)=='💩💩#4048' and message.content[:4] == 'RIP:'):
             print('heres where we would process a death message')
-            ouch.record(message.content)
+            vacuum.add_death_message(message.content)
         else:
             print('rip message')
             if ('rip' not in used or time.time() - used['rip'] > min_call_freq):
