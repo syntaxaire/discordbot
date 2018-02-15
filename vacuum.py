@@ -1,5 +1,6 @@
 import pymysql.cursors
 from config import *
+import urllib.request, json
 
 class Vacuum:
     def __init__(self):
@@ -24,6 +25,7 @@ class Vacuum:
             self.connection.close()
         return (result)
 
+
     def do_insert(self,query,args):
         self.build()
         try:
@@ -35,6 +37,24 @@ class Vacuum:
                 cursor.close()
         finally:
             self.connection.close()
+
+
+    def playtime_log(self):
+        with urllib.request.urlopen("http://136.33.144.178:8123/up/world/DIM-11/") as url:
+            data = json.loads(url.read().decode())
+            pl=data['players']
+            players=[]
+            query = "insert into `progress_playertracker` (player) VALUES "
+            for p in pl:
+                players.append(p['name'])
+                query=query+"(%s),"
+
+            query=query[:-1]
+
+            self.do_insert(query,players)
+
+
+
 
 
     def add_death_message(self,message):

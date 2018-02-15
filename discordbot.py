@@ -2,14 +2,13 @@ import asyncio
 from discord.ext.commands import Bot
 from config import *  #dont post this to github you moron
 from wordreplacer import *
-import urllib.request, json
+
 from vacuum import *
 
 
 
 
 used = {}  # stores last used time of RIP/F
-ouch = Oww()
 shitpost=WordReplacer()
 shitpost.config(shitpost_call_freq)
 vacuum=Vacuum()
@@ -29,6 +28,14 @@ async def do_send_message(channel,message,cooldown=None):
         await asyncio.sleep(2)
     await client.send_message(channel,message)
 
+async def my_background_task():
+    print("LOGGER::Logger loaded.  Waiting until I connect to Discord")
+    await client.wait_until_ready()
+    print("LOGGER::Connected to discord, start processing.")
+    while not client.is_closed:
+        vacuum.playtime_log()
+        print("LOGGER::I logged player activity at this time.")
+        await asyncio.sleep(300) # task runs every 5 minutes seconds
 
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
@@ -116,15 +123,6 @@ async def on_message(message):
 
 #shitposting follows
 
-
-    elif is_word_in_text("test",message.content):
-
-        with urllib.request.urlopen("http://136.33.144.178:8123/up/world/DIM-11/") as url:
-            data = json.loads(url.read().decode())
-            pl=data['players']
-            for p in pl:
-                await do_send_message(message.channel,p['name'])
-
     elif is_word_in_text("rip", message.content) == True:
         if (str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:') or (str(message.author)=='💩💩#4048' and message.content[:4] == 'RIP:'):
             print('heres where we would process a death message')
@@ -165,3 +163,4 @@ async def on_message(message):
             await do_send_message(message.channel,rshitpost)
 
 client.run(secretkey)
+client.loop.create_task(my_background_task())
