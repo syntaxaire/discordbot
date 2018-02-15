@@ -12,6 +12,7 @@ used = {}  # stores last used time of RIP/F
 shitpost=WordReplacer()
 shitpost.config(shitpost_call_freq)
 vacuum=Vacuum()
+vacuum.config(vacuum_update_json_url)
 
 
 def is_word_in_text(word, text):
@@ -35,7 +36,7 @@ async def my_background_task():
     while not client.is_closed:
         vacuum.playtime_log()
         print("LOGGER::I logged player activity at this time.")
-        await asyncio.sleep(300) # task runs every 5 minutes seconds
+        await asyncio.sleep(10) # task runs every 10 seconds
 
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
@@ -162,5 +163,6 @@ async def on_message(message):
          if rshitpost:
             await do_send_message(message.channel,rshitpost)
 
-client.run(secretkey)
+
 client.loop.create_task(my_background_task())
+client.run(secretkey)

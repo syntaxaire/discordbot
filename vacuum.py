@@ -9,6 +9,8 @@ class Vacuum:
     def build(self):
         self.connection = pymysql.connect(host='fartcannon.com',user=db_secrets[0],password=db_secrets[1],db='ligyptto_minecraft',charset='utf8mb4',cursorclass=pymysql.cursors.DictCursor)
 
+    def config(self,url):
+        self.updateurl=url
 
     def do_query(self,query,args):
         self.build()
@@ -40,14 +42,20 @@ class Vacuum:
 
 
     def playtime_log(self):
-        with urllib.request.urlopen("http://136.33.144.178:8123/up/world/DIM-11/") as url:
+        with urllib.request.urlopen(self.updateurl) as url:
             data = json.loads(url.read().decode())
             pl=data['players']
             players=[]
-            query = "insert into `progress_playertracker` (player) VALUES "
+            query = "insert into `progress_playertracker` (player,world,armor,health,x,y,z) VALUES "
             for p in pl:
                 players.append(p['name'])
-                query=query+"(%s),"
+                players.append(p['world'])
+                players.append(p['armor'])
+                players.append(p['health'])
+                players.append(p['x'])
+                players.append(p['y'])
+                players.append(p['z'])
+                query=query+"(%s, %s, %s, %s, %s, %s, %s),"
 
             query=query[:-1]
 
