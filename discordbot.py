@@ -102,9 +102,20 @@ async def on_message(message):
                 #pass #here is the end of the admin check test.
 
         elif c2[0]=="howchies":
-            if ('howouchies' not in used or time.time() - used['howouchies'] > ouchies_call_freq):
-                used['howouchies'] = time.time()
-                await do_send_message(message.channel, 'Heres whats killing you: ' + vacuum.top_10_death_reasons())
+            try:
+                if c2[1]:
+                    #death type profile
+                    #construct death message and ship it
+                    dmsg = ''
+                    for i in c2[1:]:
+                        dmsg = dmsg + " " + i
+                    dmsg = dmsg.strip()
+                    await do_send_message(message.channel,"People who died to "+dmsg+": "+vacuum.howchies_profile(dmsg))
+
+            except IndexError:
+                if ('howouchies' not in used or time.time() - used['howouchies'] > ouchies_call_freq):
+                    used['howouchies'] = time.time()
+                    await do_send_message(message.channel, 'Heres whats killing you: ' + vacuum.top_10_death_reasons())
 
         elif c2[0]=="ouchies":
             try:
@@ -128,6 +139,8 @@ async def on_message(message):
         if (str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:') or (str(message.author)=='💩💩#4048' and message.content[:4] == 'RIP:'):
             print('heres where we would process a death message')
             vacuum.add_death_message(message.content)
+            #print(vacuum.do_query("select * from progress_playertracker where player=%s ORDER by id DESC limit 1",message.content.split()[1]))
+
         else:
             print('rip message')
             if ('rip' not in used or time.time() - used['rip'] > min_call_freq):
