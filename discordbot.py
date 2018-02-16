@@ -138,8 +138,9 @@ async def on_message(message):
     elif is_word_in_text("rip", message.content) == True:
         if (str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:') or (str(message.author)=='💩💩#4048' and message.content[:4] == 'RIP:'):
             print('heres where we would process a death message')
+
             vacuum.add_death_message(message.content)
-            #print(vacuum.do_query("select * from progress_playertracker where player=%s ORDER by id DESC limit 1",message.content.split()[1]))
+
 
         else:
             print('rip message')

@@ -68,6 +68,9 @@ class Vacuum:
         m = message.split()
         m[1] = m[1].lower()  #case insensitivity support for player name
 
+        #we are going to gather the player coords out of the tracking db to add to their death notice
+        coords=self.do_query("select world, x, y, z from progress_playertracker where player=%s ORDER by id DESC limit 1",m[1])
+        coords=coords[0]
         #now i need to combine the death reason into a string, which will be words in positions 2-n of the death message 'm'
         dmsg=''
         if m[2]== 'was':
@@ -77,7 +80,7 @@ class Vacuum:
             for i in m[2:]:
                 dmsg=dmsg+" "+i
         dmsg=dmsg.strip()
-        self.do_insert("INSERT INTO `progress_deaths` (`player`,`message`) VALUES(%s, %s);",(m[1],dmsg))
+        self.do_insert("INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`) VALUES(%s, %s, %s, %s, %s, %s);",(m[1],dmsg,coords['world'],coords['x'],coords['y'],coords['z']))
 
 
     def top_10_deaths(self):
