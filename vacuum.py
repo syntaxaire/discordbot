@@ -94,7 +94,7 @@ class Vacuum:
 
 
     def howchies_profile(self,message):
-        result=self.do_query("SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (%s)",message)
+        result=self.do_query("SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (%s) GROUP BY player",message)
         if result:
             return self.sort(result, 'player', 'count')
         else:
