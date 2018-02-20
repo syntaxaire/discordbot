@@ -67,10 +67,15 @@ class Vacuum:
     def add_death_message(self,message):
         m = message.split()
         m[1] = m[1].lower()  #case insensitivity support for player name
-
+        #try to update the location db rq to prevent an exception for new players
+        self.playtime_log()
         #we are going to gather the player coords out of the tracking db to add to their death notice
         coords=self.do_query("select world, x, y, z from progress_playertracker where player=%s ORDER by id DESC limit 1",m[1])
-        coords=coords[0]
+        try:
+            coords=coords[0]
+        except IndexError:
+            coords={'x':0,'y':0,'z':0,'world':'Exception Handling'}
+
         #now i need to combine the death reason into a string, which will be words in positions 2-n of the death message 'm'
         dmsg=''
         if m[2]== 'was':
@@ -94,7 +99,7 @@ class Vacuum:
 
 
     def howchies_profile(self,message):
-        result=self.do_query("SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (%s) GROUP BY player",message)
+        result=self.do_query("SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (%s) GROUP BY player ORDER by count DESC",message)
         if result:
             return self.sort(result, 'player', 'count')
         else:
