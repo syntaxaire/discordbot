@@ -1,6 +1,7 @@
 import pymysql.cursors
 from config import *
 import urllib.request, json
+import datetime,math
 
 class Vacuum:
     def __init__(self):
@@ -61,7 +62,22 @@ class Vacuum:
             self.do_insert(query,players)
 
 
-
+    def lastseen(self,player):
+        lastseen=self.do_query("select datetime from progress_playertracker where player=%s order by datetime desc limit 1",player)
+        try:
+            lastseen=lastseen[0]['datetime']
+            #lasttime=datetime.datetime.strptime(lastseen,'%Y-%m-%d %H:%M:%S')
+            now=datetime.datetime.now()
+            timedelta=now-lastseen
+            seconds=timedelta.total_seconds()
+            if seconds > 15:
+                days,remainder=divmod(seconds,86400)
+                hours, remainder = divmod(remainder, 3600)
+                return('last saw %s %s days %s hours ago' % (player, int(days), int(hours)))
+            else:
+                return("Did you remember to wear your helmet today, honey?")
+        except IndexError:
+            return( "Havent seen em")
 
 
     def add_death_message(self,message):

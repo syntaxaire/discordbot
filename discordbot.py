@@ -2,7 +2,6 @@ import asyncio
 from discord.ext.commands import Bot
 from config import *  #dont post this to github you moron
 from wordreplacer import *
-
 from vacuum import *
 
 
@@ -70,6 +69,18 @@ async def on_message(message):
     if command:
         print("main::command::found command")
         c2=command.split(' ')
+        if c2[0] == "lastseen":
+            try:
+                if c2[1]:
+                    returnz=vacuum.lastseen(c2[1])
+                    if returnz:
+                        print('lastseen:: return from arg')
+                        await do_send_message(message.channel, returnz)
+                    else:
+                        print('lastseen:: no return from function')
+            except IndexError:
+                print("main::lastseen::exception:no name provided")
+                await do_send_message(message.channel,"who am i looking for?")
         if c2[0] == "buttword":
             print("main::command:buttword ")
             #buttword is restricted so lets check the author
