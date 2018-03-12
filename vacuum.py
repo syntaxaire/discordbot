@@ -1,7 +1,7 @@
 import pymysql.cursors
 from config import *
 import urllib.request, json
-import datetime,math
+import datetime
 
 class Vacuum:
     def __init__(self):
@@ -9,8 +9,10 @@ class Vacuum:
 
     def build(self):
         self.connection = pymysql.connect(host='fartcannon.com',user=db_secrets[0],password=db_secrets[1],db=db_secrets[2],charset='utf8mb4',cursorclass=pymysql.cursors.DictCursor)
-    def config(self,url):
+
+    def config(self,url,mode):
         self.updateurl=url
+        self.master_config=mode
 
     def do_query(self,query,args):
         self.build()
@@ -27,13 +29,57 @@ class Vacuum:
             self.connection.close()
         return (result)
 
+    def playtime(self,player):
+        query=self.do_query("select datetime from ligyptto_minecraft.progress_playertracker where player=%s",player)
+        totaltime=0
+        sessions=0
+        sessiontimestamps=0
+        print(query)
+        for ts in query:
+            ts=ts['datetime']
+            try:
+                if previous is None:
+                    previous=ts #this is the start
+                    sessiontimestamps=sessiontimestamps+1
+                else:
+                    timedelta=previous-ts
+                    seconds=abs(timedelta.total_seconds())
+                    if seconds < 20:
+                        #this is a break in play
+                        previous=None
+                        if sessiontimestamps==1:
+                            #special case - player was logged in for less than 20 seconds
+                            totaltime=totaltime+10 #we'll just call this session 10 seconds.
+                        elif sessiontimestamps==2:
+                            #second special case - player was logged in for 2 timestamps so between 20-30 seconds.
+                            totaltime=totaltime+20 #we'll call this one 20 seconds.
+                        else:
+                            totaltime=totaltime+((sessiontimestamps-1)*10) #we are going to remove one to better approximate the +- 10 seconds on both ends of the login sequence
+                        #ok that bullshit is done lets do some hoose keeping
+                        sessions = sessions + 1
+                        sessiontimestamps=0
+                        previous=None
+                    else:
+                        #this is a continuation of play
+                        previous=ts
+                        sessiontimestamps=sessiontimestamps+1
+            except UnboundLocalError:
+                previous = ts  # this is the start
+                sessiontimestamps = sessiontimestamps + 1
+
+        if not totaltime == 0:
+            m, s = divmod(totaltime, 60)
+            h, m = divmod(m, 60)
+            return "%d hours %02d minutes" % (h, m)
+        else:
+            return "bitch dont play"
+
+
 
     def do_insert(self,query,args):
         self.build()
         try:
             with self.connection.cursor() as cursor:
-                # Read a single record
-                #sql = "SELECT * FROM `progress_deaths` WHERE 1"
                 cursor.execute(query,args)
                 self.connection.commit()
                 cursor.close()
@@ -42,34 +88,39 @@ class Vacuum:
 
 
     def playtime_log(self):
-        with urllib.request.urlopen(self.updateurl) as url:
-            data = json.loads(url.read().decode())
-            pl=data['players']
-            players=[]
-            query = "insert into `progress_playertracker` (player,world,armor,health,x,y,z) VALUES "
-            for p in pl:
-                players.append(p['name'])
-                players.append(p['world'])
-                players.append(p['armor'])
-                players.append(p['health'])
-                players.append(p['x'])
-                players.append(p['y'])
-                players.append(p['z'])
-                query=query+"(%s, %s, %s, %s, %s, %s, %s),"
+        try:
+            with urllib.request.urlopen(self.updateurl) as url:
+                data = json.loads(url.read().decode())
+                pl=data['players']
+                players=[]
+                query = "insert into `progress_playertracker` (datetime,player,world,armor,health,x,y,z) VALUES "
+                for p in pl:
+                    players.append(datetime.datetime.utcnow())
+                    players.append(p['name'])
+                    players.append(p['world'])
+                    players.append(p['armor'])
+                    players.append(p['health'])
+                    players.append(p['x'])
+                    players.append(p['y'])
+                    players.append(p['z'])
+                    query=query+"(%s, %s, %s, %s, %s, %s, %s, %s),"
 
-            query=query[:-1]
+                query=query[:-1]
 
-            self.do_insert(query,players)
+                self.do_insert(query,players)
+
+        except Exception:
+            print("Playtime_Log::ERROR: Caught exception when trying to open Dynamap JSON file")
 
 
     def lastseen(self,player):
         lastseen=self.do_query("select datetime from progress_playertracker where player=%s order by datetime desc limit 1",player)
         try:
             lastseen=lastseen[0]['datetime']
-            #lasttime=datetime.datetime.strptime(lastseen,'%Y-%m-%d %H:%M:%S')
-            now=datetime.datetime.now()
+            now = datetime.datetime.utcnow()
+
             timedelta=now-lastseen
-            seconds=timedelta.total_seconds()
+            seconds=abs(timedelta.total_seconds())
             if seconds > 15:
                 days,remainder=divmod(seconds,86400)
                 hours, remainder = divmod(remainder, 3600)
@@ -111,7 +162,6 @@ class Vacuum:
             return self.sort(result, 'player', 'count')
         else:
             pass
-
 
 
     def howchies_profile(self,message):

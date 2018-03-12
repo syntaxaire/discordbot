@@ -11,7 +11,7 @@ used = {}  # stores last used time of RIP/F
 shitpost=WordReplacer()
 shitpost.config(shitpost_call_freq)
 vacuum=Vacuum()
-vacuum.config(vacuum_update_json_url)
+vacuum.config(vacuum_update_json_url,master_config)
 
 
 def is_word_in_text(word, text):
@@ -25,7 +25,7 @@ async def do_send_message(channel,message,cooldown=None):
     if cooldown:
         await asyncio.sleep(cooldown)
     else:
-        await asyncio.sleep(2)
+        await asyncio.sleep(randint(2,5))
     await client.send_message(channel,message)
 
 async def my_background_task():
@@ -34,7 +34,7 @@ async def my_background_task():
     print("LOGGER::Connected to discord, start processing.")
     while not client.is_closed:
         vacuum.playtime_log()
-        print("LOGGER::I logged player activity at this time.")
+        print("LOGGER:I logged player location at this time.")
         await asyncio.sleep(10) # task runs every 10 seconds
 
 
@@ -48,16 +48,13 @@ async def on_ready():
     print('Use this link to invite {}:'.format(client.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     print('--------')
-    print('You are running FartBot V1.0.5')
+    print('You are running FartBot V1.2.21')
     print('Created by Poop Poop')
     print('--------')
 
-    print('loaded ouchies.txt')
-#    print (ouch.msg())
 
 @client.event
 async def on_message(message):
-    print('getting messages ' + message.content)
     if message.author == client.user:
         return
     try:
@@ -67,41 +64,41 @@ async def on_message(message):
         command=''
 
     if command:
-        print("main::command::found command")
         c2=command.split(' ')
         if c2[0] == "lastseen":
             try:
                 if c2[1]:
                     returnz=vacuum.lastseen(c2[1])
                     if returnz:
-                        print('lastseen:: return from arg')
                         await do_send_message(message.channel, returnz)
-                    else:
-                        print('lastseen:: no return from function')
             except IndexError:
                 print("main::lastseen::exception:no name provided")
                 await do_send_message(message.channel,"who am i looking for?")
+        if c2[0] == "playtime":
+            try:
+                if c2[1]:
+                    returnz=vacuum.playtime(c2[1])
+                    if returnz:
+                        await do_send_message(message.channel, returnz)
+            except IndexError:
+                print("main::lastseen::exception:no name provided")
+                await do_send_message(message.channel,"who am i looking for?")
+
         if c2[0] == "buttword":
-            print("main::command:buttword ")
             #buttword is restricted so lets check the author
             if str(message.author) in channel_admins:
-                print("main::command::buttword::author in admins")
                 #passes admin test. process here
                 try:
                     if c2[1] == 'list':
                         returnz = shitpost.buttword('list', '')
                         if returnz:
-                            print('buttword:: return from arg')
                             await do_send_message(message.channel, returnz)
-                        else:
-                            print('buttword:: no return from function')
+
                     elif c2[1] and c2[2]:
                         returnz = shitpost.buttword(c2[1], c2[2])
                         if returnz:
-                            print('buttword:: return from arg')
                             await do_send_message(message.channel, returnz)
-                        else:
-                            print('buttword:: no return from function')
+
                     else:
                         await do_send_message(message.channel, 'add remove list')
                 except IndexError:
@@ -148,40 +145,43 @@ async def on_message(message):
 
     elif is_word_in_text("rip", message.content) == True:
         if (str(message.author)=='Progress#6064' and message.content[:4] == 'RIP:') or (str(message.author)=='💩💩#4048' and message.content[:4] == 'RIP:'):
-            print('heres where we would process a death message')
-
             vacuum.add_death_message(message.content)
 
 
         else:
-            print('rip message')
             if ('rip' not in used or time.time() - used['rip'] > min_call_freq):
                 used['rip'] = time.time()
                 if randint(1,20)==5:
                     await do_send_message(message.channel,'Ya, butts',randint(2,5))
                 else:
                     await do_send_message(message.channel,'Ya, RIP',randint(2,5))
-            else:
-                print('suck my dick RIP under cooldown')
 
     elif is_word_in_text("F", message.content) == True:
-        print('rip message')
         if ('f' not in used or time.time() - used['f'] > min_call_freq):
             used['f'] = time.time()
             await do_send_message(message.channel,'Ya, F',randint(2,5))
         else:
             if randint(1,100) == 44:
                 await do_send_message(message.channel,'suck my dick F under cooldown')
-            else:
-                print('suck my dick F under cooldown')
+
+    elif is_word_in_text("thanks buttbot",message.content) is True or is_word_in_text("thanks\\, buttbot",message.content) is True:
+        if ('reply' not in used or time.time() - used['reply'] > min_call_freq):
+            used['reply'] = time.time()
+            replies=['fuck off','youre welcome','your butt','i wish didnt have to look at you are posts','ur whale cum']
+            await do_send_message(message.channel, replies[randint(1,len(replies))], randint(2, 5))
+    elif is_word_in_text("thanks for trying buttbot",message.content) is True or is_word_in_text("thanks for trying\\, buttbot",message.content) is True:
+        if ('reply' not in used or time.time() - used['reply'] > min_call_freq):
+            used['reply'] = time.time()
+            replies=['fuck off','youre welcome','your butt','i wish didnt have to look at you are posts','ur whale cum']
+            await do_send_message(message.channel, replies[randint(1,len(replies))], randint(2, 5))
 
 
 
     elif is_word_in_text('butt', message.content)==True:
-        print('we have a butt here')
         rshitpost=shitpost.rspeval(message.content)
         if rshitpost:
             await do_send_message(message.channel,rshitpost)
+
     else:
         #here's where im going to evaluate all other sentences for shitposting
          rshitpost=shitpost.eval(message.content)

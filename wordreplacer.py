@@ -62,27 +62,24 @@ class WordReplacer:
     def eval(self, message):
         if randint(1, 5) == 3:
             message = message.lower()
-            print ('wordreplace::evaling shitpost')
-            for s in self.wlist:
-                print(s)
-                if self.is_word_in_text(s, message) or self.is_word_in_text(s+'s',message):
-                    print('wordreplace::word replacement found')
-                    # found it
-                    # people want this to spew garbage so give the garbage to the people
-                    if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
-                        print('worldreplace::timer threshhold met')
-                        self.used['shitpost'] = time.time()
-                        for t in self.wlist:  # replace everything aaaaaaa
-                            message = message.replace(t, 'butt')
-                        return message
+            try:
+                for s in self.wlist:
+                    if self.is_word_in_text(s, message) or self.is_word_in_text(s+'s',message):
+                        # found it
+                        # people want this to spew garbage so give the garbage to the people
+                        if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
+                            self.used['shitpost'] = time.time()
+                            for t in self.wlist:  # replace everything aaaaaaa
+                                message = message.replace(t, 'butt')
+                            return message
+            except TypeError:
+                self.wlist=self.load()
+
 
     def rspeval(self, message):
-        print('reverseshitpost:: got it')
-        if randint(1, 5) == 3:
+        if randint(1, 6) == 3:
             message = message.lower()
-            print ('reverseshitpost::evaling shitpost')
             if ('reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer):
-                print('reverseshitpost::timer threshhold met')
                 self.used['reverseshitpost'] = time.time()
                 for t in self.wlist:  # replace everything aaaaaaa
                     message = message.replace('butt',self.wlist[randint(0,len(self.wlist)-1)],1)
