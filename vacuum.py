@@ -30,23 +30,35 @@ class Vacuum:
         return (result)
 
     def playtime(self,player):
-        query=self.do_query("select datetime from ligyptto_minecraft.progress_playertracker where player=%s",player)
+        query=self.do_query("select datetime from ligyptto_minecraft.progress_playertracker where player=%s order by datetime DESC",player)
         totaltime=0
         sessions=0
         sessiontimestamps=0
+        s1=0
+        s2=0
+        s3=0
         print(query)
         for ts in query:
             ts=ts['datetime']
             try:
+                if savetime is not None:
+                    previous=savetime
+                    savetime=None
+                    #print("Started with previous timestamp %s for new session" % (previous))
+            except UnboundLocalError:
+                pass #skip this shit doesnt matter
+
+            try:
                 if previous is None:
+                    #print("started session for timestamp " + str(ts))
                     previous=ts #this is the start
                     sessiontimestamps=sessiontimestamps+1
                 else:
+                    #print("on timestamp %s" % (ts))
                     timedelta=previous-ts
                     seconds=abs(timedelta.total_seconds())
-                    if seconds < 20:
+                    if seconds > 18:
                         #this is a break in play
-                        previous=None
                         if sessiontimestamps==1:
                             #special case - player was logged in for less than 20 seconds
                             totaltime=totaltime+10 #we'll just call this session 10 seconds.
@@ -56,9 +68,13 @@ class Vacuum:
                         else:
                             totaltime=totaltime+((sessiontimestamps-1)*10) #we are going to remove one to better approximate the +- 10 seconds on both ends of the login sequence
                         #ok that bullshit is done lets do some hoose keeping
+                        #print("ended session with timestamp %s due to delta %s. i counted %s timestamps" % (ts,timedelta,sessiontimestamps))
+                        #print('-------------------')
                         sessions = sessions + 1
                         sessiontimestamps=0
+                        savetime=ts
                         previous=None
+
                     else:
                         #this is a continuation of play
                         previous=ts
@@ -66,11 +82,12 @@ class Vacuum:
             except UnboundLocalError:
                 previous = ts  # this is the start
                 sessiontimestamps = sessiontimestamps + 1
+              #  print("Exception started session for timestamp "+str(ts))
 
         if not totaltime == 0:
             m, s = divmod(totaltime, 60)
             h, m = divmod(m, 60)
-            return "%d hours %02d minutes" % (h, m)
+            return "Estimated playtime for %s: %d hours %d minutes in %s sessions" % (player, h, m,sessions)
         else:
             return "bitch dont play"
 
