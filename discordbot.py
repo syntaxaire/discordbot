@@ -3,6 +3,7 @@ from discord.ext.commands import Bot
 from config import *  #dont post this to github you moron
 from wordreplacer import *
 from vacuum import *
+from mojang import *
 
 
 
@@ -74,6 +75,11 @@ async def on_message(message):
             except IndexError:
                 print("main::lastseen::exception:no name provided")
                 await do_send_message(message.channel,"who am i looking for?")
+        if c2[0] == "mojang":
+            msg=mojang_status_requested()
+            for t in msg:
+                await do_send_message(message.channel, t)
+
         if c2[0] == "playtime":
             try:
                 if c2[1]:
