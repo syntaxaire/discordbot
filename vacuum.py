@@ -34,10 +34,6 @@ class Vacuum:
         totaltime=0
         sessions=0
         sessiontimestamps=0
-        s1=0
-        s2=0
-        s3=0
-        print(query)
         for ts in query:
             ts=ts['datetime']
             try:
@@ -83,11 +79,22 @@ class Vacuum:
                 previous = ts  # this is the start
                 sessiontimestamps = sessiontimestamps + 1
               #  print("Exception started session for timestamp "+str(ts))
+        #now we check to make sure we are counting the last session
+        if not sessiontimestamps==0:
+            totaltime = totaltime + ((sessiontimestamps - 1) * 10)
 
         if not totaltime == 0:
             m, s = divmod(totaltime, 60)
             h, m = divmod(m, 60)
-            return "Estimated playtime for %s: %d hours %d minutes in %s sessions" % (player, h, m,sessions)
+            insult=""
+            if h > 80:
+                insult=". is this shit your full time job or something"
+            elif h > 50:
+                insult=". go outside you fuckin nerd"
+            elif h > 30:
+                insult=". don't you have something better to do with your time?"
+
+            return "Estimated playtime for %s: %d hours %d minutes in %s sessions%s" % (player, h, m,sessions, insult)
         else:
             return "bitch dont play"
 
