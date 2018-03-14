@@ -29,7 +29,7 @@ class Vacuum:
             self.connection.close()
         return (result)
 
-    def playtime(self,player):
+    def _playtime_(self,player):
         query=self.do_query("select datetime from ligyptto_minecraft.progress_playertracker where player=%s order by datetime DESC",player)
         totaltime=0
         sessions=0
@@ -43,7 +43,6 @@ class Vacuum:
                     #print("Started with previous timestamp %s for new session" % (previous))
             except UnboundLocalError:
                 pass #skip this shit doesnt matter
-
             try:
                 if previous is None:
                     #print("started session for timestamp " + str(ts))
@@ -82,7 +81,12 @@ class Vacuum:
         #now we check to make sure we are counting the last session
         if not sessiontimestamps==0:
             totaltime = totaltime + ((sessiontimestamps - 1) * 10)
+        return [totaltime,sessions]
 
+    def playtime_insult(self,player):
+        q=self._playtime_(player)
+        totaltime=q[0]
+        sessions=q[1]
         if not totaltime == 0:
             m, s = divmod(totaltime, 60)
             h, m = divmod(m, 60)
