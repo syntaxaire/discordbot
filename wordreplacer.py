@@ -47,16 +47,7 @@ class WordReplacer:
             return 'ok fuck '+arg
 
         if command=='list':
-            i = 1
-            cmsg = ''
-
-            if self.wlist is not None:
-                for d in self.wlist:
-                    if i != 1:
-                        cmsg = cmsg + ', '
-                    cmsg = cmsg + d
-                    i = i + 1
-                return cmsg
+                return ", ".join(sorted(self.wlist, key=lambda s: s.lower()))
 
 
     def eval(self, message):
