@@ -2,6 +2,8 @@ import json
 import re
 import time
 from random import *
+from nltk.corpus import wordnet as wn
+
 
 class WordReplacer:
 
@@ -75,3 +77,17 @@ class WordReplacer:
                 for t in self.wlist:  # replace everything aaaaaaa
                     message = message.replace('butt',self.wlist[randint(0,len(self.wlist)-1)],1)
                 return message
+
+    def wordclassifier(self,message):
+        nouns = {x.name().split('.', 1)[0] for x in wn.all_synsets('n')}
+        words=message.split(" ")
+        _nouns=[]
+        for w in words:
+            if words in nouns:
+                #replacement candidate
+                _nouns.append(w)
+        return _nouns
+
+    def eval_sentence(self,message):
+        nouns=self.wordclassifier(message)
+        return message.replace('butt',nouns[randint(0,len(nouns))])
