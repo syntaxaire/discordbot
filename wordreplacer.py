@@ -3,6 +3,7 @@ import re
 import time
 from random import *
 from nltk.corpus import wordnet as wn
+import nltk
 
 
 class WordReplacer:
@@ -16,6 +17,9 @@ class WordReplacer:
     def __init__(self):
         self.wlist=self.load()
         self.used={}
+        #NLTK test
+        #self.nouns=set()
+        #self.nouns = {x.name().split('.', 1)[0] for x in wn.all_synsets('n')}
 
     def config(self,timer):
         self.timer=timer
@@ -68,7 +72,6 @@ class WordReplacer:
             except TypeError:
                 self.wlist=self.load()
 
-
     def rspeval(self, message):
         if randint(1, 6) == 3:
             message = message.lower()
@@ -76,18 +79,25 @@ class WordReplacer:
                 self.used['reverseshitpost'] = time.time()
                 for t in self.wlist:  # replace everything aaaaaaa
                     message = message.replace('butt',self.wlist[randint(0,len(self.wlist)-1)],1)
+                    #NLTK test
+                    #message = message.replace('butt', sample(self.nouns,1)[0].replace('_'," "), 1)
                 return message
 
     def wordclassifier(self,message):
-        nouns = {x.name().split('.', 1)[0] for x in wn.all_synsets('n')}
-        words=message.split(" ")
-        _nouns=[]
-        for w in words:
-            if words in nouns:
-                #replacement candidate
-                _nouns.append(w)
-        return _nouns
+        nouns=[]
+        # function to test if something is a noun
+        # do the nlp stuff
+        li = nltk.pos_tag(nltk.word_tokenize(message),tagset='universal')
+        for w in li:
+            if w[1] == "NN" or w[1] == "NNP" or w[1] == "NOUN":
+                #it categorized it as either a noun or proper noun
+                nouns.append(w[0])
+        return nouns
 
-    def eval_sentence(self,message):
-        nouns=self.wordclassifier(message)
-        return message.replace('butt',nouns[randint(0,len(nouns))])
+    def eval_sentence_nltk(self,message):
+        if randint(1, 5) == 3:
+            if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
+                self.used['shitpost'] = time.time()
+                nouns=self.wordclassifier(message)
+                if len(nouns) > 1:
+                    return message.replace(nouns[randint(0,len(nouns))],'butt')
