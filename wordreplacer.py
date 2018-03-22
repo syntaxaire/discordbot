@@ -6,7 +6,6 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 
 
-
 class WordReplacer:
 
     def is_word_in_text(self, word, text):
@@ -16,15 +15,14 @@ class WordReplacer:
         return bool(matches)
 
     def __init__(self):
-        self.wlist=self.load()
-        self.used={}
-        #NLTK test
-        #self.nouns=set()
-        #self.nouns = {x.name().split('.', 1)[0] for x in wn.all_synsets('n')}
+        self.wlist = self.load()
+        self.used = {}
+        # NLTK test
+        # self.nouns=set()
+        # self.nouns = {x.name().split('.', 1)[0] for x in wn.all_synsets('n')}
 
-    def config(self,timer):
-        self.timer=timer
-
+    def config(self, timer):
+        self.timer = timer
 
     def load(self):
         try:
@@ -33,36 +31,33 @@ class WordReplacer:
         except Exception:
             pass
 
-    def addword(self,word):
+    def addword(self, word):
         pass
 
     def save(self):
         with open('wordlist.txt', 'w') as f:
             json.dump(self.wlist, f, ensure_ascii=False)
 
-
-
-    def buttword(self,command,arg):
-        if command=='add':
+    def buttword(self, command, arg):
+        if command == 'add':
             self.wlist.append(arg)
             self.save()
-            return 'ok fine, '+arg
+            return 'ok fine, ' + arg
 
-        if command=='remove':
+        if command == 'remove':
             self.wlist.remove(arg)
             self.save()
-            return 'ok fuck '+arg
+            return 'ok fuck ' + arg
 
-        if command=='list':
-                return ", ".join(sorted(self.wlist, key=lambda s: s.lower()))
-
+        if command == 'list':
+            return ", ".join(sorted(self.wlist, key=lambda s: s.lower()))
 
     def eval(self, message):
         if randint(1, 5) == 3:
             message = message.lower()
             try:
                 for s in self.wlist:
-                    if self.is_word_in_text(s, message) or self.is_word_in_text(s+'s',message):
+                    if self.is_word_in_text(s, message) or self.is_word_in_text(s + 's', message):
                         # found it
                         # people want this to spew garbage so give the garbage to the people
                         if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
@@ -71,7 +66,7 @@ class WordReplacer:
                                 message = message.replace(t, 'butt')
                             return message
             except TypeError:
-                self.wlist=self.load()
+                self.wlist = self.load()
 
     def rspeval(self, message):
         if randint(1, 6) == 3:
@@ -79,42 +74,41 @@ class WordReplacer:
             if ('reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer):
                 self.used['reverseshitpost'] = time.time()
                 for t in self.wlist:  # replace everything aaaaaaa
-                    message = message.replace('butt',self.wlist[randint(0,len(self.wlist)-1)],1)
-                    #NLTK test
-                    #message = message.replace('butt', sample(self.nouns,1)[0].replace('_'," "), 1)
+                    message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
+                    # NLTK test
+                    # message = message.replace('butt', sample(self.nouns,1)[0].replace('_'," "), 1)
                 return message
 
-    def wordclassifier(self,message,author):
-        nouns=[]
+    def wordclassifier(self, message, author):
+        nouns = []
         # function to test if something is a noun
         # do the nlp stuff
-        li = nltk.pos_tag(nltk.word_tokenize(message),tagset='universal')
+        li = nltk.pos_tag(nltk.word_tokenize(message), tagset='universal')
         for w in li:
-            if w[0]=="<" or w[0]==">":
-                #ignore this punctuation because for some reason NLTK doesnt always
+            if w[0] == "<" or w[0] == ">":
+                # ignore this punctuation because for some reason NLTK doesnt always
                 pass
             else:
                 if w[1] == "NN" or w[1] == "NNP" or w[1] == "NOUN":
-                    #NLTK categorized the word as either a noun or proper noun
+                    # NLTK categorized the word as either a noun or proper noun
                     nouns.append(w[0])
         return nouns
 
-
-    def eval_sentence_nltk(self,message,author):
+    def eval_sentence_nltk(self, message, author):
         if randint(1, 5) == 3:
             if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
                 self.used['shitpost'] = time.time()
-                if author=="Progress#6064":
-                    #this removes the character preamble for when Progress relays the chat message from in game.
+                if author == "Progress#6064":
+                    # this removes the character preamble for when Progress relays the chat message from in game.
                     # It is not sent to the word classifier to prevent a bunch of silly issues like
-                    message=message.split(" ",1)[1]
+                    message = message.split(" ", 1)[1]
 
-                nouns=self.wordclassifier(message,author)
+                nouns = self.wordclassifier(message, author)
                 if len(nouns) > 1:
                     lemmatizer = WordNetLemmatizer()
-                    buttword=randint(0,len(nouns))#this is the word we are replacing with butt.
+                    buttword = randint(0, len(nouns))  # this is the word we are replacing with butt.
                     if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
-                        #the lemmatizer thinks that this is a plural
-                        return message.replace(nouns[buttword],'butts')
+                        # the lemmatizer thinks that this is a plural
+                        return message.replace(nouns[buttword], 'butts')
                     else:
-                        return message.replace(nouns[buttword],'butt')
+                        return message.replace(nouns[buttword], 'butt')
