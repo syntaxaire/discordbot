@@ -2,8 +2,9 @@ import json
 import re
 import time
 from random import *
-from nltk.corpus import wordnet as wn
 import nltk
+from nltk.stem import WordNetLemmatizer
+
 
 
 class WordReplacer:
@@ -90,22 +91,34 @@ class WordReplacer:
         li = nltk.pos_tag(nltk.word_tokenize(message),tagset='universal')
         for w in li:
             if w[0]=="<" or w[0]==">":
-                #ignore this punctuation because for some reason NLTK doesnt
+                #ignore this punctuation because for some reason NLTK doesnt always
                 pass
             else:
                 if w[1] == "NN" or w[1] == "NNP" or w[1] == "NOUN":
-                    #it categorized it as either a noun or proper noun
+                    #NLTK categorized the word as either a noun or proper noun
                     nouns.append(w[0])
         return nouns
 
 
     def eval_sentence_nltk(self,message,author):
-        if randint(1, 5) == 3:
+        if randint(3, 3) == 3:
             if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
                 self.used['shitpost'] = time.time()
                 if author=="Progress#6064":
-                    message2=message.split(" ",1)[1]
-                    #need to save character preamble for message to reattach it to the text
-                nouns=self.wordclassifier(message2,author)
+                    #this removes the character preamble for when Progress relays the chat message from in game.
+                    # It is not sent to the word classifier to prevent a bunch of silly issues like
+                    message=message.split(" ",1)[1]
+
+                nouns=self.wordclassifier(message,author)
                 if len(nouns) > 1:
-                    return message.replace(nouns[randint(0,len(nouns))],'butt')
+                    lemmatizer = WordNetLemmatizer()
+                    buttword=randint(0,len(nouns))#this is the word we are replacing with butt.
+                    print(nouns)
+                    print(buttword)
+                    print(nouns[buttword])
+                    print(lemmatizer.lemmatize(nouns[buttword]))
+                    if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
+                        #the lemmatizer thinks that this is a plural
+                        return message.replace(nouns[buttword],'butts')
+                    else:
+                        return message.replace(nouns[buttword],'butt')
