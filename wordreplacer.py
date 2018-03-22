@@ -101,7 +101,7 @@ class WordReplacer:
 
 
     def eval_sentence_nltk(self,message,author):
-        if randint(3, 3) == 3:
+        if randint(1, 5) == 3:
             if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
                 self.used['shitpost'] = time.time()
                 if author=="Progress#6064":
