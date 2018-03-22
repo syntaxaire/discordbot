@@ -45,6 +45,5 @@ def mojang_user_to_uuid(username):
 def mojang_get_user_avatar(username):
     with urllib.request.urlopen("https://sessionserver.mojang.com/session/minecraft/profile/%s" % mojang_user_to_uuid(username)) as url:
         data = json.loads(url.read().decode())
-        a=data['properties'][0]['value']
-    return a
+    return data['properties'][0]['value']
 

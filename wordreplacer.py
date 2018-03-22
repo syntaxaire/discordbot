@@ -83,21 +83,29 @@ class WordReplacer:
                     #message = message.replace('butt', sample(self.nouns,1)[0].replace('_'," "), 1)
                 return message
 
-    def wordclassifier(self,message):
+    def wordclassifier(self,message,author):
         nouns=[]
         # function to test if something is a noun
         # do the nlp stuff
         li = nltk.pos_tag(nltk.word_tokenize(message),tagset='universal')
         for w in li:
-            if w[1] == "NN" or w[1] == "NNP" or w[1] == "NOUN":
-                #it categorized it as either a noun or proper noun
-                nouns.append(w[0])
+            if w[0]=="<" or w[0]==">":
+                #ignore this punctuation because for some reason NLTK doesnt
+                pass
+            else:
+                if w[1] == "NN" or w[1] == "NNP" or w[1] == "NOUN":
+                    #it categorized it as either a noun or proper noun
+                    nouns.append(w[0])
         return nouns
 
-    def eval_sentence_nltk(self,message):
+
+    def eval_sentence_nltk(self,message,author):
         if randint(1, 5) == 3:
             if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
                 self.used['shitpost'] = time.time()
-                nouns=self.wordclassifier(message)
+                if author=="Progress#6064":
+                    message2=message.split(" ",1)[1]
+                    #need to save character preamble for message to reattach it to the text
+                nouns=self.wordclassifier(message2,author)
                 if len(nouns) > 1:
                     return message.replace(nouns[randint(0,len(nouns))],'butt')

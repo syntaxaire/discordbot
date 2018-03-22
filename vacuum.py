@@ -29,6 +29,24 @@ class Vacuum:
             self.connection.close()
         return (result)
 
+    def playtime_global(self):
+        query_count=self.do_query("SELECT count(distinct player) as total_players FROM ligyptto_minecraft.progress_playertracker",'')
+        query_count=query_count[0]['total_players']
+        query_players=self.do_query("SELECT player FROM ligyptto_minecraft.progress_playertracker group by player ORDER BY player DESC",'')
+
+        total_seconds=0
+        total_sessions=0
+        for p in query_players:
+            p=p['player']
+            print(p)
+            playtime=self._playtime_(p)
+            total_seconds=total_seconds+int(playtime[0])
+            total_sessions=total_sessions+int(playtime[1])
+        print(total_seconds)
+        print(total_sessions)
+
+
+
     def _playtime_(self,player):
         query=self.do_query("select datetime from ligyptto_minecraft.progress_playertracker where player=%s order by datetime DESC",player)
         totaltime=0
