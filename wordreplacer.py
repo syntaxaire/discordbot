@@ -113,10 +113,6 @@ class WordReplacer:
                 if len(nouns) > 1:
                     lemmatizer = WordNetLemmatizer()
                     buttword=randint(0,len(nouns))#this is the word we are replacing with butt.
-                    print(nouns)
-                    print(buttword)
-                    print(nouns[buttword])
-                    print(lemmatizer.lemmatize(nouns[buttword]))
                     if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
                         #the lemmatizer thinks that this is a plural
                         return message.replace(nouns[buttword],'butts')
