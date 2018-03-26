@@ -25,7 +25,7 @@ async def do_send_message(channel, message, cooldown=None):
         await asyncio.sleep(cooldown)
     else:
         await asyncio.sleep(randint(2, 5))
-        client.send_message(channel, message)
+        await client.send_message(channel, message)
 
 
 async def my_background_task():
@@ -63,7 +63,6 @@ async def on_message(message):
     except IndexError:
         # finally:
         command = ''
-
     if command:
         c2 = command.split(' ')
         if c2[0] == "lastseen":
