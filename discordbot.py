@@ -25,7 +25,7 @@ async def do_send_message(channel, message, cooldown=None):
         await asyncio.sleep(cooldown)
     else:
         await asyncio.sleep(randint(2, 5))
-    await client.send_message(channel, message)
+        client.send_message(channel, message)
 
 
 async def my_background_task():
@@ -49,7 +49,7 @@ async def on_ready():
     print('Use this link to invite {}:'.format(client.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     print('--------')
-    print('You are running FartBot V1.2.44')
+    print('You are running FartBot V1.3.05')
     print('Created by Poop Poop')
     print('--------')
 
@@ -202,7 +202,6 @@ async def on_message(message):
                 is_word_in_text("left the game", message.content) or is_word_in_text("joined the game",
                                                                                      message.content)):
             # this is a join or part message and we are going to ignore it
-            print("found a join or part message")
             pass
         else:
             rshitpost = shitpost.eval_sentence_nltk(message.content, str(message.author))

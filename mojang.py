@@ -4,7 +4,6 @@ import urllib.request, json
 def mojang_status():
     with urllib.request.urlopen("https://status.mojang.com/check") as url:
         data = json.loads(url.read().decode())
-        # data=[{'minecraft.net': 'yellow'},{'session.minecraft.net': 'red'},{'account.mojang.com': 'red'},{'authserver.mojang.com': 'green'},{'sessionserver.mojang.com': 'green'},{'api.mojang.com': 'green'},{'textures.minecraft.net': 'green'},{'mojang.com': 'green'}]
         yellow = []
         red = []
         for service in data:
@@ -38,7 +37,7 @@ def mojang_status_loop():
 
 
 def mojang_user_to_uuid(username):
-    with urllib.request.urlopen("https://api.mojang.com/users/profiles/minecraft/%s" % (username)) as url:
+    with urllib.request.urlopen("https://api.mojang.com/users/profiles/minecraft/%s" % username) as url:
         data = json.loads(url.read().decode())
     return data['id']
 

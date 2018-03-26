@@ -95,18 +95,18 @@ class WordReplacer:
         return nouns
 
     def eval_sentence_nltk(self, message, author):
-        if randint(1, 5) == 3:
-            if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
-                self.used['shitpost'] = time.time()
-                if author == "Progress#6064":
-                    # this removes the character preamble for when Progress relays the chat message from in game.
-                    # It is not sent to the word classifier to prevent a bunch of silly issues like
-                    message = message.split(" ", 1)[1]
+        if author == "Progress#6064":
+            # this removes the character preamble for when Progress relays the chat message from in game.
+            # It is not sent to the word classifier to prevent a bunch of silly issues like
+            message = message.split(" ", 1)[1]
 
-                nouns = self.wordclassifier(message, author)
-                if len(nouns) > 1:
-                    lemmatizer = WordNetLemmatizer()
-                    buttword = randint(0, len(nouns))  # this is the word we are replacing with butt.
+            nouns = self.wordclassifier(message, author)
+            if len(nouns) > 1:
+                lemmatizer = WordNetLemmatizer()
+                buttword = randint(0, len(nouns))  # this is the word we are replacing with butt.
+                if randint(1, 5) == 3:
+                    if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
+                        self.used['shitpost'] = time.time()
                     if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
                         # the lemmatizer thinks that this is a plural
                         return message.replace(nouns[buttword], 'butts')
