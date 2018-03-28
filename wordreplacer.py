@@ -83,13 +83,14 @@ class WordReplacer:
         nouns = []
         # function to test if something is a noun
         # do the nlp stuff
-        li = nltk.pos_tag(nltk.word_tokenize(message), tagset='universal')
+        li = nltk.pos_tag(nltk.word_tokenize(message))
+
         for w in li:
             if w[0] == "<" or w[0] == ">":
                 # ignore this punctuation because for some reason NLTK doesnt always
                 pass
             else:
-                if w[1] == "NN" or w[1] == "NNP" or w[1] == "NOUN":
+                if w[1] == "NN" or w[1] == "NNP" or w[1] == "NOUN" or w[1] == "NNSP":
                     # NLTK categorized the word as either a noun or proper noun
                     nouns.append(w[0])
         return nouns
@@ -100,15 +101,20 @@ class WordReplacer:
             # It is not sent to the word classifier to prevent a bunch of silly issues like
             message = message.split(" ", 1)[1]
 
-            nouns = self.wordclassifier(message, author)
-            if len(nouns) > 1:
-                lemmatizer = WordNetLemmatizer()
-                buttword = randint(0, len(nouns))  # this is the word we are replacing with butt.
-                if randint(1, 5) == 3:
-                    if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
-                        self.used['shitpost'] = time.time()
-                    if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
-                        # the lemmatizer thinks that this is a plural
-                        return message.replace(nouns[buttword], 'butts')
-                    else:
-                        return message.replace(nouns[buttword], 'butt')
+        nouns = self.wordclassifier(message, author)
+        #list comprehension to remove words that shouldn't be included in the list
+        badwords=['i']
+
+        nouns=[var for var in nouns if var not in badwords]
+
+        if len(nouns) > 1:
+            lemmatizer = WordNetLemmatizer()
+            buttword = randint(0, len(nouns))  # this is the word we are replacing with butt.
+            if randint(1, 5) == 3:
+                if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
+                    self.used['shitpost'] = time.time()
+                if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
+                    # the lemmatizer thinks that this is a plural
+                    return message.replace(nouns[buttword], 'butts')
+                else:
+                    return message.replace(nouns[buttword], 'butt')
