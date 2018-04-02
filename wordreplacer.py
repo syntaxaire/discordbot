@@ -1,18 +1,12 @@
 import json
-import re
 import time
 from random import *
 import nltk
 from nltk.stem import WordNetLemmatizer
+from butt_library import *
 
 
 class WordReplacer:
-
-    def is_word_in_text(self, word, text):
-        pattern = r'(^|[^\w]){}([^\w]|$)'.format(word)
-        pattern = re.compile(pattern, re.IGNORECASE)
-        matches = re.search(pattern, text)
-        return bool(matches)
 
     def __init__(self):
         self.wlist = self.load()
@@ -57,7 +51,7 @@ class WordReplacer:
             message = message.lower()
             try:
                 for s in self.wlist:
-                    if self.is_word_in_text(s, message) or self.is_word_in_text(s + 's', message):
+                    if is_word_in_text(s, message) or is_word_in_text(s + 's', message):
                         # found it
                         # people want this to spew garbage so give the garbage to the people
                         if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
@@ -79,12 +73,15 @@ class WordReplacer:
                     # message = message.replace('butt', sample(self.nouns,1)[0].replace('_'," "), 1)
                 return message
 
+    def wordtagger(self, message):
+        return nltk.pos_tag(nltk.word_tokenize(message))
+
     def wordclassifier(self, message, author):
         nouns = []
         # function to test if something is a noun
         # do the nlp stuff
-        li = nltk.pos_tag(nltk.word_tokenize(message))
-
+        li = self.wordtagger(message)
+        print(li)
         for w in li:
             if w[0] == "<" or w[0] == ">":
                 # ignore this punctuation because for some reason NLTK doesnt always
@@ -99,22 +96,21 @@ class WordReplacer:
         if author == "Progress#6064":
             # this removes the character preamble for when Progress relays the chat message from in game.
             # It is not sent to the word classifier to prevent a bunch of silly issues like
-            message = message.split(" ", 1)[1]
+            nouns = self.wordclassifier(message.split(" ", 1)[1], author)
+        else:
+            nouns = self.wordclassifier(message, author)
+        # list comprehension to remove words that shouldn't be included in the list
+        badwords = ['i', 'gon', 'beat', 'dont', 'lol']
 
-        nouns = self.wordclassifier(message, author)
-        #list comprehension to remove words that shouldn't be included in the list
-        badwords=['i']
-
-        nouns=[var for var in nouns if var not in badwords]
-
+        nouns = [var for var in nouns if var not in badwords]
         if len(nouns) > 1:
-            lemmatizer = WordNetLemmatizer()
-            buttword = randint(0, len(nouns))  # this is the word we are replacing with butt.
             if randint(1, 5) == 3:
                 if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
                     self.used['shitpost'] = time.time()
-                if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
-                    # the lemmatizer thinks that this is a plural
-                    return message.replace(nouns[buttword], 'butts')
-                else:
-                    return message.replace(nouns[buttword], 'butt')
+                    lemmatizer = WordNetLemmatizer()
+                    buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
+                    if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
+                        # the lemmatizer thinks that this is a plural
+                        return message.replace(nouns[buttword], 'butts')
+                    else:
+                        return message.replace(nouns[buttword], 'butt')

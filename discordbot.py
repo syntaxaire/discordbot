@@ -4,6 +4,7 @@ from config import *  # dont post this to github you moron
 from wordreplacer import *
 from vacuum import *
 from mojang import *
+from butt_library import *
 
 used = {}  # stores last used time of RIP/F
 shitpost = WordReplacer()
@@ -12,20 +13,13 @@ vacuum = Vacuum()
 vacuum.config(vacuum_update_json_url, master_config)
 
 
-def is_word_in_text(word, text):
-    pattern = r'(^|[^\w]){}([^\w]|$)'.format(word)
-    pattern = re.compile(pattern, re.IGNORECASE)
-    matches = re.search(pattern, text)
-    return bool(matches)
-
-
 async def do_send_message(channel, message, cooldown=None):
     # this shit sends the messages to the peeps
     if cooldown:
         await asyncio.sleep(cooldown)
     else:
         await asyncio.sleep(randint(2, 5))
-        await client.send_message(channel, message)
+    await client.send_message(channel, message)  # dont remove await from here or this shit will break
 
 
 async def my_background_task():
@@ -74,12 +68,12 @@ async def on_message(message):
             except IndexError:
                 print("main::lastseen::exception:no name provided")
                 await do_send_message(message.channel, "who am i looking for?")
-        if c2[0] == "mojang":
+        elif c2[0] == "mojang":
             msg = mojang_status_requested()
             for t in msg:
                 await do_send_message(message.channel, t)
 
-        if c2[0] == "playtime":
+        elif c2[0] == "playtime":
             try:
                 if c2[1]:
                     returnz = vacuum.playtime_insult(c2[1])
@@ -89,7 +83,7 @@ async def on_message(message):
                 # TODO: evaluate and complete vacuum.playtime_global()
                 await do_send_message(message.channel, "who am i looking for?")
 
-        if c2[0] == "buttword":
+        elif c2[0] == "buttword":
             # buttword is restricted so lets check the author
             if str(message.author) in channel_admins:
                 # passes admin test. process here
@@ -130,6 +124,9 @@ async def on_message(message):
                 if ('howouchies' not in used or time.time() - used['howouchies'] > ouchies_call_freq):
                     used['howouchies'] = time.time()
                     await do_send_message(message.channel, 'Heres whats killing you: ' + vacuum.top_10_death_reasons())
+        elif c2[0] == 'nltk':
+            if str(message.author) in channel_admins:
+                await do_send_message(message.channel, shitpost.wordtagger(message.content))
 
         elif c2[0] == "ouchies":
             try:
@@ -145,18 +142,14 @@ async def on_message(message):
         elif c2[0] == "commands" or c2[0] == "help":
             await do_send_message(message.channel, 'ouchies, howchies, buttword (but only if ur a cool kid)')
 
-
-
     # shitposting follows
 
     elif is_word_in_text("rip", message.content) == True:
         if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
                 str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
             vacuum.add_death_message(message.content)
-
-
         else:
-            if ('rip' not in used or time.time() - used['rip'] > min_call_freq):
+            if 'rip' not in used or time.time() - used['rip'] > min_call_freq:
                 used['rip'] = time.time()
                 if randint(1, 20) == 5:
                     await do_send_message(message.channel, 'Ya, butts', randint(2, 5))
@@ -164,7 +157,7 @@ async def on_message(message):
                     await do_send_message(message.channel, 'Ya, RIP', randint(2, 5))
 
     elif is_word_in_text("F", message.content) == True:
-        if ('f' not in used or time.time() - used['f'] > min_call_freq):
+        if 'f' not in used or time.time() - used['f'] > min_call_freq:
             used['f'] = time.time()
             await do_send_message(message.channel, 'Ya, F', randint(2, 5))
         else:
@@ -173,20 +166,18 @@ async def on_message(message):
 
     elif is_word_in_text("thanks buttbot", message.content) is True or is_word_in_text("thanks\\, buttbot",
                                                                                        message.content) is True:
-        if ('reply' not in used or time.time() - used['reply'] > min_call_freq):
+        if 'reply' not in used or time.time() - used['reply'] > min_call_freq:
             used['reply'] = time.time()
             replies = ['fuck off', 'youre welcome', 'your butt', 'i wish didnt have to look at you are posts',
                        'ur whale cum']
             await do_send_message(message.channel, replies[randint(1, len(replies))], randint(2, 5))
     elif is_word_in_text("thanks for trying buttbot", message.content) is True or is_word_in_text(
             "thanks for trying\\, buttbot", message.content) is True:
-        if ('reply' not in used or time.time() - used['reply'] > min_call_freq):
+        if 'reply' not in used or time.time() - used['reply'] > min_call_freq:
             used['reply'] = time.time()
             replies = ['fuck off', 'youre welcome', 'your butt', 'i wish didnt have to look at you are posts',
                        'ur whale cum']
             await do_send_message(message.channel, replies[randint(1, len(replies))], randint(2, 5))
-
-
 
     elif is_word_in_text('butt', message.content) == True:
         rshitpost = shitpost.rspeval(message.content)
