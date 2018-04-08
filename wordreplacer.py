@@ -81,7 +81,6 @@ class WordReplacer:
         # function to test if something is a noun
         # do the nlp stuff
         li = self.wordtagger(message)
-        print(li)
         for w in li:
             if w[0] == "<" or w[0] == ">":
                 # ignore this punctuation because for some reason NLTK doesnt always
