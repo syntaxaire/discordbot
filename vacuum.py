@@ -2,7 +2,6 @@ import pymysql.cursors
 from config import *
 import urllib.request, json
 import datetime
-import time
 
 
 class Vacuum:
@@ -17,7 +16,7 @@ class Vacuum:
         self.updateurl = url
         self.master_config = mode
 
-    def do_query(self, query, args):
+    def do_query(self, query, args=''):
         self.build()
         try:
             with self.connection.cursor() as cursor:
@@ -33,84 +32,28 @@ class Vacuum:
         return (result)
 
     def playtime_global(self):
-        query_count = self.do_query(
-            "SELECT count(distinct player) as total_players FROM ligyptto_minecraft.progress_playertracker", '')
-        query_count = query_count[0]['total_players']
-        query_players = self.do_query(
-            "SELECT player FROM ligyptto_minecraft.progress_playertracker group by player ORDER BY player DESC", '')
-
+        players = self.do_query(
+            "select abs(sum(timedelta)) as seconds, count(timedelta) as sessions, player from progress_playertracker_v2 group by player")
         total_seconds = 0
         total_sessions = 0
-        for p in query_players:
-            p = p['player']
-            print(p)
-            playtime = self._playtime_(p)
-            total_seconds = total_seconds + int(playtime[0])
-            total_sessions = total_sessions + int(playtime[1])
-        print(total_seconds)
-        print(total_sessions)
+        for p in players:
+            total_seconds = total_seconds + int(p['seconds'])
+            total_sessions = total_sessions + p['sessions']
+        days, remainder = divmod(total_seconds, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        return ("These fucking nerds have played %s days, %s hours worth of meincraft over %s sessions" % (
+        days, hours, total_sessions))
 
-    def _playtime_(self, player):
-        query = self.do_query(
-            "select datetime from ligyptto_minecraft.progress_playertracker where player=%s order by datetime DESC",
+    def playtime_single(self, player):
+        time = self.do_query(
+            "select sum(timedelta) as seconds, count(timedelta) as sessions from progress_playertracker_v2 where player=%s",
             player)
-        totaltime = 0
-        sessions = 0
-        sessiontimestamps = 0
-        for ts in query:
-            ts = ts['datetime']
-            try:
-                if savetime is not None:
-                    previous = savetime
-                    savetime = None
-                    # print("Started with previous timestamp %s for new session" % (previous))
-            except UnboundLocalError:
-                pass  # skip this shit doesnt matter
-            try:
-                if previous is None:
-                    # print("started session for timestamp " + str(ts))
-                    previous = ts  # this is the start
-                    sessiontimestamps = sessiontimestamps + 1
-                else:
-                    # print("on timestamp %s" % (ts))
-                    timedelta = previous - ts
-                    seconds = abs(timedelta.total_seconds())
-                    if seconds > 18:
-                        # this is a break in play
-                        if sessiontimestamps == 1:
-                            # special case - player was logged in for less than 20 seconds
-                            totaltime = totaltime + 10  # we'll just call this session 10 seconds.
-                        elif sessiontimestamps == 2:
-                            # second special case - player was logged in for 2 timestamps so between 20-30 seconds.
-                            totaltime = totaltime + 20  # we'll call this one 20 seconds.
-                        else:
-                            totaltime = totaltime + ((
-                                                             sessiontimestamps - 1) * 10)  # we are going to remove one to better approximate the +- 10 seconds on both ends of the login sequence
-                        # ok that bullshit is done lets do some hoose keeping
-                        # print("ended session with timestamp %s due to delta %s. i counted %s timestamps" % (ts,timedelta,sessiontimestamps))
-                        # print('-------------------')
-                        sessions = sessions + 1
-                        sessiontimestamps = 0
-                        savetime = ts
-                        previous = None
-
-                    else:
-                        # this is a continuation of play
-                        previous = ts
-                        sessiontimestamps = sessiontimestamps + 1
-            except UnboundLocalError:
-                previous = ts  # this is the start
-                sessiontimestamps = sessiontimestamps + 1
-            #  print("Exception started session for timestamp "+str(ts))
-        # now we check to make sure we are counting the last session
-        if not sessiontimestamps == 0:
-            totaltime = totaltime + ((sessiontimestamps - 1) * 10)
-        return [totaltime, sessions]
+        return [time[0]['seconds'], time[0]['sessions']]
 
     def playtime_insult(self, player):
-        q = self._playtime_(player)
-        totaltime = q[0]
-        sessions = q[1]
+        a=self.playtime_single(player)
+        totaltime=a[0]
+        sessions=a[1]
         if not totaltime == 0:
             m, s = divmod(totaltime, 60)
             h, m = divmod(m, 60)
@@ -135,31 +78,6 @@ class Vacuum:
                 cursor.close()
         finally:
             self.connection.close()
-
-    def playtime_log(self):
-        try:
-            with urllib.request.urlopen(self.updateurl) as url:
-                data = json.loads(url.read().decode())
-                pl = data['players']
-                players = []
-                query = "insert into `progress_playertracker` (datetime,player,world,armor,health,x,y,z) VALUES "
-                for p in pl:
-                    players.append(datetime.datetime.utcnow())
-                    players.append(p['name'])
-                    players.append(p['world'])
-                    players.append(p['armor'])
-                    players.append(p['health'])
-                    players.append(p['x'])
-                    players.append(p['y'])
-                    players.append(p['z'])
-                    query = query + "(%s, %s, %s, %s, %s, %s, %s, %s),"
-
-                query = query[:-1]
-
-                self.do_insert(query, players)
-
-        except Exception:
-            print("Playtime_Log::ERROR: Caught exception when trying to open Dynamap JSON file")
 
     def playtime_scraper(self):
         try:
@@ -228,7 +146,8 @@ class Vacuum:
 
     def lastseen(self, player):
         lastseen = self.do_query(
-            "select datetime from progress_playertracker where player=%s order by datetime desc limit 1", player)
+            "select datetime from progress_playertracker_v2 where player=%s order by datetime desc limit 1", player)
+        print(lastseen)
         try:
             lastseen = lastseen[0]['datetime']
             now = datetime.datetime.utcnow()
@@ -244,19 +163,23 @@ class Vacuum:
         except IndexError:
             return ("Havent seen em")
 
+    def get_player_coords(self, player):
+        try:
+            with urllib.request.urlopen(self.updateurl) as url:
+                data = json.loads(url.read().decode())
+                pl = data['players']
+                for p in pl:
+                    if p['name'] == player:
+                        return {'x': p['x'], 'y': p['y'], 'z': p['z'], 'world': p['world']}
+        except Exception:
+            # we dont actually really care what the error is here, theres too many inside of url for me to care.
+            # i'm just going to return the error handling coords:
+            return {'x': 0, 'y': 0, 'z': 0, 'world': 'Exception Handling'}
+
     def add_death_message(self, message):
         m = message.split()
         m[1] = m[1].lower()  # case insensitivity support for player name
-        # try to update the location db rq to prevent an exception for new players
-        self.playtime_log()
-        # we are going to gather the player coords out of the tracking db to add to their death notice
-        coords = self.do_query(
-            "select world, x, y, z from progress_playertracker where player=%s ORDER by id DESC limit 1", m[1])
-        try:
-            coords = coords[0]
-        except IndexError:
-            coords = {'x': 0, 'y': 0, 'z': 0, 'world': 'Exception Handling'}
-
+        coords = self.get_player_coords(m[1])
         # now i need to combine the death reason into a string, which will be words in positions 2-n of the death message 'm'
         dmsg = ''
         if m[2] == 'was':
@@ -267,8 +190,8 @@ class Vacuum:
                 dmsg = dmsg + " " + i
         dmsg = dmsg.strip()
         self.do_insert(
-            "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`) VALUES(%s, %s, %s, %s, %s, %s);",
-            (m[1], dmsg, coords['world'], coords['x'], coords['y'], coords['z']))
+            "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`) VALUES(%s, %s, %s, %s, %s, %s, %s);",
+            (m[1], dmsg, coords['world'], coords['x'], coords['y'], coords['z'], datetime.datetime.utcnow()))
 
     def top_10_deaths(self):
 

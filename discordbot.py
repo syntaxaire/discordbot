@@ -84,7 +84,8 @@ async def on_message(message):
                         await do_send_message(message.channel, returnz)
             except IndexError:
                 # TODO: evaluate and complete vacuum.playtime_global()
-                await do_send_message(message.channel, "who am i looking for?")
+                await do_send_message(message.channel, vacuum.playtime_global())
+                #await do_send_message(message.channel, "who am i looking for?")
 
         elif c2[0] == "buttword":
             # buttword is restricted so lets check the author
