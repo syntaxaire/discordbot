@@ -2,11 +2,12 @@ import pymysql.cursors
 from config import *
 import urllib.request, json
 import datetime
+import time
 
 
 class Vacuum:
     def __init__(self):
-        pass
+        self.players = []
 
     def build(self):
         self.connection = pymysql.connect(host='fartcannon.com', user=db_secrets[0], password=db_secrets[1],
@@ -84,7 +85,7 @@ class Vacuum:
                             totaltime = totaltime + 20  # we'll call this one 20 seconds.
                         else:
                             totaltime = totaltime + ((
-                                                                 sessiontimestamps - 1) * 10)  # we are going to remove one to better approximate the +- 10 seconds on both ends of the login sequence
+                                                             sessiontimestamps - 1) * 10)  # we are going to remove one to better approximate the +- 10 seconds on both ends of the login sequence
                         # ok that bullshit is done lets do some hoose keeping
                         # print("ended session with timestamp %s due to delta %s. i counted %s timestamps" % (ts,timedelta,sessiontimestamps))
                         # print('-------------------')
@@ -159,6 +160,71 @@ class Vacuum:
 
         except Exception:
             print("Playtime_Log::ERROR: Caught exception when trying to open Dynamap JSON file")
+
+    def playtime_scraper(self):
+        try:
+            with urllib.request.urlopen(self.updateurl) as url:
+                data = json.loads(url.read().decode())
+                pl = data['players']
+                players = []
+                for p in pl:
+                    p = p['name']
+                    players.append(p)
+                    # we start by checking to see if the player is currently active
+                    if self.playtime_player_active(p):
+                        pass
+                        # player was logged in, and is still logged in
+                        # we do not need to do anything for this player at this time.
+                    else:
+                        print("adding player %s since they have logged in" % p)
+                        # player was not logged in, but is logged in now.
+                        self.playtime_player_addplayer(p)
+                # now we are going to find players that have logged out since the last check
+                self.playtime_player_checkplayers(players)
+
+        finally:
+            pass
+
+    def playtime_player_checkplayers(self, players):
+        for e in self.players:
+            if e[0] in players:
+                pass
+                # person is still logged in. we do not need to do anything at this time.
+            else:
+                # log that they logged out
+                print("%s has logged out" % e[0])
+                self.playtime_player_record(e[0], self.playtime_player_deltaseconds(e[1]))
+                # remove player.
+                self.playtime_player_removeplayer(e)
+
+    def playtime_player_deltaseconds(self, startTime):
+        d = startTime - datetime.datetime.utcnow()
+        d = abs(int(d.total_seconds()))
+        if d > 20:
+            d = d - 10
+        return d
+
+    def playtime_player_record(self, player, deltatime):
+        print("going to do query: user is %s and timedetla is %s" % (player, deltatime))
+        self.do_insert("INSERT into `progress_playertracker_v2` (`player`,`timedelta`,`datetime`) values (%s,%s,%s)",
+                       (player, deltatime, datetime.datetime.utcnow()))
+
+    def playtime_player_addplayer(self, player):
+        self.players.append([player, datetime.datetime.utcnow()])
+
+    def playtime_player_removeplayer(self, player):
+        self.players.remove(player)
+
+    def playtime_player_active(self, player):
+        try:
+            if any(e[0] == player for e in self.players):
+                return True
+            else:
+                return False
+        except AttributeError:
+            # the self.players variable is empty.  This can happen when the bot first turns on or when a player joins
+            # and no one else is logged in.
+            return False
 
     def lastseen(self, player):
         lastseen = self.do_query(

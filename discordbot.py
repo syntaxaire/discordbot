@@ -28,9 +28,11 @@ async def my_background_task():
     await client.wait_until_ready()
     # print("LOGGER::Connected to discord, start processing.")
     while not client.is_closed:
-        vacuum.playtime_log()
+        #vacuum.playtime_log()
+        await asyncio.sleep(10)          # task runs every 10 seconds
+        vacuum.playtime_scraper()
         # print("LOGGER:I logged player location at this time.")
-        await asyncio.sleep(10)  # task runs every 10 seconds
+
 
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
