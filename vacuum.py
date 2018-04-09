@@ -1,6 +1,6 @@
 import pymysql.cursors
 from config import *
-import urllib.request, json
+import urllib.request, json, urllib.error, http.client
 import datetime
 
 
@@ -100,6 +100,14 @@ class Vacuum:
                 # now we are going to find players that have logged out since the last check
                 self.playtime_player_checkplayers(players)
 
+        except urllib.error.URLError:
+            #minecraft server is offline and buttbot is still online
+            self.playtime_player_saveall()
+
+        except http.client.RemoteDisconnected:
+            #we are going to save all data here too
+            self.playtime_player_saveall()
+
         finally:
             pass
 
@@ -121,6 +129,12 @@ class Vacuum:
         if d > 20:
             d = d - 10
         return d
+
+    def playtime_player_saveall(self):
+        for e in self.players:
+            self.playtime_player_record(e[0], self.playtime_player_deltaseconds(e[1]))
+            # remove player.
+            self.playtime_player_removeplayer(e)
 
     def playtime_player_record(self, player, deltatime):
         print("going to do query: user is %s and timedetla is %s" % (player, deltatime))
@@ -147,7 +161,6 @@ class Vacuum:
     def lastseen(self, player):
         lastseen = self.do_query(
             "select datetime from progress_playertracker_v2 where player=%s order by datetime desc limit 1", player)
-        print(lastseen)
         try:
             lastseen = lastseen[0]['datetime']
             now = datetime.datetime.utcnow()
