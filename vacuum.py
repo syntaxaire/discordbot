@@ -42,7 +42,7 @@ class Vacuum:
         days, remainder = divmod(total_seconds, 86400)
         hours, remainder = divmod(remainder, 3600)
         return ("These fucking nerds have played %s days, %s hours worth of meincraft over %s sessions" % (
-        days, hours, total_sessions))
+            days, hours, total_sessions))
 
     def playtime_single(self, player):
         time = self.do_query(
@@ -51,9 +51,9 @@ class Vacuum:
         return [time[0]['seconds'], time[0]['sessions']]
 
     def playtime_insult(self, player):
-        a=self.playtime_single(player)
-        totaltime=a[0]
-        sessions=a[1]
+        a = self.playtime_single(player)
+        totaltime = a[0]
+        sessions = a[1]
         if not totaltime == 0:
             m, s = divmod(totaltime, 60)
             h, m = divmod(m, 60)
@@ -101,11 +101,11 @@ class Vacuum:
                 self.playtime_player_checkplayers(players)
 
         except urllib.error.URLError:
-            #minecraft server is offline and buttbot is still online
+            # minecraft server is offline and buttbot is still online
             self.playtime_player_saveall()
 
         except http.client.RemoteDisconnected:
-            #we are going to save all data here too
+            # we are going to save all data here too
             self.playtime_player_saveall()
 
         finally:
