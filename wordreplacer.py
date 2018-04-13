@@ -92,9 +92,9 @@ class WordReplacer:
         return nouns
 
     def eval_sentence_nltk(self, message, author):
-        #code block detection.  We are going to skip processing the entire message.
+        # code block detection.  We are going to skip processing the entire message.
         if detect_code_block(message) is not True:
-            unedited_message=message
+            unedited_message = message
             if author == "Progress#6064":
                 # this removes the character preamble for when Progress relays the chat message from in game.
                 # It is not sent to the word classifier to prevent a bunch of silly issues

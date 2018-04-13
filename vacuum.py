@@ -207,11 +207,10 @@ class Vacuum:
                 "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`) VALUES(%s, %s, %s, %s, %s, %s, %s);",
                 (m[1], dmsg, coords['world'], coords['x'], coords['y'], coords['z'], datetime.datetime.utcnow()))
         except TypeError:
-            #catch this error, something that i dont believe should be possible with how this is set up but?????
+            # catch this error, something that i dont believe should be possible with how this is set up but?????
             self.do_insert(
                 "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`) VALUES(%s, %s, %s, %s, %s, %s, %s);",
                 (m[1], dmsg, "Exception Handling", 0, 0, 0, datetime.datetime.utcnow()))
-
 
     def top_10_deaths(self):
 
