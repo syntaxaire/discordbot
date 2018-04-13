@@ -5,6 +5,7 @@ from wordreplacer import *
 from vacuum import *
 from mojang import *
 from butt_library import *
+import random
 
 used = {}  # stores last used time of RIP/F
 shitpost = WordReplacer()
@@ -194,7 +195,7 @@ async def on_message(message):
             if rshitpost:
                 await do_send_message(message.channel, rshitpost)
         elif randint(1,3) == 3:
-            await do_react(message,"👍")
+            await do_react(message,random.choice(["👌","👍"]))
 
     else:
         # here's where im going to evaluate all other sentences for shitposting
