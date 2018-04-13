@@ -23,6 +23,12 @@ async def do_send_message(channel, message, cooldown=None):
         await asyncio.sleep(randint(2, 5))
     await client.send_message(channel, message)  # dont remove await from here or this shit will break
 
+async def do_react(message,emoji,cooldown=None):
+    if cooldown:
+        await asyncio.sleep(cooldown)
+    else:
+        await asyncio.sleep(randint(2, 5))
+    await client.add_reaction(message,emoji)
 
 async def my_background_task():
     # print("LOGGER::Logger loaded.  Waiting until I connect to Discord")
@@ -47,7 +53,7 @@ async def on_ready():
     print('Use this link to invite {}:'.format(client.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     print('--------')
-    print('You are running FartBot V1.3.05')
+    print('You are running FartBot V1.6.05')
     print('Created by Poop Poop')
     print('--------')
 
@@ -84,9 +90,7 @@ async def on_message(message):
                     if returnz:
                         await do_send_message(message.channel, returnz)
             except IndexError:
-                # TODO: evaluate and complete vacuum.playtime_global()
                 await do_send_message(message.channel, vacuum.playtime_global())
-                #await do_send_message(message.channel, "who am i looking for?")
 
         elif c2[0] == "buttword":
             # buttword is restricted so lets check the author
@@ -185,9 +189,12 @@ async def on_message(message):
             await do_send_message(message.channel, replies[randint(1, len(replies))], randint(2, 5))
 
     elif is_word_in_text('butt', message.content) == True:
-        rshitpost = shitpost.rspeval(message.content)
-        if rshitpost:
-            await do_send_message(message.channel, rshitpost)
+        if randint(1,6) == 3:
+            rshitpost = shitpost.rspeval(message.content)
+            if rshitpost:
+                await do_send_message(message.channel, rshitpost)
+        elif randint(1,3) == 3:
+            await do_react(message,"👍")
 
     else:
         # here's where im going to evaluate all other sentences for shitposting

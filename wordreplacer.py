@@ -63,15 +63,14 @@ class WordReplacer:
                 self.wlist = self.load()
 
     def rspeval(self, message):
-        if randint(1, 6) == 3:
-            message = message.lower()
-            if ('reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer):
-                self.used['reverseshitpost'] = time.time()
-                for t in self.wlist:  # replace everything aaaaaaa
-                    message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
-                    # NLTK test
-                    # message = message.replace('butt', sample(self.nouns,1)[0].replace('_'," "), 1)
-                return message
+        message = message.lower()
+        if ('reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer):
+            self.used['reverseshitpost'] = time.time()
+            for t in self.wlist:  # replace everything aaaaaaa
+                message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
+                # NLTK test
+                # message = message.replace('butt', sample(self.nouns,1)[0].replace('_'," "), 1)
+            return message
 
     def wordtagger(self, message):
         return nltk.pos_tag(nltk.word_tokenize(message))
