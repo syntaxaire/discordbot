@@ -92,24 +92,27 @@ class WordReplacer:
         return nouns
 
     def eval_sentence_nltk(self, message, author):
-        if author == "Progress#6064":
-            # this removes the character preamble for when Progress relays the chat message from in game.
-            # It is not sent to the word classifier to prevent a bunch of silly issues like
-            nouns = self.wordclassifier(message.split(" ", 1)[1], author)
-        else:
-            nouns = self.wordclassifier(message, author)
-        # list comprehension to remove words that shouldn't be included in the list
-        badwords = ['i', 'gon', 'beat', 'dont', 'lol']
+        #code block detection.  We are going to skip processing the entire message.
+        if detect_code_block(message) is not True:
+            unedited_message=message
+            if author == "Progress#6064":
+                # this removes the character preamble for when Progress relays the chat message from in game.
+                # It is not sent to the word classifier to prevent a bunch of silly issues
+                nouns = self.wordclassifier(strip_IRI(message.split(" ", 1)[1]), author)
+            else:
+                nouns = self.wordclassifier(strip_IRI(message), author)
+            # list comprehension to remove words that shouldn't be included in the list
+            badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah']
 
-        nouns = [var for var in nouns if var not in badwords]
-        if len(nouns) > 1:
-            if randint(1, 5) == 3:
-                if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
-                    self.used['shitpost'] = time.time()
-                    lemmatizer = WordNetLemmatizer()
-                    buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
-                    if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
-                        # the lemmatizer thinks that this is a plural
-                        return message.replace(nouns[buttword], 'butts')
-                    else:
-                        return message.replace(nouns[buttword], 'butt')
+            nouns = [var for var in nouns if var not in badwords]
+            if len(nouns) > 1:
+                if randint(1, 5) == 3:
+                    if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
+                        self.used['shitpost'] = time.time()
+                        lemmatizer = WordNetLemmatizer()
+                        buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
+                        if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
+                            # the lemmatizer thinks that this is a plural
+                            return unedited_message.replace(nouns[buttword], 'butts')
+                        else:
+                            return unedited_message.replace(nouns[buttword], 'butt')
