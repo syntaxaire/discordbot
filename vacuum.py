@@ -2,11 +2,19 @@ import pymysql.cursors
 from config import *
 import urllib.request, json, urllib.error, http.client
 import datetime
+from dateutil.parser import parse
 
 
 class Vacuum:
     def __init__(self):
         self.players = []
+        self.playtime_load()
+        try:
+            if self.players:
+                pass
+        except TypeError:
+            #variable is empty instead of being an empty list
+            self.players=[]
 
     def build(self):
         self.connection = pymysql.connect(host='fartcannon.com', user=db_secrets[0], password=db_secrets[1],
@@ -112,16 +120,22 @@ class Vacuum:
             pass
 
     def playtime_player_checkplayers(self, players):
-        for e in self.players:
-            if e[0] in players:
-                pass
-                # person is still logged in. we do not need to do anything at this time.
-            else:
-                # log that they logged out
-                print("%s has logged out" % e[0])
-                self.playtime_player_record(e[0], self.playtime_player_deltaseconds(e[1]))
-                # remove player.
-                self.playtime_player_removeplayer(e)
+        try:
+            for e in self.players:
+                if e[0] in players:
+                    pass
+                    # person is still logged in. we do not need to do anything at this time.
+                else:
+                    # log that they logged out
+                    print("%s has logged out" % e[0])
+                    self.playtime_player_record(e[0], self.playtime_player_deltaseconds(e[1]))
+                    self.playtime_player_removeplayer(e)
+        except TypeError:
+            #something went wrong with variable initialization.
+            self.players=[]
+            self.playtime_player_checkplayers(players)
+
+
 
     def playtime_player_deltaseconds(self, startTime):
         d = startTime - datetime.datetime.utcnow()
@@ -143,9 +157,11 @@ class Vacuum:
 
     def playtime_player_addplayer(self, player):
         self.players.append([player, datetime.datetime.utcnow()])
+        self.playtime_serialize()
 
     def playtime_player_removeplayer(self, player):
         self.players.remove(player)
+        self.playtime_serialize()
 
     def playtime_player_active(self, player):
         try:
@@ -157,6 +173,22 @@ class Vacuum:
             # the self.players variable is empty.  This can happen when the bot first turns on or when a player joins
             # and no one else is logged in.
             return False
+
+    def playtime_serialize(self):
+        with open('players.txt', 'w') as f:
+            json.dump(self.players, f, ensure_ascii=False, default=str)
+
+
+    def playtime_load(self):
+        try:
+            with open('players.txt') as f:
+                self.players=json.load(f)
+        except FileNotFoundError:
+            #nothing special needs to happen here
+            pass
+        for i in self.players:
+            i[1]=parse(i[1])
+
 
     def lastseen(self, player):
         lastseen = self.do_query(
