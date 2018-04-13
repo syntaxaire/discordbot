@@ -15,6 +15,7 @@ vacuum.config(vacuum_update_json_url, master_config)
 
 async def do_send_message(channel, message, cooldown=None):
     # this shit sends the messages to the peeps
+    await asyncio.sleep(1)
     await client.send_typing(channel)
     if cooldown:
         await asyncio.sleep(cooldown)
