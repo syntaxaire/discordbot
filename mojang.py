@@ -1,4 +1,5 @@
-import urllib.request, json
+import json
+import urllib.request
 
 
 def mojang_status():
@@ -28,7 +29,6 @@ def mojang_status_requested():
             message.append("looks like %s could be having problems" % ",".join(status[1]))
     if not status[0] and not status[1]:
         message.append("praise notch, it works")
-    print(message)
     return message
 
 

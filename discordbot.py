@@ -7,12 +7,9 @@ from butt_library import *
 import random
 from buttbot import buttbot
 
-
 used = {}  # stores last used time of RIP/F
 shitpost = WordReplacer()
 shitpost.config(shitpost_call_freq)
-
-
 
 
 async def do_send_message(channel, message, cooldown=None):
@@ -26,27 +23,27 @@ async def do_send_message(channel, message, cooldown=None):
     await client.send_message(channel, message)  # dont remove await from here or this shit will break
 
 
-async def do_react(message,emoji,cooldown=None):
+async def do_react(message, emoji, cooldown=None):
     if cooldown:
         await asyncio.sleep(cooldown)
     else:
         await asyncio.sleep(randint(2, 5))
-    await client.add_reaction(message,emoji)
+    await client.add_reaction(message, emoji)
 
-#async def my_background_task():
+    # async def my_background_task():
     # print("LOGGER::Logger loaded.  Waiting until I connect to Discord")
     await client.wait_until_ready()
     # print("LOGGER::Connected to discord, start processing.")
     while not client.is_closed:
-        #vacuum.playtime_log()
-        await asyncio.sleep(10)          # task runs every 10 seconds
-        vacuum.playtime_scraper()
+        # vacuum.playtime_log()
+        await asyncio.sleep(10)  # task runs every 10 seconds
+        # vacuum.playtime_scraper()
         # print("LOGGER:I logged player location at this time.")
 
 
-
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
-progress_bot=buttbot(client)
+progress_bot = buttbot(client)
+
 
 @client.event
 async def on_ready():
@@ -65,18 +62,18 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
-    channels={"💩💩": progress_bot.dispatch}
+    channels = {"💩💩": progress_bot.dispatch}
     if "&" in message.content:
-        functiontocall=channels[message.server.name]
-        back=await functiontocall(message)
-
+        functiontocall = channels[message.server.name]
+        back = await functiontocall(message)
 
     # shitposting follows
 
     if is_word_in_text("rip", message.content) == True:
         if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
                 str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
-            vacuum.add_death_message(message.content)s
+            pass
+            # vacuum.add_death_message(message.content)s
         else:
             if 'rip' not in used or time.time() - used['rip'] > min_call_freq:
                 used['rip'] = time.time()
@@ -109,12 +106,12 @@ async def on_message(message):
             await do_send_message(message.channel, replies[randint(1, len(replies))], randint(2, 5))
 
     elif is_word_in_text('butt', message.content) == True:
-        if randint(1,6) == 3:
+        if randint(1, 6) == 3:
             rshitpost = shitpost.rspeval(message.content)
             if rshitpost:
                 await do_send_message(message.channel, rshitpost)
-        elif randint(1,3) == 3:
-            await do_react(message,random.choice(["👌","👍"]))
+        elif randint(1, 3) == 3:
+            await do_react(message, random.choice(["👌", "👍"]))
 
     else:
         # here's where im going to evaluate all other sentences for shitposting
@@ -135,5 +132,5 @@ async def on_message(message):
             pass
 
 
-#client.loop.create_task(my_background_task())
+# client.loop.create_task(my_background_task())
 client.run(secretkey)
