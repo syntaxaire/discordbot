@@ -23,7 +23,7 @@ class db:
                 cursor.close()
         finally:
             pass
-        return (result)
+        return result
 
     def do_insert(self, query, args):
         self.build()
