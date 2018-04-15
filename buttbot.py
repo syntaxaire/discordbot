@@ -1,5 +1,5 @@
 import discord_comms
-import mojang
+import mojang as mj
 from vacuum import Vacuum
 from wordreplacer import WordReplacer
 from butt_database import db
@@ -13,51 +13,18 @@ class buttbot:
         self.discordBot = BotObject
         self.used={}
         self.shitpost=WordReplacer()
+        self.mojang=mj.mojang()
+        self.allcommands={}
 
-
-    def lastseen(self, player):
-        try:
-            if player:
-                returnz = self.vacuum.lastseen(player)
-                if returnz:
-                    return returnz
-        except IndexError:
-            return ("who am i looking for?")
-
-    def mojang(self):
-        msg = mojang.mojang_status_requested()
-        for t in msg:
-            return t
-
-    def playtime(self,player):
-        try:
-            if player:
-                returnz = self.vacuum.playtime_insult(player)
-                if returnz:
-                    return returnz
-        except IndexError:
-                return self.vacuum.playtime_global()
-
-    def howchies(self,message):
-            if message:
-                return("People who died to " + message + ": " + self.vacuum.howchies_profile(message))
-            else:
-                return('Heres whats killing you: ' + self.vacuum.top_10_death_reasons())
-
-
-    def nltk(self,message):
-        if str(message.author) in self.config.channel_admins:
+    def do_nltk(self,message):
+        if str(message.author) in self.channel_admins:
             return(self.shitpost.wordtagger(message.content))
 
-
+    def do_howchies(self):
+        print("fuck")
 
     async def dispatch(self, message):
-        tokenDict = {"mojang": self.mojang,
-                     "lastseen": self.lastseen,
-                     "playtime": self.playtime,
-                     "howchies": self.howchies,
-                     "nltk": self.nltk
-                     }
+
         try:
             command = message.content.split("&", 1)[1]
         except IndexError:
@@ -65,8 +32,15 @@ class buttbot:
             command = ''
         if command:
             command, se, arguments = command.partition(' ')
-            func = tokenDict[command]
-            back = func(arguments)
+
+            if command in self.vacuum.return_commands():
+                module=self.vacuum
+            try:
+                func=getattr(module, 'do_' + command)
+            except AttributeError:
+                #TODO: probably should build a default return all the command thing here.
+                pass
+            back=func(arguments)
             if back:
                 await self.doComms(back, message.channel)
 
