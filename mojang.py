@@ -4,7 +4,7 @@ import urllib.request
 
 class mojang:
 
-    def __init(self):
+    def __init__(self):
         self.command=['mojang',]
 
     def do_mojang(self):
