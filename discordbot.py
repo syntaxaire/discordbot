@@ -1,16 +1,9 @@
 import asyncio
+
 from discord.ext.commands import Bot
-from config import *  # dont post this to github you moron
-from wordreplacer import *
-from vacuum import *
-from butt_library import *
-import random
+
 from buttbot import buttbot
-
-used = {}  # stores last used time of RIP/F
-shitpost = WordReplacer()
-shitpost.config(shitpost_call_freq)
-
+from vacuum import *
 
 
 async def my_background_task():
@@ -45,74 +38,34 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
-    channels = {"💩💩": progress_bot.dispatch}
-    if "&" in message.content:
-        functiontocall = channels[message.server.name]
-        back = await functiontocall(message)
+    command_channels = \
+        {
+            "💩💩": progress_bot.command_dispatch,
+            "Shithole": progress_bot.command_dispatch
+        }
+    try:
+        if str(message.content)[:1] == "&" or str(message.content).partition(" ")[2][0] == "&":
+            # command sent from inside of mc server
+            send_to_butt_instance = command_channels[message.server.name]
+            await send_to_butt_instance(message)
+            return  # dont pass to chat dispatcher
+    except IndexError:
+        # command sent from normal discord client
+        if str(message.content)[:1] == "&":
+            send_to_butt_instance = command_channels[message.server.name]
+            await send_to_butt_instance(message)
+            return  # dont pass to chat dispatcher
 
     # shitposting follows
 
-    if is_word_in_text("rip", message.content) == True:
-        if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
-                str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
-            pass
-            # vacuum.add_death_message(message.content)s
-        else:
-            if 'rip' not in used or time.time() - used['rip'] > min_call_freq:
-                used['rip'] = time.time()
-                if randint(1, 20) == 5:
-                    await do_send_message(message.channel, 'Ya, butts', randint(2, 5))
-                else:
-                    await do_send_message(message.channel, 'Ya, RIP', randint(2, 5))
+    chat_dispatcher_channels = \
+        {
+            "💩💩": progress_bot.chat_dispatch,
+            "Shithole": progress_bot.chat_dispatch
+        }
 
-    elif is_word_in_text("F", message.content) == True:
-        if 'f' not in used or time.time() - used['f'] > min_call_freq:
-            used['f'] = time.time()
-            await do_send_message(message.channel, 'Ya, F', randint(2, 5))
-        else:
-            if randint(1, 100) == 44:
-                await do_send_message(message.channel, 'suck my dick F under cooldown')
-
-    elif is_word_in_text("thanks buttbot", message.content) is True or is_word_in_text("thanks\\, buttbot",
-                                                                                       message.content) is True:
-        if 'reply' not in used or time.time() - used['reply'] > min_call_freq:
-            used['reply'] = time.time()
-            replies = ['fuck off', 'youre welcome', 'your butt', 'i wish didnt have to look at you are posts',
-                       'ur whale cum']
-            await do_send_message(message.channel, replies[randint(1, len(replies))], randint(2, 5))
-    elif is_word_in_text("thanks for trying buttbot", message.content) is True or is_word_in_text(
-            "thanks for trying\\, buttbot", message.content) is True:
-        if 'reply' not in used or time.time() - used['reply'] > min_call_freq:
-            used['reply'] = time.time()
-            replies = ['fuck off', 'youre welcome', 'your butt', 'i wish didnt have to look at you are posts',
-                       'ur whale cum']
-            await do_send_message(message.channel, replies[randint(1, len(replies))], randint(2, 5))
-
-    elif is_word_in_text('butt', message.content) == True:
-        if randint(1, 6) == 3:
-            rshitpost = shitpost.rspeval(message.content)
-            if rshitpost:
-                await do_send_message(message.channel, rshitpost)
-        elif randint(1, 3) == 3:
-            await do_react(message, random.choice(["👌", "👍"]))
-
-    else:
-        # here's where im going to evaluate all other sentences for shitposting
-        # rshitpost=shitpost.eval(message.content)
-        # NLTK test
-        if str(message.author) == "Progress#6064" and (
-                is_word_in_text("left the game", message.content) or is_word_in_text("joined the game",
-                                                                                     message.content)):
-            # this is a join or part message and we are going to ignore it
-            pass
-        else:
-            rshitpost = shitpost.eval_sentence_nltk(message.content, str(message.author))
-            pass
-        try:
-            if rshitpost:
-                await do_send_message(message.channel, rshitpost)
-        except UnboundLocalError:
-            pass
+    send_to_butt_instance = command_channels[message.server.name]
+    await send_to_butt_instance(message)
 
 
 # client.loop.create_task(my_background_task())
