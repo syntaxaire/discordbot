@@ -12,25 +12,8 @@ shitpost = WordReplacer()
 shitpost.config(shitpost_call_freq)
 
 
-async def do_send_message(channel, message, cooldown=None):
-    # this shit sends the messages to the peeps
-    await asyncio.sleep(1)
-    await client.send_typing(channel)
-    if cooldown:
-        await asyncio.sleep(cooldown)
-    else:
-        await asyncio.sleep(randint(2, 5))
-    await client.send_message(channel, message)  # dont remove await from here or this shit will break
 
-
-async def do_react(message, emoji, cooldown=None):
-    if cooldown:
-        await asyncio.sleep(cooldown)
-    else:
-        await asyncio.sleep(randint(2, 5))
-    await client.add_reaction(message, emoji)
-
-    # async def my_background_task():
+async def my_background_task():
     # print("LOGGER::Logger loaded.  Waiting until I connect to Discord")
     await client.wait_until_ready()
     # print("LOGGER::Connected to discord, start processing.")
