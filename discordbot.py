@@ -19,6 +19,7 @@ async def my_background_task():
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 progress_bot = buttbot(client,'progress_config.ini')
+testes_bot=buttbot(client,'testes_config.ini')
 
 
 @client.event
@@ -40,7 +41,7 @@ async def on_message(message):
         return
     command_channels = \
         {
-            "💩💩": progress_bot.command_dispatch,
+            "💩💩": testes_bot.command_dispatch,
             "Shithole": progress_bot.command_dispatch
         }
     try:
@@ -59,7 +60,7 @@ async def on_message(message):
     # shitposting follows
     chat_dispatcher_channels = \
         {
-            "💩💩": progress_bot.chat_dispatch,
+            "💩💩": testes_bot.chat_dispatch,
             "Shithole": progress_bot.chat_dispatch
         }
 

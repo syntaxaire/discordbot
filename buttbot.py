@@ -23,9 +23,11 @@ class buttbot:
         self.shitpost = WordReplacer(self.min_call_freq)
         self.mojang = mj.mojang()
 
-    def do_nltk(self, message):
-        if str(message.author) in self.channel_admins:
-            return (self.shitpost.wordtagger(message.content))
+    async def do_leave(self, message):
+        if str(message.author) in self.config.get('discordbot','bot_admin'):
+            await self.discordBot.leave_server(message.server)
+        else:
+            await self.doComms('fuck you youre not my real dad', message.channel)
 
     async def command_dispatch(self, message):
         try:
@@ -35,7 +37,7 @@ class buttbot:
             command = ''
         if command:
             command, se, arguments = command.partition(' ')
-
+            module=self
             # pick which module has the command, and set the module to the object
             if command in self.vacuum.return_commands() and bool(self.config.get('vacuum', 'enabled')) is True:
                 # vacuum  must be turned on for this to work.
@@ -48,7 +50,6 @@ class buttbot:
             if command in self.mojang.return_commands() and bool(self.config.get('vacuum', 'enabled')) is True:
                 # we are using the vacuum config because both of these are for minecraft.
                 module = self.mojang
-
             try:
                 if module:
                     func = getattr(module, 'do_' + command)
@@ -59,13 +60,16 @@ class buttbot:
             except UnboundLocalError:
                 # the module was specifically disabled in the configuration
                 pass
-
-            back = func(arguments)
+            if module is self:
+                back=await func(message)
+            else:
+                back = func(arguments)
             if back:
                 await self.doComms(back, message.channel)
 
     async def doComms(self, message, channel):
-        await self.comm.do_send_message(channel, self.discordBot, message)
+        if bool(self.config.get('allowed_channels', str(channel))) is True:
+            await self.comm.do_send_message(channel, self.discordBot, message)
 
     async def chat_dispatch(self, message):
         if is_word_in_text("rip", message.content) == True:
