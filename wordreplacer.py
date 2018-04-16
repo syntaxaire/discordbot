@@ -8,15 +8,13 @@ from butt_library import *
 
 class WordReplacer:
 
-    def __init__(self):
+    def __init__(self,timer):
         self.wlist = self.load()
+        self.timer=timer
         self.used = {}
         # NLTK test
         # self.nouns=set()
         # self.nouns = {x.name().split('.', 1)[0] for x in wn.all_synsets('n')}
-
-    def config(self, timer):
-        self.timer = timer
 
     def load(self):
         try:
@@ -32,19 +30,6 @@ class WordReplacer:
         with open('wordlist.txt', 'w') as f:
             json.dump(self.wlist, f, ensure_ascii=False)
 
-    def buttword(self, command, arg):
-        if command == 'add':
-            self.wlist.append(arg)
-            self.save()
-            return 'ok fine, ' + arg
-
-        if command == 'remove':
-            self.wlist.remove(arg)
-            self.save()
-            return 'ok fuck ' + arg
-
-        if command == 'list':
-            return ", ".join(sorted(self.wlist, key=lambda s: s.lower()))
 
     def eval(self, message):
         if randint(1, 5) == 3:
