@@ -1,31 +1,32 @@
-import pymysql.cursors
-from config import *
-import urllib.request, json, urllib.error, http.client
 import datetime
+import http.client
+import json
+import urllib.error
+import urllib.request
+
 from dateutil.parser import parse
 
 
 class Vacuum:
-    def __init__(self,db):
+    def __init__(self, db):
         self.players = []
         self.playtime_load()
-        self.db=db
-        self.command={'lastseen':'vacuum','playtime':'vacuum','howchies':'vacuum','ouchies':'vacuum'}
+        self.db = db
+        self.command = {'lastseen': 'vacuum', 'playtime': 'vacuum', 'howchies': 'vacuum', 'ouchies': 'vacuum'}
 
         try:
             if self.players:
                 pass
         except TypeError:
-            #variable is empty instead of being an empty list
-            self.players=[]
-
+            # variable is empty instead of being an empty list
+            self.players = []
 
     def return_commands(self):
         return self.command
 
-################################################################################
-#                               commands                                       #
-################################################################################
+    ################################################################################
+    #                               commands                                       #
+    ################################################################################
     def do_lastseen(self, player):
         try:
             if player:
@@ -35,21 +36,26 @@ class Vacuum:
         except IndexError:
             return ("who am i looking for?")
 
-
-    def do_playtime(self,player):
+    def do_playtime(self, player):
         try:
             if player:
                 returnz = self.playtime_insult(player)
                 if returnz:
                     return returnz
         except IndexError:
-                return self.playtime_global()
+            return self.playtime_global()
 
-    def do_howchies(self,message):
-            if message:
-                return("People who died to " + message + ": " + self.howchies_profile(message))
-            else:
-                return('Heres whats killing you: ' + self.top_10_death_reasons())
+    def do_howchies(self, message):
+        if message:
+            return ("People who died to " + message + ": " + self.howchies_profile(message))
+        else:
+            return ('Heres whats killing you: ' + self.top_10_death_reasons())
+
+    def do_ouchies(self, message):
+        if message:
+            return ("Deaths for %s: %s" % (message, self.ouchies_profile(message)))
+        else:
+            return ('Top 10 ouchies: %s' % self.top_10_deaths())
 
     ################################################################################
     #                               end commands                                   #
@@ -58,7 +64,6 @@ class Vacuum:
     def config(self, url, mode):
         self.updateurl = url
         self.master_config = mode
-
 
     def playtime_global(self):
         players = self.do_query(
@@ -142,11 +147,9 @@ class Vacuum:
                     self.playtime_player_record(e[0], self.playtime_player_deltaseconds(e[1]))
                     self.playtime_player_removeplayer(e)
         except TypeError:
-            #something went wrong with variable initialization.
-            self.players=[]
+            # something went wrong with variable initialization.
+            self.players = []
             self.playtime_player_checkplayers(players)
-
-
 
     def playtime_player_deltaseconds(self, startTime):
         d = startTime - datetime.datetime.utcnow()
@@ -189,17 +192,15 @@ class Vacuum:
         with open('players.txt', 'w') as f:
             json.dump(self.players, f, ensure_ascii=False, default=str)
 
-
     def playtime_load(self):
         try:
             with open('players.txt') as f:
-                self.players=json.load(f)
+                self.players = json.load(f)
         except FileNotFoundError:
-            #nothing special needs to happen here
+            # nothing special needs to happen here
             pass
         for i in self.players:
-            i[1]=parse(i[1])
-
+            i[1] = parse(i[1])
 
     def lastseen(self, player):
         lastseen = self.db.do_query(

@@ -1,17 +1,20 @@
 import json
 import time
 from random import *
+
 import nltk
 from nltk.stem import WordNetLemmatizer
+
 from butt_library import *
 
 
 class WordReplacer:
 
-    def __init__(self,timer):
+    def __init__(self, timer):
         self.wlist = self.load()
-        self.timer=timer
+        self.timer = timer
         self.used = {}
+        self.command = {"nltk": 'wordreplacer'}
         # NLTK test
         # self.nouns=set()
         # self.nouns = {x.name().split('.', 1)[0] for x in wn.all_synsets('n')}
@@ -23,13 +26,22 @@ class WordReplacer:
         except Exception:
             pass
 
-    def addword(self, word):
-        pass
+    def return_commands(self):
+        return self.command
+
+    ################################################################################
+    #                               commands                                       #
+    ################################################################################
+    def do_nltk(self, message):
+        return self.wordtagger(message)
+
+    ################################################################################
+    #                               end commands                                   #
+    ################################################################################
 
     def save(self):
         with open('wordlist.txt', 'w') as f:
             json.dump(self.wlist, f, ensure_ascii=False)
-
 
     def eval(self, message):
         if randint(1, 5) == 3:

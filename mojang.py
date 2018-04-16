@@ -5,14 +5,22 @@ import urllib.request
 class mojang:
 
     def __init__(self):
-        self.command={'mojang':'mojang'}
+        self.command = {'mojang': 'mojang'}
 
-    def do_mojang(self):
+    ################################################################################
+    #                               commands                                       #
+    ################################################################################
+
+    def do_mojang(self,message):
         msg = self.mojang_status_requested()
         for t in msg:
             return t
 
-    def commands(self):
+    ################################################################################
+    #                               end commands                                   #
+    ################################################################################
+
+    def return_commands(self):
         return self.command
 
     def mojang_status(self):
@@ -27,7 +35,6 @@ class mojang:
                     elif t == "red":
                         red.append(s)
         return [red, yellow]
-
 
     def mojang_status_requested(self):
         status = self.mojang_status()
@@ -44,19 +51,16 @@ class mojang:
             message.append("praise notch, it works")
         return message
 
-
     def mojang_status_loop(self):
-        #todo: probably should finish this
+        # todo: probably should finish this
         pass
 
-
-    def mojang_user_to_uuid(self,username):
+    def mojang_user_to_uuid(self, username):
         with urllib.request.urlopen("https://api.mojang.com/users/profiles/minecraft/%s" % username) as url:
             data = json.loads(url.read().decode())
         return data['id']
 
-
-    def mojang_get_user_avatar(self,username):
+    def mojang_get_user_avatar(self, username):
         with urllib.request.urlopen(
                 "https://sessionserver.mojang.com/session/minecraft/profile/%s" % mojang_user_to_uuid(username)) as url:
             data = json.loads(url.read().decode())
