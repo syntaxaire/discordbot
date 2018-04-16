@@ -1,7 +1,7 @@
 import asyncio
 
 from discord.ext.commands import Bot
-
+from config import *
 from buttbot import buttbot
 from vacuum import *
 
@@ -18,7 +18,7 @@ async def my_background_task():
 
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
-progress_bot = buttbot(client)
+progress_bot = buttbot(client,'progress_config.ini')
 
 
 @client.event
