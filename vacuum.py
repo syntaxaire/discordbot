@@ -13,6 +13,7 @@ class Vacuum:
         self.playtime_load()
         self.db = db
         self.command = {'lastseen': 'vacuum', 'playtime': 'vacuum', 'howchies': 'vacuum', 'ouchies': 'vacuum'}
+        self.updateurl=""
 
         try:
             if self.players:
@@ -23,6 +24,9 @@ class Vacuum:
 
     def return_commands(self):
         return self.command
+
+    def update_url(self,url):
+        self.updateurl=url
 
     ################################################################################
     #                               commands                                       #

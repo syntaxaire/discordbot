@@ -6,19 +6,9 @@ from buttbot import buttbot
 from vacuum import *
 
 
-async def my_background_task():
-    # print("LOGGER::Logger loaded.  Waiting until I connect to Discord")
-    await client.wait_until_ready()
-    # print("LOGGER::Connected to discord, start processing.")
-    while not client.is_closed:
-        # vacuum.playtime_log()
-        await asyncio.sleep(10)  # task runs every 10 seconds
-        # vacuum.playtime_scraper()
-        # print("LOGGER:I logged player location at this time.")
-
-
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 progress_bot = buttbot(client,'progress_config.ini')
+
 testes_bot=buttbot(client,'testes_config.ini')
 
 
@@ -68,5 +58,4 @@ async def on_message(message):
     await send_to_butt_instance(message)
 
 
-# client.loop.create_task(my_background_task())
 client.run(secretkey)
