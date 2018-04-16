@@ -57,14 +57,13 @@ async def on_message(message):
             return  # dont pass to chat dispatcher
 
     # shitposting follows
-
     chat_dispatcher_channels = \
         {
             "💩💩": progress_bot.chat_dispatch,
             "Shithole": progress_bot.chat_dispatch
         }
 
-    send_to_butt_instance = command_channels[message.server.name]
+    send_to_butt_instance = chat_dispatcher_channels[message.server.name]
     await send_to_butt_instance(message)
 
 
