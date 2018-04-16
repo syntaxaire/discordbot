@@ -170,8 +170,9 @@ class Vacuum:
 
     def playtime_player_record(self, player, deltatime):
         print("going to do query: user is %s and timedetla is %s" % (player, deltatime))
-        self.do_insert("INSERT into `progress_playertracker_v2` (`player`,`timedelta`,`datetime`) values (%s,%s,%s)",
+        self.db.do_insert("INSERT into `progress_playertracker_v2` (`player`,`timedelta`,`datetime`) values (%s,%s,%s)",
                        (player, deltatime, datetime.datetime.utcnow()))
+        self.db.close()
 
     def playtime_player_addplayer(self, player):
         self.players.append([player, datetime.datetime.utcnow()])

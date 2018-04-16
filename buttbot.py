@@ -1,6 +1,7 @@
 import configparser
 import random
 import time
+import asyncio
 
 import discord_comms
 import mojang as mj
@@ -22,6 +23,18 @@ class buttbot:
         self.used = {}
         self.shitpost = WordReplacer(self.min_call_freq)
         self.mojang = mj.mojang()
+
+        if self.config.getboolean('vacuum', 'enabled') is True:
+            self.vacuum.update_url(self.config.get('vacuum', 'vacuum_update_json_url'))
+            self.discordBot.loop.create_task(self.my_background_task())
+
+    async def my_background_task(self):
+        await self.discordBot.wait_until_ready()
+        while not self.discordBot.is_closed:
+            pass
+            await asyncio.sleep(10)  # task runs every 10 seconds
+            print("i logged player status at this time")
+            self.vacuum.playtime_scraper()
 
     async def do_leave(self, message):
         if str(message.author) in self.config.get('discordbot','bot_admin'):
