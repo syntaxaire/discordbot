@@ -6,9 +6,12 @@ from dateutil.parser import parse
 
 
 class Vacuum:
-    def __init__(self):
+    def __init__(self,db):
         self.players = []
         self.playtime_load()
+        self.db=db
+        self.command={'lastseen':'vacuum','playtime':'vacuum','howchies':'vacuum','ouchies':'vacuum'}
+
         try:
             if self.players:
                 pass
@@ -16,28 +19,46 @@ class Vacuum:
             #variable is empty instead of being an empty list
             self.players=[]
 
-    def build(self):
-        self.connection = pymysql.connect(host='fartcannon.com', user=db_secrets[0], password=db_secrets[1],
-                                          db=db_secrets[2], charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
+
+    def return_commands(self):
+        return self.command
+
+################################################################################
+#                               commands                                       #
+################################################################################
+    def do_lastseen(self, player):
+        try:
+            if player:
+                returnz = self.lastseen(player)
+                if returnz:
+                    return returnz
+        except IndexError:
+            return ("who am i looking for?")
+
+
+    def do_playtime(self,player):
+        try:
+            if player:
+                returnz = self.playtime_insult(player)
+                if returnz:
+                    return returnz
+        except IndexError:
+                return self.playtime_global()
+
+    def do_howchies(self,message):
+            if message:
+                return("People who died to " + message + ": " + self.howchies_profile(message))
+            else:
+                return('Heres whats killing you: ' + self.top_10_death_reasons())
+
+    ################################################################################
+    #                               end commands                                   #
+    ################################################################################
 
     def config(self, url, mode):
         self.updateurl = url
         self.master_config = mode
 
-    def do_query(self, query, args=''):
-        self.build()
-        try:
-            with self.connection.cursor() as cursor:
-                # Read a single record
-                if args:
-                    cursor.execute(query, args)
-                else:
-                    cursor.execute(query)
-                result = cursor.fetchall()
-                cursor.close()
-        finally:
-            self.connection.close()
-        return (result)
 
     def playtime_global(self):
         players = self.do_query(
@@ -76,16 +97,6 @@ class Vacuum:
             return "Estimated playtime for %s: %d hours %d minutes in %s sessions%s" % (player, h, m, sessions, insult)
         else:
             return "bitch dont play"
-
-    def do_insert(self, query, args):
-        self.build()
-        try:
-            with self.connection.cursor() as cursor:
-                cursor.execute(query, args)
-                self.connection.commit()
-                cursor.close()
-        finally:
-            self.connection.close()
 
     def playtime_scraper(self):
         try:
@@ -191,8 +202,9 @@ class Vacuum:
 
 
     def lastseen(self, player):
-        lastseen = self.do_query(
+        lastseen = self.db.do_query(
             "select datetime from progress_playertracker_v2 where player=%s order by datetime desc limit 1", player)
+        self.db.close()
         try:
             lastseen = lastseen[0]['datetime']
             now = datetime.datetime.utcnow()
@@ -235,47 +247,52 @@ class Vacuum:
                 dmsg = dmsg + " " + i
         dmsg = dmsg.strip()
         try:
-            self.do_insert(
+            self.db.do_insert(
                 "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`) VALUES(%s, %s, %s, %s, %s, %s, %s);",
                 (m[1], dmsg, coords['world'], coords['x'], coords['y'], coords['z'], datetime.datetime.utcnow()))
         except TypeError:
             # catch this error, something that i dont believe should be possible with how this is set up but?????
-            self.do_insert(
+            self.db.do_insert(
                 "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`) VALUES(%s, %s, %s, %s, %s, %s, %s);",
                 (m[1], dmsg, "Exception Handling", 0, 0, 0, datetime.datetime.utcnow()))
+        self.db.close()
 
     def top_10_deaths(self):
 
-        result = self.do_query(
+        result = self.db.do_query(
             "SELECT player, count(*) as `count` FROM `progress_deaths` GROUP BY player ORDER BY count DESC LIMIT 10",
             '')
+        self.db.close()
         if result:
             return self.sort(result, 'player', 'count')
         else:
             pass
 
     def howchies_profile(self, message):
-        result = self.do_query(
+        result = self.db.do_query(
             "SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (%s) GROUP BY player ORDER by count DESC",
             message)
+        self.db.close()
         if result:
             return self.sort(result, 'player', 'count')
         else:
             return 'No deaths recorded'
 
     def ouchies_profile(self, player):
-        result = self.do_query(
+        result = self.db.do_query(
             "SELECT message,count(*) as `count` FROM `progress_deaths` WHERE player=%s GROUP BY message ORDER BY count DESC",
             player)
+        self.db.close()
         if result:
             return self.sort(result, 'message', 'count')
         else:
             return 'No deaths recorded'
 
     def top_10_death_reasons(self):
-        result = self.do_query(
+        result = self.db.do_query(
             "SELECT message, count(*) as `count` FROM `progress_deaths` GROUP BY message ORDER BY count DESC LIMIT 10",
             '')
+        self.db.close()
         if result:
             return self.sort(result, 'message', 'count')
         else:
