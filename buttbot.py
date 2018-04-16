@@ -39,15 +39,15 @@ class buttbot:
             command, se, arguments = command.partition(' ')
             module=self
             # pick which module has the command, and set the module to the object
-            if command in self.vacuum.return_commands() and bool(self.config.get('vacuum', 'enabled')) is True:
+            if command in self.vacuum.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
                 # vacuum  must be turned on for this to work.
                 module = self.vacuum
 
-            if command in self.shitpost.return_commands() and bool(self.config.get('wordreplacer', 'enabled')) is True:
+            if command in self.shitpost.return_commands() and self.config.getboolean('wordreplacer', 'enabled') is True:
                 # wordreplacer  must be turned on for this to work.
                 module = self.shitpost
 
-            if command in self.mojang.return_commands() and bool(self.config.get('vacuum', 'enabled')) is True:
+            if command in self.mojang.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
                 # we are using the vacuum config because both of these are for minecraft.
                 module = self.mojang
             try:
@@ -55,21 +55,29 @@ class buttbot:
                     func = getattr(module, 'do_' + command)
             except AttributeError:
                 # TODO: probably should build a default return all the command thing here.
-                print("tried to run %s %s" % (module, command))
                 pass
             except UnboundLocalError:
                 # the module was specifically disabled in the configuration
                 pass
-            if module is self:
-                back=await func(message)
-            else:
-                back = func(arguments)
-            if back:
-                await self.doComms(back, message.channel)
+            try:
+                if module is self:
+                    back=await func(message)
+                else:
+                    back = func(arguments)
+                if back:
+                    await self.doComms(back, message.channel)
+            except UnboundLocalError:
+                #command not found, skip for now
+                #todo: maybe default return option here too?
+                pass
 
     async def doComms(self, message, channel):
-        if bool(self.config.get('allowed_channels', str(channel))) is True:
-            await self.comm.do_send_message(channel, self.discordBot, message)
+        try:
+            if bool(self.config.get('allowed_channels', str(channel))) is True:
+                await self.comm.do_send_message(channel, self.discordBot, message)
+        except configparser.NoOptionError:
+            #channel not in config, skip.
+            pass
 
     async def chat_dispatch(self, message):
         if is_word_in_text("rip", message.content) == True:
