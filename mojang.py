@@ -5,7 +5,7 @@ import urllib.request
 class mojang:
 
     def __init__(self):
-        self.command=['mojang',]
+        self.command={'mojang':'mojang'}
 
     def do_mojang(self):
         msg = self.mojang_status_requested()
@@ -13,7 +13,7 @@ class mojang:
             return t
 
     def commands(self):
-        return self.command()
+        return self.command
 
     def mojang_status(self):
         with urllib.request.urlopen("https://status.mojang.com/check") as url:
