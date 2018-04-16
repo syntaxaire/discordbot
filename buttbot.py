@@ -1,3 +1,4 @@
+import configparser
 import random
 import time
 
@@ -10,7 +11,9 @@ from wordreplacer import WordReplacer
 
 
 class buttbot:
-    def __init__(self, BotObject):
+    def __init__(self, BotObject, conf):
+        self.config = configparser.ConfigParser()
+        self.config.read_file(open(conf))
         self.min_call_freq = 1
         self.db = db()
         self.vacuum = Vacuum(self.db)
@@ -19,10 +22,6 @@ class buttbot:
         self.used = {}
         self.shitpost = WordReplacer(self.min_call_freq)
         self.mojang = mj.mojang()
-        self.allcommands = {}
-
-
-    #        self.config=configparser.
 
     def do_nltk(self, message):
         if str(message.author) in self.channel_admins:
@@ -38,13 +37,29 @@ class buttbot:
             command, se, arguments = command.partition(' ')
 
             # pick which module has the command, and set the module to the object
-            if command in self.vacuum.return_commands():
+            if command in self.vacuum.return_commands() and bool(self.config.get('vacuum', 'enabled')) is True:
+                # vacuum  must be turned on for this to work.
                 module = self.vacuum
+
+            if command in self.shitpost.return_commands() and bool(self.config.get('wordreplacer', 'enabled')) is True:
+                # wordreplacer  must be turned on for this to work.
+                module = self.shitpost
+
+            if command in self.mojang.return_commands() and bool(self.config.get('vacuum', 'enabled')) is True:
+                # we are using the vacuum config because both of these are for minecraft.
+                module = self.mojang
+
             try:
-                func = getattr(module, 'do_' + command)
+                if module:
+                    func = getattr(module, 'do_' + command)
             except AttributeError:
                 # TODO: probably should build a default return all the command thing here.
+                print("tried to run %s %s" % (module, command))
                 pass
+            except UnboundLocalError:
+                # the module was specifically disabled in the configuration
+                pass
+
             back = func(arguments)
             if back:
                 await self.doComms(back, message.channel)
