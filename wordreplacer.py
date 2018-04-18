@@ -1,11 +1,20 @@
 import json
 import time
 from random import *
+import os
+import config
 
 import nltk
 from nltk.stem import WordNetLemmatizer
 
 from butt_library import *
+
+#########################################
+#   environ vars for stanford coreNLP   #
+#########################################
+os.environ['STANFORD_PARSER'] = '/path/to/standford/jars'
+os.environ['STANFORD_MODELS'] = '/path/to/standford/jars'
+#########################################
 
 
 class WordReplacer:
@@ -51,7 +60,7 @@ class WordReplacer:
                     if is_word_in_text(s, message) or is_word_in_text(s + 's', message):
                         # found it
                         # people want this to spew garbage so give the garbage to the people
-                        if ('shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer):
+                        if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
                             self.used['shitpost'] = time.time()
                             for t in self.wlist:  # replace everything aaaaaaa
                                 message = message.replace(t, 'butt')
@@ -61,7 +70,7 @@ class WordReplacer:
 
     def rspeval(self, message):
         message = message.lower()
-        if ('reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer):
+        if 'reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer:
             self.used['reverseshitpost'] = time.time()
             for t in self.wlist:  # replace everything aaaaaaa
                 message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
@@ -87,7 +96,7 @@ class WordReplacer:
                     nouns.append(w[0])
         return nouns
 
-    def eval_sentence_nltk(self, message, author):
+    def toButtOrNotToButt(self, message, author):
         # code block detection.  We are going to skip processing the entire message.
         if detect_code_block(message) is not True:
             unedited_message = message
@@ -98,7 +107,7 @@ class WordReplacer:
             else:
                 nouns = self.wordclassifier(strip_IRI(message), author)
             # list comprehension to remove words that shouldn't be included in the list
-            badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah']
+            badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah','tho']
 
             nouns = [var for var in nouns if var not in badwords]
             if len(nouns) > 1:
@@ -109,6 +118,14 @@ class WordReplacer:
                         buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
                         if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
                             # the lemmatizer thinks that this is a plural
-                            return unedited_message.replace(nouns[buttword], 'butts')
+                            return unedited_message.replace(nouns[buttword], self.buttInProperCase(nouns[buttword],'butts'))
                         else:
-                            return unedited_message.replace(nouns[buttword], 'butt')
+                            return unedited_message.replace(nouns[buttword], self.buttInProperCase(nouns[buttword],'butt'))
+
+    def buttInProperCase(self,wordToButt,buttToReplace):
+        if wordToButt.istitle():
+            return buttToReplace.title()
+        elif wordToButt.isupper():
+            return buttToReplace.upper()
+        else:
+            return buttToReplace

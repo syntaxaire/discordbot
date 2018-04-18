@@ -129,7 +129,7 @@ class buttbot:
                 # this is a join or part message and we are going to ignore it
                 pass
             else:
-                rshitpost = self.shitpost.eval_sentence_nltk(message.content, str(message.author))
+                rshitpost = self.shitpost.toButtOrNotToButt(message.content, str(message.author))
                 pass
             try:
                 if rshitpost:
