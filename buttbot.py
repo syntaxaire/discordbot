@@ -33,7 +33,6 @@ class buttbot:
         while not self.discordBot.is_closed:
             pass
             await asyncio.sleep(10)  # task runs every 10 seconds
-            print("i logged player status at this time")
             self.vacuum.playtime_scraper()
 
     async def do_leave(self, message):
@@ -115,7 +114,6 @@ class buttbot:
 
 
         elif is_word_in_text('butt', message.content) == True:
-            print("made it to butt: %s" % message.content)
             if random.randint(1, 6) == 3:
                 rshitpost = self.shitpost.rspeval(message.content)
                 if rshitpost:

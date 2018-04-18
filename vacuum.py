@@ -147,7 +147,6 @@ class Vacuum:
                     # person is still logged in. we do not need to do anything at this time.
                 else:
                     # log that they logged out
-                    print("%s has logged out" % e[0])
                     self.playtime_player_record(e[0], self.playtime_player_deltaseconds(e[1]))
                     self.playtime_player_removeplayer(e)
         except TypeError:
