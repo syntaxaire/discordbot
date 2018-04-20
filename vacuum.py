@@ -70,8 +70,9 @@ class Vacuum:
         self.master_config = mode
 
     def playtime_global(self):
-        players = self.do_query(
+        players = self.db.do_query(
             "select abs(sum(timedelta)) as seconds, count(timedelta) as sessions, player from progress_playertracker_v2 group by player")
+        self.db.close()
         total_seconds = 0
         total_sessions = 0
         for p in players:
@@ -83,9 +84,10 @@ class Vacuum:
             days, hours, total_sessions))
 
     def playtime_single(self, player):
-        time = self.do_query(
+        time = self.db.do_query(
             "select sum(timedelta) as seconds, count(timedelta) as sessions from progress_playertracker_v2 where player=%s",
             player)
+        self.db.close()
         return [time[0]['seconds'], time[0]['sessions']]
 
     def playtime_insult(self, player):
