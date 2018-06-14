@@ -15,24 +15,22 @@ class buttbot:
     def __init__(self, BotObject, conf):
         self.config = configparser.ConfigParser()
         self.config.read_file(open(conf))
-        self.min_call_freq = 1
         self.db = db()
         self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.discord_comms()
         self.discordBot = BotObject
         self.used = {}
-        self.shitpost = WordReplacer(self.min_call_freq)
+        self.shitpost = WordReplacer(int(self.config.get('discordbot','shitpost_call_freq')))
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
             self.vacuum.update_url(self.config.get('vacuum', 'vacuum_update_json_url'))
-            self.discordBot.loop.create_task(self.my_background_task())
+            #self.discordBot.loop.create_task(self.my_background_task()) TODO: unfuck it
 
     async def my_background_task(self):
         await self.discordBot.wait_until_ready()
         while not self.discordBot.is_closed:
-            pass
-            await asyncio.sleep(10)  # task runs every 10 seconds
+            await asyncio.sleep(10)
             self.vacuum.playtime_scraper()
 
     async def do_leave(self, message):
@@ -50,13 +48,13 @@ class buttbot:
         if command:
             command, se, arguments = command.partition(' ')
             module=self
-            # pick which module has the command, and set the module to the object
+            # pick which module has the command, and set the module var to the module object
             if command in self.vacuum.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
-                # vacuum  must be turned on for this to work.
+                # vacuum must be turned on for this to work.
                 module = self.vacuum
 
             if command in self.shitpost.return_commands() and self.config.getboolean('wordreplacer', 'enabled') is True:
-                # wordreplacer  must be turned on for this to work.
+                # wordreplacer must be turned on for this to work.
                 module = self.shitpost
 
             if command in self.mojang.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
@@ -73,13 +71,14 @@ class buttbot:
                 pass
             try:
                 if module is self:
-                    back=await func(message)
+                    #no module was found for the command.  We are going to try to run it in the base buttbot object
+                    back = await func(message)
                 else:
                     back = func(arguments)
                 if back:
                     await self.doComms(back, message.channel)
             except UnboundLocalError:
-                #command not found, skip for now
+                #command not found in any module, including the base buttbot object.  skip for now
                 #todo: maybe default return option here too?
                 pass
 
@@ -129,7 +128,7 @@ class buttbot:
                 # this is a join or part message and we are going to ignore it
                 pass
             else:
-                rshitpost = self.shitpost.toButtOrNotToButt(message.content, str(message.author))
+                rshitpost = self.shitpost.tobuttornottobutt(message.content, str(message.author))
                 pass
             try:
                 if rshitpost:

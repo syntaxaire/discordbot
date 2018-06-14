@@ -45,6 +45,9 @@ async def on_message(message):
             send_to_butt_instance = command_channels[message.server.name]
             await send_to_butt_instance(message)
             return  # dont pass to chat dispatcher
+    except KeyError:
+        #there isnt a command channel key for this channel.  Let's dump it through a general one.
+            await default_channel.command_dispatch(message)
 
     # shitposting follows
     chat_dispatcher_channels = \

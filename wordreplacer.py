@@ -3,6 +3,8 @@ import time
 from random import *
 
 import nltk
+import nltk.tag, nltk.data
+from nltk.corpus import brown
 from nltk.stem import WordNetLemmatizer
 
 from butt_library import *
@@ -67,6 +69,7 @@ class WordReplacer:
     def wordtagger(self, message):
         return nltk.pos_tag(nltk.word_tokenize(message))
 
+
     def wordclassifier(self, message, author):
         nouns = []
         # function to test if something is a noun
@@ -82,7 +85,7 @@ class WordReplacer:
                     nouns.append(w[0])
         return nouns
 
-    def toButtOrNotToButt(self, message, author):
+    def tobuttornottobutt(self, message, author):
         # code block detection.  We are going to skip processing the entire message.
         if detect_code_block(message) is not True:
             unedited_message = message
@@ -94,64 +97,62 @@ class WordReplacer:
                 print(":::new sentence: %s" % self.wordtagger(message))
                 nouns2 = self.wordclassifier(strip_IRI(message), author)
                 print("old tag: %s" % nouns2)
-                nouns = self.findNounsBySecondaryTag(self.wordtagger(strip_IRI(message)))
+                nouns = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
+                print("new tag: %s" % nouns)
             # list comprehension to remove words that shouldn't be included in the list
             badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho']
-
             nouns = [var for var in nouns if var not in badwords]
+            return
+            if len(nouns) > 0:
+                if randint(3, 3) == 3:  # TODO: fix for prod
+                    if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
+                        self.used['shitpost'] = time.time()
+                        lemmatizer = WordNetLemmatizer()
+                        buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
+                        if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
+                            # the lemmatizer thinks that this is a plural
+                            return unedited_message.replace(nouns[buttword],
+                                                            self.buttinpropercase(nouns[buttword], 'butts'))
+                        else:
+                            return unedited_message.replace(nouns[buttword],
+                                                            self.buttinpropercase(nouns[buttword], 'butt'))
 
-            if randint(3, 3) == 3: #TODO: fix for prod
-                if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
-                    self.used['shitpost'] = time.time()
-                    lemmatizer = WordNetLemmatizer()
-                    buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
-                    if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
-                        # the lemmatizer thinks that this is a plural
-                        return unedited_message.replace(nouns[buttword],
-                                                        self.buttInProperCase(nouns[buttword], 'butts'))
-                    else:
-                        return unedited_message.replace(nouns[buttword],
-                                                        self.buttInProperCase(nouns[buttword], 'butt'))
-
-    def buttInProperCase(self, wordToButt, buttToReplace):
-        if wordToButt.istitle():
-            return buttToReplace.title()
-        elif wordToButt.isupper():
-            return buttToReplace.upper()
+    def buttinpropercase(self, wordtobutt, buttoreplace):
+        if wordtobutt.istitle():
+            return buttoreplace.title()
+        elif wordtobutt.isupper():
+            return buttoreplace.upper()
         else:
-            return buttToReplace
+            return buttoreplace
 
-    def findNounsBySecondaryTag(self, taggedSentence):
-        # we are going to look for a few speech patterns:
-        # (the) noun
-        index = 0
-        nounList = []
-        for a in taggedSentence:
-            try:
-                nextWord = taggedSentence[index + 1]
-            except IndexError:
-                # nextword is empty, dont give a crap about this
-                nextWord = None
-            wordTagsToCheckPrioritize = ['PRP','PRP$']
-            wordTagsToCheckForNoun = ['DT', 'JJ', 'JJS', 'JJR', 'CD']
-            wordsThatMayBeMispelled = ['teh']
-            tagsToAcceptAsNouns = ['NN', 'NNS']
-            if a[1] in wordTagsToCheckForNoun or a[0] in wordsThatMayBeMispelled:
-                # we want to check adjectives and determiners
-                try:
-                    if nextWord[1] in tagsToAcceptAsNouns:
-                        # word has a noun tag
-                        nounList.append(nextWord[0])
-                except TypeError:
-                    # tag is empty for this word
-                    pass
+    def _findnounsbyprevioustag(self, taggedsentence, prioritized):
+        # we construct a list of nouns if the previously tagged word has a certain tag.
+        # we prioritize possessive pronouns (his, her, my, etc)
+        nouns = []
+        wordtagstocheckprioritized = ['PRP$']
+        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'CD']
+        tagstoacceptasnouns = ['NN', 'NNS']
+        if prioritized == True:
+            tagstocheck = wordtagstocheckprioritized
+        else:
+            tagstocheck = wordtagstochecknotprioritized
 
-            index += 1
-        print("new tag: %s" % nounList)
-        return nounList
+        for i in range(len(taggedsentence) - 1):  # *jiggling intensifies*
+            if taggedsentence[i][1] in tagstocheck:
+                if taggedsentence[i + 1][1] in tagstoacceptasnouns:
+                    nouns.append(taggedsentence[i + 1][0])
 
-    def buttWord(self,word):
-        pass
+        return nouns
 
-    def wordReplacer(self,word):
-        pass
+    def findnounsbyprevioustag(self, taggedsentence):
+        wordtagstocheckprioritized = ['PRP$']  # posessive personal pronoun
+
+        if any(t for t in taggedsentence if t[1] in wordtagstocheckprioritized):
+            nouns = self._findnounsbyprevioustag(taggedsentence, True)
+            if len(nouns) == 0:
+                # nothing returned from the prioritized check, run a non prioritized check
+                nouns = self._findnounsbyprevioustag(taggedsentence, False)
+        else:
+            nouns = self._findnounsbyprevioustag(taggedsentence, False)
+        return nouns
+
