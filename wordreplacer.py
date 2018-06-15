@@ -92,7 +92,7 @@ class WordReplacer:
             if author == "Progress#6064":
                 # this removes the character preamble for when Progress relays the chat message from in game.
                 # It is not sent to the word classifier to prevent a bunch of silly issues
-                nouns = self.findnounsbyprevioustag(strip_IRI(message.split(" ", 1)[1]), author)
+                nouns = self.findnounsbyprevioustag(strip_IRI(message.split(" ", 1)[1]))
             else:
                 nouns = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
 
