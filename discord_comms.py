@@ -1,6 +1,8 @@
 import asyncio
 import random as rand
 
+from discord.utils import get
+
 
 class discord_comms:
     def __init__(self):
@@ -21,4 +23,7 @@ class discord_comms:
             await asyncio.sleep(cooldown)
         else:
             await asyncio.sleep(rand.randint(2, 5))
+        if emoji[0] == ":":
+            # custom emoji for channel. we need to get it
+            emoji = get(client.get_all_emojis(), name=emoji[1:])
         await client.add_reaction(message, emoji)
