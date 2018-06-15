@@ -118,7 +118,7 @@ class buttbot:
                 if rshitpost:
                     await self.doComms(rshitpost, message.channel)
             elif random.randint(1, 3) == 3:
-                await self.comm.do_react(message, self.discordBot, random.choice(["👌", "👍"]))
+                await self.comm.do_react(message, self.discordBot, random.choice(self.config.get('discordbot','butt_response_emojis').split(",")))
 
         else:
             # here's where im going to evaluate all other sentences for shitposting
