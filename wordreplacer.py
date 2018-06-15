@@ -94,11 +94,7 @@ class WordReplacer:
                 # It is not sent to the word classifier to prevent a bunch of silly issues
                 nouns = self.wordclassifier(strip_IRI(message.split(" ", 1)[1]), author)
             else:
-                print(":::new sentence: %s" % self.wordtagger(message))
-                nouns2 = self.wordclassifier(strip_IRI(message), author)
-                print("old tag: %s" % nouns2)
-                nouns = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
-                print("new tag: %s" % nouns)
+
             # list comprehension to remove words that shouldn't be included in the list
             badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho']
             nouns = [var for var in nouns if var not in badwords]
