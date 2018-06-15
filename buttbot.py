@@ -34,10 +34,11 @@ class buttbot:
             self.vacuum.playtime_scraper()
 
     async def do_leave(self, message):
-        if str(message.author) in self.config.get('discordbot','bot_admin'):
+        if (str(message.author) in self.config.get('discordbot','bot_admin')) and str(self.discordBot.user) in str(message.content):
             await self.discordBot.leave_server(message.server)
         else:
             await self.doComms('fuck you youre not my real dad', message.channel)
+            print(self.discordBot.user)
 
     async def command_dispatch(self, message):
         try:
