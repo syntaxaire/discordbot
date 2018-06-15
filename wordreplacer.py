@@ -94,6 +94,7 @@ class WordReplacer:
                 # It is not sent to the word classifier to prevent a bunch of silly issues
                 nouns = self.wordclassifier(strip_IRI(message.split(" ", 1)[1]), author)
             else:
+                nouns = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
 
             # list comprehension to remove words that shouldn't be included in the list
             badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho']
