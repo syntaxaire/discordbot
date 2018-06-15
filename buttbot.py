@@ -17,10 +17,11 @@ class buttbot:
         self.config.read_file(open(conf))
         self.db = db()
         self.vacuum = Vacuum(self.db)
+        self.min_call_freq = int(self.config.get('discordbot', 'shitpost_call_freq'))
         self.comm = discord_comms.discord_comms()
         self.discordBot = BotObject
         self.used = {}
-        self.shitpost = WordReplacer(int(self.config.get('discordbot', 'shitpost_call_freq')))
+        self.shitpost = WordReplacer(self.min_call_freq)
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
