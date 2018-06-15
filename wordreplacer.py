@@ -91,15 +91,16 @@ class WordReplacer:
             if author == "Progress#6064":
                 # this removes the character preamble for when Progress relays the chat message from in game.
                 # It is not sent to the word classifier to prevent a bunch of silly issues
-                nouns = self.findnounsbyprevioustag(strip_IRI(message.split(" ", 1)[1]))
+                nouns, targeted = self.findnounsbyprevioustag(strip_IRI(message.split(" ", 1)[1]))
             else:
-                nouns = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
-
+                nouns, targeted = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
+            print("sentence: %s " % self.wordtagger(strip_IRI(message)))
+            print("nouns: %s" % nouns)
             # list comprehension to remove words that shouldn't be included in the list
             badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>']
             nouns = [var for var in nouns if var not in badwords]
 
-            if len(nouns) > 0:
+            if len(nouns) > 1:
                 if randint(1, 5) == 3:
                     if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
                         self.used['shitpost'] = time.time()
@@ -145,9 +146,12 @@ class WordReplacer:
 
         if any(t for t in taggedsentence if t[1] in wordtagstocheckprioritized):
             nouns = self._findnounsbyprevioustag(taggedsentence, True)
+            targeted = True
             if len(nouns) == 0:
                 # nothing returned from the prioritized check, run a non prioritized check
                 nouns = self._findnounsbyprevioustag(taggedsentence, False)
+                targeted = False
         else:
             nouns = self._findnounsbyprevioustag(taggedsentence, False)
-        return nouns
+            targeted = False
+        return nouns, targeted
