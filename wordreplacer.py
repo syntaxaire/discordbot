@@ -97,7 +97,7 @@ class WordReplacer:
             print("sentence: %s " % self.wordtagger(strip_IRI(message)))
             print("nouns: %s" % nouns)
             # list comprehension to remove words that shouldn't be included in the list
-            badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>']
+            badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>', '@']
             nouns = [var for var in nouns if var not in badwords]
 
             if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
