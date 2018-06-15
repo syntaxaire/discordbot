@@ -3,8 +3,8 @@ import time
 from random import *
 
 import nltk
-import nltk.tag, nltk.data
-from nltk.corpus import brown
+import nltk.data
+import nltk.tag
 from nltk.stem import WordNetLemmatizer
 
 from butt_library import *
@@ -69,7 +69,6 @@ class WordReplacer:
     def wordtagger(self, message):
         return nltk.pos_tag(nltk.word_tokenize(message))
 
-
     def wordclassifier(self, message, author):
         nouns = []
         # function to test if something is a noun
@@ -97,7 +96,7 @@ class WordReplacer:
                 nouns = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
 
             # list comprehension to remove words that shouldn't be included in the list
-            badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho']
+            badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>']
             nouns = [var for var in nouns if var not in badwords]
 
             if len(nouns) > 0:
@@ -152,4 +151,3 @@ class WordReplacer:
         else:
             nouns = self._findnounsbyprevioustag(taggedsentence, False)
         return nouns
-

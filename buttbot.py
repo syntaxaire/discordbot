@@ -1,7 +1,7 @@
+import asyncio
 import configparser
 import random
 import time
-import asyncio
 
 import discord_comms
 import mojang as mj
@@ -20,7 +20,7 @@ class buttbot:
         self.comm = discord_comms.discord_comms()
         self.discordBot = BotObject
         self.used = {}
-        self.shitpost = WordReplacer(int(self.config.get('discordbot','shitpost_call_freq')))
+        self.shitpost = WordReplacer(int(self.config.get('discordbot', 'shitpost_call_freq')))
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
@@ -34,7 +34,8 @@ class buttbot:
             self.vacuum.playtime_scraper()
 
     async def do_leave(self, message):
-        if (str(message.author) in self.config.get('discordbot','bot_admin')) and str(self.discordBot.user) in str(message.content):
+        if (str(message.author) in self.config.get('discordbot', 'bot_admin')) and str(self.discordBot.user) in str(
+                message.content):
             await self.discordBot.leave_server(message.server)
         else:
             await self.doComms('fuck you youre not my real dad', message.channel)
@@ -48,7 +49,7 @@ class buttbot:
             command = ''
         if command:
             command, se, arguments = command.partition(' ')
-            module=self
+            module = self
             # pick which module has the command, and set the module var to the module object
             if command in self.vacuum.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
                 # vacuum must be turned on for this to work.
@@ -72,15 +73,15 @@ class buttbot:
                 pass
             try:
                 if module is self:
-                    #no module was found for the command.  We are going to try to run it in the base buttbot object
+                    # no module was found for the command.  We are going to try to run it in the base buttbot object
                     back = await func(message)
                 else:
                     back = func(arguments)
                 if back:
                     await self.doComms(back, message.channel)
             except UnboundLocalError:
-                #command not found in any module, including the base buttbot object.  skip for now
-                #todo: maybe default return option here too?
+                # command not found in any module, including the base buttbot object.  skip for now
+                # todo: maybe default return option here too?
                 pass
 
     async def doComms(self, message, channel):
@@ -88,7 +89,7 @@ class buttbot:
             if bool(self.config.get('allowed_channels', str(channel))) is True:
                 await self.comm.do_send_message(channel, self.discordBot, message)
         except configparser.NoOptionError:
-            #channel not in config, skip.
+            # channel not in config, skip.
             pass
 
     async def chat_dispatch(self, message):
@@ -119,7 +120,8 @@ class buttbot:
                 if rshitpost:
                     await self.doComms(rshitpost, message.channel)
             elif random.randint(1, 3) == 3:
-                await self.comm.do_react(message, self.discordBot, random.choice(self.config.get('discordbot','butt_response_emojis').split(",")))
+                await self.comm.do_react(message, self.discordBot, random.choice(
+                    self.config.get('discordbot', 'butt_response_emojis').split(",")))
 
         else:
             # here's where im going to evaluate all other sentences for shitposting

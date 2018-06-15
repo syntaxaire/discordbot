@@ -1,15 +1,13 @@
-import asyncio
-
 from discord.ext.commands import Bot
-from config import *
-from buttbot import buttbot
-from vacuum import *
 
+from buttbot import buttbot
+from config import *
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
-progress_bot = buttbot(client,'progress_config.ini')
-hohle_bot=buttbot(client,'hohle_config.ini')
-default_channel=buttbot(client,'default_config.ini')
+progress_bot = buttbot(client, 'progress_config.ini')
+hohle_bot = buttbot(client, 'hohle_config.ini')
+default_channel = buttbot(client, 'default_config.ini')
+
 
 @client.event
 async def on_ready():
@@ -46,8 +44,8 @@ async def on_message(message):
             await send_to_butt_instance(message)
             return  # dont pass to chat dispatcher
     except KeyError:
-        #there isnt a command channel key for this channel.  Let's dump it through a general one.
-            await default_channel.command_dispatch(message)
+        # there isnt a command channel key for this channel.  Let's dump it through a general one.
+        await default_channel.command_dispatch(message)
 
     # shitposting follows
     chat_dispatcher_channels = \
@@ -58,7 +56,7 @@ async def on_message(message):
     try:
         send_to_butt_instance = chat_dispatcher_channels[message.server.name]
     except KeyError:
-        #no chat dispatcher for this so we are going to default to the 💩💩 channel
+        # no chat dispatcher for this so we are going to default to the 💩💩 channel
         send_to_butt_instance = default_channel.chat_dispatch
     await send_to_butt_instance(message)
 
