@@ -102,9 +102,9 @@ class WordReplacer:
             # list comprehension to remove words that shouldn't be included in the list
             badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho']
             nouns = [var for var in nouns if var not in badwords]
-            return
+
             if len(nouns) > 0:
-                if randint(3, 3) == 3:  # TODO: fix for prod
+                if randint(1, 5) == 3:
                     if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
                         self.used['shitpost'] = time.time()
                         lemmatizer = WordNetLemmatizer()

@@ -25,7 +25,7 @@ class buttbot:
 
         if self.config.getboolean('vacuum', 'enabled') is True:
             self.vacuum.update_url(self.config.get('vacuum', 'vacuum_update_json_url'))
-            #self.discordBot.loop.create_task(self.my_background_task()) TODO: unfuck it
+            self.discordBot.loop.create_task(self.my_background_task())
 
     async def my_background_task(self):
         await self.discordBot.wait_until_ready()
