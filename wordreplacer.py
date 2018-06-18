@@ -94,11 +94,8 @@ class WordReplacer:
                 nouns, targeted = self.findnounsbyprevioustag(strip_IRI(message.split(" ", 1)[1]))
             else:
                 nouns, targeted = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
-            print("sentence: %s " % self.wordtagger(strip_IRI(message)))
-            print("nouns: %s" % nouns)
-            # list comprehension to remove words that shouldn't be included in the list
-            badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>', '@']
-            nouns = [var for var in nouns if var not in badwords]
+
+            nouns = self.removestopwords(nouns)
 
             if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
                 if randint(1, 5) == 3:
@@ -155,3 +152,8 @@ class WordReplacer:
             nouns = self._findnounsbyprevioustag(taggedsentence, False)
             targeted = False
         return nouns, targeted
+
+    def removestopwords(self, nouns):
+        # list comprehension to remove words that shouldn't be included in the list
+        badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>', '@', 'lmao']
+        return [var for var in nouns if var not in badwords]
