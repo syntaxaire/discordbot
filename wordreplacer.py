@@ -145,9 +145,13 @@ class WordReplacer:
 
         for i in range(len(taggedsentence) - 1):  # *jiggling intensifies*
             if taggedsentence[i][1] in tagstocheck:
-                if taggedsentence[i + 1][1] in tagstoacceptasnouns and taggedsentence[i + 2][1] not in tagstoskipword:
-                    #this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB"
-                    nouns.append(taggedsentence[i + 1][0])
+                try:
+                    if taggedsentence[i + 1][1] in tagstoacceptasnouns and taggedsentence[i + 2][1] not in tagstoskipword:
+                        #this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB"
+                        nouns.append(taggedsentence[i + 1][0])
+                except IndexError:
+                    #end of the noun list so we don't really care.
+                    pass
 
         return nouns
 
