@@ -94,7 +94,18 @@ class WordReplacer:
                 nouns, targeted = self.findnounsbyprevioustag(strip_IRI(message.split(" ", 1)[1]))
             else:
                 nouns, targeted = self.findnounsbyprevioustag(self.wordtagger(strip_IRI(message)))
-
+            print("tagged sentence: %s" % self.wordtagger(message))
+            print("prioritized: %s" % str(targeted))
+            print("noun candidates: %s" % self.removestopwords(nouns))
+            print("----------------------------")
+            if targeted == True:
+                print("non prioritized nouns: %s" % self._findnounsbyprevioustag(nouns,False))
+                print("----------------------------")
+            print("nouns ignored: %s" % [n for n in self.wordclassifier(message,"butt") if n not in nouns])
+            if not nouns == self.removestopwords(nouns):
+                #stopwords applied
+                print("----------------------------")
+                print("nouns explicitly stopworded: %s " % [n for n in nouns if n not in self.removestopwords(nouns)])
             nouns = self.removestopwords(nouns)
 
             if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
@@ -126,6 +137,7 @@ class WordReplacer:
         wordtagstocheckprioritized = ['PRP$']
         wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'CD']
         tagstoacceptasnouns = ['NN', 'NNS']
+        tagstoskipword = ['TO']
         if prioritized == True:
             tagstocheck = wordtagstocheckprioritized
         else:
@@ -133,7 +145,8 @@ class WordReplacer:
 
         for i in range(len(taggedsentence) - 1):  # *jiggling intensifies*
             if taggedsentence[i][1] in tagstocheck:
-                if taggedsentence[i + 1][1] in tagstoacceptasnouns:
+                if taggedsentence[i + 1][1] in tagstoacceptasnouns and taggedsentence[i + 2][1] not in tagstoskipword:
+                    #this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB"
                     nouns.append(taggedsentence[i + 1][0])
 
         return nouns
@@ -155,5 +168,5 @@ class WordReplacer:
 
     def removestopwords(self, nouns):
         # list comprehension to remove words that shouldn't be included in the list
-        badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>', '@', 'lmao']
+        badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>', '@', 'lmao', 'yes', 'cares']
         return [var for var in nouns if var not in badwords]
