@@ -117,12 +117,16 @@ class buttbot:
 
         elif is_word_in_text('butt', message.content) == True:
             if random.randint(1, 6) == 3:
-                rshitpost = self.shitpost.rspeval(message.content)
-                if rshitpost:
-                    await self.doComms(rshitpost, message.channel)
+                if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
+                    self.used['r_shitpost'] = time.time()
+                    rshitpost = self.shitpost.rspeval(message.content)
+                    if rshitpost:
+                        await self.doComms(rshitpost, message.channel)
             elif random.randint(1, 3) == 3:
-                await self.comm.do_react(message, self.discordBot, random.choice(
-                    self.config.get('discordbot', 'butt_response_emojis').split(",")))
+                if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
+                    self.used['r_shitpost'] = time.time()
+                    await self.comm.do_react(message, self.discordBot, random.choice(
+                        self.config.get('discordbot', 'butt_response_emojis').split(",")))
 
         else:
             # here's where im going to evaluate all other sentences for shitposting
