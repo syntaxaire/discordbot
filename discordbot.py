@@ -7,6 +7,7 @@ client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 progress_bot = buttbot(client, 'progress_config.ini')
 hohle_bot = buttbot(client, 'hohle_config.ini')
 default_channel = buttbot(client, 'default_config.ini')
+dpt_bot=buttbot(client, 'dpt_config.ini')
 
 
 @client.event
@@ -29,7 +30,8 @@ async def on_message(message):
     command_channels = \
         {
             "Die Höhle des Mannes": hohle_bot.command_dispatch,
-            "Shithole": progress_bot.command_dispatch
+            "Shithole": progress_bot.command_dispatch,
+            "Disasterpiece Theater": dpt_bot.command_dispatch
         }
     try:
         if str(message.content)[:1] == "&" or str(message.content).partition(" ")[2][0] == "&":
@@ -51,7 +53,8 @@ async def on_message(message):
     chat_dispatcher_channels = \
         {
             "Die Höhle des Mannes": hohle_bot.chat_dispatch,
-            "Shithole": progress_bot.chat_dispatch
+            "Shithole": progress_bot.chat_dispatch,
+            "General": dpt_bot.chat_dispatch
         }
     try:
         send_to_butt_instance = chat_dispatcher_channels[message.server.name]
