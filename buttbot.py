@@ -21,7 +21,7 @@ class buttbot:
         self.comm = discord_comms.discord_comms()
         self.discordBot = BotObject
         self.used = {}
-        self.shitpost = WordReplacer(self.min_call_freq)
+        self.shitpost = WordReplacer(self.min_call_freq, int(self.config.get('wordreplacer', 'max_sentence_length')))
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
