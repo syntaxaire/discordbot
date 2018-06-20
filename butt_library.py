@@ -1,5 +1,5 @@
 import re
-
+import glob
 from rfc3987 import parse
 
 
@@ -36,3 +36,7 @@ def detect_code_block(text):
         if w == "```" or w[:3] == "```" or w[-3:] == "```":
             return True
     return False
+
+
+def load_all_config_files():
+    return glob.glob("config/*.ini")

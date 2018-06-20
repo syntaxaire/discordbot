@@ -1,16 +1,12 @@
 from discord.ext.commands import Bot
-
+import butt_library as butt_lib
 from buttbot import buttbot
 from config import *
-import glob
 
-
-def load_all_config_files():
-    return glob.glob("config/*.ini")
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
-channel_configs=load_all_config_files() #global that will hold channel IDs that have configs
+channel_configs=butt_lib.load_all_config_files() #global that will hold channel IDs that have configs
 command_channels={}
 for i in channel_configs:
     command_channels[i.split("/")[1][:-4]] = buttbot(client, i)
