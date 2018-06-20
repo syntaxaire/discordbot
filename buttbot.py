@@ -86,12 +86,10 @@ class buttbot:
                 pass
 
     async def doComms(self, message, channel):
-        try:
-            if bool(self.config.get('allowed_channels', str(channel))) is True:
+            allowed_channels=self.config.get("allowed_channels","channels").split(",")
+            if channel.id in allowed_channels:
                 await self.comm.do_send_message(channel, self.discordBot, message)
-        except configparser.NoOptionError:
-            # channel not in config, skip.
-            pass
+
 
     async def chat_dispatch(self, message):
         if is_word_in_text("rip", message.content) == True:
@@ -137,7 +135,6 @@ class buttbot:
                 pass
             else:
                 rshitpost = self.shitpost.tobuttornottobutt(message.content, str(message.author))
-                pass
             try:
                 if rshitpost:
                     await self.doComms(rshitpost, message.channel)
