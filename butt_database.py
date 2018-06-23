@@ -5,7 +5,7 @@ class db:
     def __init__(self, _db, username, password):
         self._db = _db
         self.user = username
-        self.passw=password
+        self.passw = password
 
     def build(self):
         self.connection = pymysql.connect(host='fartcannon.com', user=self.user, password=self.passw,
@@ -31,6 +31,19 @@ class db:
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(query, args)
+                self.connection.commit()
+                cursor.close()
+        finally:
+            pass
+
+    def close(self):
+        self.connection.close()
+
+    def do_insertmany(self, query, args):
+        self.build()
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.executemany(query, args)
                 self.connection.commit()
                 cursor.close()
         finally:
