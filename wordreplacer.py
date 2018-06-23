@@ -12,7 +12,8 @@ from butt_library import *
 
 class WordReplacer:
 
-    def __init__(self, timer, sentence_max_length):
+    def __init__(self, timer, sentence_max_length, stat_module):
+        self.stats = stat_module
         self.wlist = self.load()
         self.timer = timer
         self.used = {}
@@ -222,7 +223,8 @@ class WordReplacer:
             return True
 
     def pickwordtobutt(self, nouns, unedited_message):
-        wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use', 'means']
+        wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
+                               'means']
 
         if any(t for t in nouns if t in wordsthatarentfunny):
             # one of the tagged words is in the not funny list
