@@ -1,15 +1,19 @@
 from discord.ext.commands import Bot
+
 import butt_library as butt_lib
+from butt_statistics import ButtStatistics
 from buttbot import buttbot
 from config import *
+import asyncio
 
+stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1])
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
-channel_configs=butt_lib.load_all_config_files() #global that will hold channel IDs that have configs
-command_channels={}
+channel_configs = butt_lib.load_all_config_files()  # global that will hold channel IDs that have configs
+command_channels = {}
 for i in channel_configs:
-    command_channels[i.split("/")[1][:-4]] = buttbot(client, i, db_, db_secrets[0], db_secrets[1])
+    command_channels[i.split("/")[1][:-4]] = buttbot(client, i, db_, db_secrets[0], db_secrets[1], stat_module)
 
 
 @client.event
@@ -31,10 +35,10 @@ async def on_message(message):
         return
 
     if message.author == "BroBot#4514":
-        #we dont give a shit about anything this bot says
+        # we dont give a shit about anything this bot says
         return
 
-    #try:
+    # try:
     try:
         if str(message.content)[:1] == "&" or str(message.content).partition(" ")[2][0] == "&":
             # command sent from inside of mc server
@@ -42,7 +46,7 @@ async def on_message(message):
             await send_to_butt_instance(message)
             return  # dont pass to chat dispatcher
     except IndexError:
-        #this message was sent from a regular discord client
+        # this message was sent from a regular discord client
         if str(message.content)[:1] == "&":
             send_to_butt_instance = command_channels[message.server.id].command_dispatch
             await send_to_butt_instance(message)
@@ -53,9 +57,21 @@ async def on_message(message):
         await send_to_butt_instance(message)
     except KeyError:
         # no chat dispatcher for this so we are going to default to the 💩💩 channel
-        #send_to_butt_instance = default_channel.chat_dispatch
+        # send_to_butt_instance = default_channel.chat_dispatch
         pass
 
+async def serializeloop():
+    await client.wait_until_ready()
+    while not client.is_closed:
+        await asyncio.sleep(30)
+        stat_module.serialize_all_stats_to_disk()
 
+async def send_stats_to_db():
+    await client.waituntilready()
+    while not client.is_closed:
+        await asyncio.sleep(300)
+        stat_module.send_stats_to_db()
 
+client.loop.create_task(serializeloop())
+client.loop.create_task(send_stats_to_db())
 client.run(secretkey)
