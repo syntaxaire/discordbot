@@ -12,7 +12,8 @@ from wordreplacer import WordReplacer
 
 
 class buttbot:
-    def __init__(self, BotObject, conf, db_, db_user, db_pass):
+    def __init__(self, BotObject, conf, db_, db_user, db_pass, stat_module):
+        self.stats = stat_module
         self.config = configparser.ConfigParser()
         self.config.read_file(open(conf))
         self.db = db(db_, db_user, db_pass)
@@ -22,7 +23,8 @@ class buttbot:
         self.comm = discord_comms.discord_comms()
         self.discordBot = BotObject
         self.used = {}
-        self.shitpost = WordReplacer(self.min_call_freq, int(self.config.get('wordreplacer', 'max_sentence_length')))
+        self.shitpost = WordReplacer(self.min_call_freq, int(self.config.get('wordreplacer', 'max_sentence_length')),
+                                     self.stats)
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
