@@ -9,7 +9,7 @@ client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 channel_configs=butt_lib.load_all_config_files() #global that will hold channel IDs that have configs
 command_channels={}
 for i in channel_configs:
-    command_channels[i.split("/")[1][:-4]] = buttbot(client, i)
+    command_channels[i.split("/")[1][:-4]] = buttbot(client, i, db_, db_secrets[0], db_secrets[1])
 
 
 @client.event
@@ -30,12 +30,23 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    if message.author == "BroBot#4514":
+        #we dont give a shit about anything this bot says
+        return
+
     #try:
-    if str(message.content)[:1] == "&" or str(message.content).partition(" ")[2][0] == "&":
-        # command sent from inside of mc server or from regular client
-        send_to_butt_instance = command_channels[message.server.id].command_dispatch
-        await send_to_butt_instance(message)
-        return  # dont pass to chat dispatcher
+    try:
+        if str(message.content)[:1] == "&" or str(message.content).partition(" ")[2][0] == "&":
+            # command sent from inside of mc server
+            send_to_butt_instance = command_channels[message.server.id].command_dispatch
+            await send_to_butt_instance(message)
+            return  # dont pass to chat dispatcher
+    except IndexError:
+        #this message was sent from a regular discord client
+        if str(message.content)[:1] == "&":
+            send_to_butt_instance = command_channels[message.server.id].command_dispatch
+            await send_to_butt_instance(message)
+            return
 
     try:
         send_to_butt_instance = command_channels[message.server.id].chat_dispatch

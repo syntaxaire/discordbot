@@ -1,16 +1,17 @@
 import pymysql.cursors
-from config import *
 
 
 class db:
-    def __init__(self):
-        pass
+    def __init__(self, _db, username, password):
+        self._db = _db
+        self.user = username
+        self.passw=password
 
     def build(self):
-        self.connection = pymysql.connect(host='fartcannon.com', user=db_secrets[0], password=db_secrets[1],
-                                          db=db_secrets[2], charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
+        self.connection = pymysql.connect(host='fartcannon.com', user=self.user, password=self.passw,
+                                          db=self._db, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
 
-    def do_query(self, query, args=''):
+    def do_query(self, db_, query, args=''):
         self.build()
         try:
             with self.connection.cursor() as cursor:
