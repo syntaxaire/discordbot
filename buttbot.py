@@ -12,11 +12,12 @@ from wordreplacer import WordReplacer
 
 
 class buttbot:
-    def __init__(self, BotObject, conf):
+    def __init__(self, BotObject, conf, db_, db_user, db_pass):
         self.config = configparser.ConfigParser()
         self.config.read_file(open(conf))
-        self.db = db()
-        self.vacuum = Vacuum(self.db)
+        self.db = db(db_, db_user, db_pass)
+        if bool(self.config.get('vacuum', 'enabled')):
+            self.vacuum = Vacuum(self.db)
         self.min_call_freq = int(self.config.get('discordbot', 'shitpost_call_freq'))
         self.comm = discord_comms.discord_comms()
         self.discordBot = BotObject
@@ -86,10 +87,9 @@ class buttbot:
                 pass
 
     async def doComms(self, message, channel):
-            allowed_channels=self.config.get("allowed_channels","channels").split(",")
-            if channel.id in allowed_channels:
-                await self.comm.do_send_message(channel, self.discordBot, message)
-
+        allowed_channels = self.config.get("allowed_channels", "channels").split(",")
+        if channel.id in allowed_channels:
+            await self.comm.do_send_message(channel, self.discordBot, message)
 
     async def chat_dispatch(self, message):
         if is_word_in_text("rip", message.content) == True:
