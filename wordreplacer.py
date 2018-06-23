@@ -98,7 +98,8 @@ class WordReplacer:
         if detect_code_block(message) is not True:
             unedited_message = message
             if author == "Progress#6064" or author == "DPTBot#3069":
-                stupidDPTshit = ['contracted the Death', 'just gained the achievement', 'just left the server']
+                stupidDPTshit = ['contracted the Death', 'just gained the achievement', 'just left the server',
+                                 'just joined the server']
                 if not any(v for v in stupidDPTshit if v in message) and not (
                         message.startswith("*") and message.endswith("*")):
                     # specific catch for DPT death message and other dumb stuff they have go to chat like cheevos
@@ -111,45 +112,53 @@ class WordReplacer:
             else:
                 tagged_sentence = self.wordtagger(strip_IRI(message))
                 nouns, targeted = self.findnounsbyprevioustag(tagged_sentence)
-            print("------------------------------------------------------------------------------------")
-            print("tagged sentence: %s" % self.wordtagger(message))
-            print("sentence tag length: %s " % str(len(tagged_sentence)))
-            print("-----------------------")
-            print("prioritized: %s" % str(targeted))
-            print("noun candidates: %s" % self.removestopwords(nouns))
+            try:
+                print("------------------------------------------------------------------------------------")
+                print("tagged sentence: %s" % self.wordtagger(message))
+                print("sentence tag length: %s " % str(len(tagged_sentence)))
+                print("-----------------------")
+                print("prioritized: %s" % str(targeted))
+                print("noun candidates: %s" % self.removestopwords(nouns))
 
-            if targeted == True:
-                print("-------TARGETED--------")
-                print("non prioritized nouns: %s" % self._findnounsbyprevioustag(nouns, False))
-                print("-------IGNORE----------")
-            print("nouns ignored: %s" % [n for n in self.wordclassifier(message, "butt") if n not in nouns])
-            if not nouns == self.removestopwords(nouns):
-                # stopwords applied
-                print("-------STOPWORD--------")
-                print("nouns explicitly stopworded: %s " % [n for n in nouns if n not in self.removestopwords(nouns)])
+                if targeted == True:
+                    print("-------TARGETED--------")
+                    print("non prioritized nouns: %s" % self._findnounsbyprevioustag(nouns, False))
+                    print("-------IGNORE----------")
+                print("nouns ignored: %s" % [n for n in self.wordclassifier(message, "butt") if n not in nouns])
+                if not nouns == self.removestopwords(nouns):
+                    # stopwords applied
+                    print("-------STOPWORD--------")
+                    print(
+                        "nouns explicitly stopworded: %s " % [n for n in nouns if n not in self.removestopwords(nouns)])
 
-            print("------DECISION TREE--------")
-            arewebuttingthisshit = (True if len(nouns) > 1 or targeted == True and len(nouns) > 0 else False)
-            print("Butt this sentence? %s" % arewebuttingthisshit)
-            arewebuttinglength = (True if len(tagged_sentence) < 50 else "MAYBE (not DPT)")
-            print("does it meet length? %s" % arewebuttinglength)
-
-            nouns = self.removestopwords(nouns)
-            if self.checklengthofsentencetobutt(tagged_sentence):
-                # DPT feature.  default is 9999 but DPT wants it to be shorter for more impact.
-                if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
-                    if randint(1, 5) == 3:
-                        if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
-                            self.used['shitpost'] = time.time()
-                            lemmatizer = WordNetLemmatizer()
-                            buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
-                            if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
-                                # the lemmatizer thinks that this is a plural
-                                return unedited_message.replace(nouns[buttword],
-                                                                self.buttinpropercase(nouns[buttword], 'butts'))
+                print("------DECISION TREE--------")
+                arewebuttingthisshit = (True if len(nouns) > 1 or targeted == True and len(nouns) > 0 else False)
+                print("Butt this sentence? %s" % arewebuttingthisshit)
+                arewebuttinglength = (True if len(tagged_sentence) < 50 else "MAYBE (not DPT)")
+                print("does it meet length? %s" % arewebuttinglength)
+            except UnboundLocalError:
+                pass
+            try:
+                nouns = self.removestopwords(nouns)
+            except UnboundLocalError:
+                # noun list is empty
+                pass
+            try:
+                if self.checklengthofsentencetobutt(tagged_sentence):
+                    # DPT feature.  default is 9999 but DPT wants it to be shorter for more impact.
+                    if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
+                        if randint(1, 5) == 3:
+                            if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
+                                print("this should be getting sent")
+                                self.used['shitpost'] = time.time()
+                                return self.pickwordtobutt(nouns, unedited_message)
                             else:
-                                return unedited_message.replace(nouns[buttword],
-                                                                self.buttinpropercase(nouns[buttword], 'butt'))
+                                print("timed out (check timer limit for shitpost)")
+                        else:
+                            print("did not meet 20% threshhold")
+            except UnboundLocalError:
+                # no tags
+                pass
 
     def buttinpropercase(self, wordtobutt, buttoreplace):
         if wordtobutt.istitle():
@@ -201,8 +210,7 @@ class WordReplacer:
 
     def removestopwords(self, nouns):
         # list comprehension to remove words that shouldn't be included in the list
-        badwords = ['i', 'gon', 'beat', 'dont', 'lol', 'yeah', 'tho', '>', '@', 'lmao', 'yes', 'cares', '%', "**", "[",
-                    "]", 'works']
+        badwords = ['i', 'gon', 'dont', 'lol', 'yeah', 'tho', '>', '@', 'lmao', 'yes', '%', "**", "[", "]", ]
         return [var for var in nouns if var not in badwords]
 
     def checklengthofsentencetobutt(self, message):
@@ -212,3 +220,22 @@ class WordReplacer:
             return False
         else:
             return True
+
+    def pickwordtobutt(self, nouns, unedited_message):
+        wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use', 'means']
+
+        if any(t for t in nouns if t in wordsthatarentfunny):
+            # one of the tagged words is in the not funny list
+            # we're going to remove the unfunny words before picking one to use
+            nouns = [var for var in nouns if var not in wordsthatarentfunny]
+
+        buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
+
+        lemmatizer = WordNetLemmatizer()
+        if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
+            # the lemmatizer thinks that this is a plural
+            return unedited_message.replace(nouns[buttword],
+                                            self.buttinpropercase(nouns[buttword], 'butts'))
+        else:
+            return unedited_message.replace(nouns[buttword],
+                                            self.buttinpropercase(nouns[buttword], 'butt'))
