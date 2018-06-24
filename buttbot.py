@@ -89,13 +89,13 @@ class buttbot:
                 pass
 
     async def doComms(self, message, channel):
-        allowed_channels = self.config.get("allowed_channels", "channels").split(",")
-        if channel.id in allowed_channels:
+        if self.allowed_in_channel(channel):
             await self.comm.do_send_message(channel, self.discordBot, message)
 
     async def doreact(self, message, channel, emojis):
-        allowed_channels = self.config.get("allowed_channels", "channels").split(",")
-        if channel.id in allowed_channels:
+        if self.allowed_in_channel(channel):
+            self.stats.disposition_store(message.server.id, message.channel.id,
+                                         "React", emojis, message.content)
             await self.comm.do_react(message, self.discordBot, emojis)
 
     async def chat_dispatch(self, message):
@@ -104,34 +104,51 @@ class buttbot:
                     str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
                 self.vacuum.add_death_message(message.content)
             else:
-                if 'rip' not in self.used or time.time() - self.used['rip'] > self.min_call_freq:
-                    self.used['rip'] = time.time()
-                    if random.randint(1, 20) == 5:
-                        await self.doComms('Ya, butts', message.channel)
+                if self.allowed_in_channel(message.channel.id):
+                    if 'rip' not in self.used or time.time() - self.used['rip'] > self.min_call_freq:
+                        self.used['rip'] = time.time()
+                        self.stats.disposition_store(message.server.id, message.channel.id,
+                                                     "RIP", "RIP")
+                        if random.randint(1, 20) == 5:
+                            await self.doComms('Ya, butts', message.channel)
+                        else:
+                            await self.doComms('Ya, RIP', message.channel)
                     else:
-                        await self.doComms('Ya, RIP', message.channel)
+                        self.stats.disposition_store(message.server.id, message.channel.id,
+                                                     "RIP cooldown", "RIP cooldown")
 
         elif is_word_in_text("F", message.content):
-            if 'f' not in self.used or time.time() - self.used['f'] > self.min_call_freq:
-                self.used['f'] = time.time()
-                await self.doComms('Ya, F', message.channel)
-            else:
-                if random.randint(1, 100) == 44:
-                    await self.doComms('suck my dick F under cooldown', message.channel)
+            if self.allowed_in_channel(message.channel.id):
+                if 'f' not in self.used or time.time() - self.used['f'] > self.min_call_freq:
+                    self.used['f'] = time.time()
+                    self.stats.disposition_store(message.server.id, message.channel.id,
+                                                 "F", "F")
+                    await self.doComms('Ya, F', message.channel)
+                else:
+                    self.stats.disposition_store(message.server.id, message.channel.id,
+                                                 "F cooldown", "F cooldown")
+                    if random.randint(1, 100) == 44:
+                        await self.doComms('suck my dick F under cooldown', message.channel)
 
 
         elif is_word_in_text('butt', message.content) == True:
-            if random.randint(1, 6) == 3:
-                if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
-                    self.used['r_shitpost'] = time.time()
-                    rshitpost = self.shitpost.rspeval(message.content)
-                    if rshitpost:
-                        await self.doComms(rshitpost, message.channel)
-            elif random.randint(1, 3) == 3:
-                if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
-                    self.used['r_shitpost'] = time.time()
-                    await self.doreact(message, message.channel, random.choice(
-                        self.config.get('discordbot', 'butt_response_emojis').split(",")))
+            if self.allowed_in_channel(message.channel.id):
+                if random.randint(1, 6) == 3:
+                    if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
+                        self.used['r_shitpost'] = time.time()
+                        rshitpost = self.shitpost.rspeval(message.content)
+                        if rshitpost:
+                            self.stats.disposition_store(message.server.id, message.channel.id,
+                                                         "RSP", "RSP", message.content)
+                            await self.doComms(rshitpost, message.channel)
+                    else:
+                        self.stats.disposition_store(message.server.id, message.channel.id,
+                                                     "RSP cooldown", "RSP cooldown")
+                elif random.randint(1, 3) == 3:
+                    if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
+                        self.used['r_shitpost'] = time.time()
+                        await self.doreact(message, message.channel, random.choice(
+                            self.config.get('discordbot', 'butt_response_emojis').split(",")))
 
         else:
             # here's where im going to evaluate all other sentences for shitposting
@@ -141,9 +158,18 @@ class buttbot:
                 # this is a join or part message and we are going to ignore it
                 pass
             else:
-                rshitpost = self.shitpost.tobuttornottobutt(message.content, str(message.author))
+                if self.allowed_in_channel(message.channel):
+                    #do not send to shitpost module if we aren't allowed to talk in the channel in question
+                    rshitpost = self.shitpost.tobuttornottobutt(message, str(message.author))
             try:
                 if rshitpost:
                     await self.doComms(rshitpost, message.channel)
             except UnboundLocalError:
                 pass
+
+    def allowed_in_channel(self,channel):
+        allowed_channels = self.config.get("allowed_channels", "channels").split(",")
+        if channel.id in allowed_channels:
+            return True
+        else:
+            return False
