@@ -94,7 +94,8 @@ class WordReplacer:
                     nouns.append(w[0])
         return nouns
 
-    def tobuttornottobutt(self, message, author):
+    def tobuttornottobutt(self, messageobject, author):
+        message = messageobject.content
         # code block detection.  We are going to skip processing the entire message.
         if detect_code_block(message) is not True:
             unedited_message = message
@@ -145,21 +146,24 @@ class WordReplacer:
                 # noun list is empty
                 pass
             try:
+                self.stats.message_store(messageobject.channel.id)
                 if self.checklengthofsentencetobutt(tagged_sentence):
                     # DPT feature.  default is 9999 but DPT wants it to be shorter for more impact.
                     if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
                         if randint(1, 5) == 3:
                             if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
-                                print("this should be getting sent")
                                 self.used['shitpost'] = time.time()
-                                return self.pickwordtobutt(nouns, unedited_message)
+                                return self.pickwordtobutt(nouns, unedited_message, messageobject)
                             else:
-                                print("timed out (check timer limit for shitpost)")
+                                self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
+                                                             "Config Timeout", "Config Timeout")
                         else:
-                            print("did not meet 20% threshhold")
+                            self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
+                                                         "20% Threshold", "20% Threshold")
             except UnboundLocalError:
                 # no tags
-                pass
+                self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
+                                             "No Noun Tags", "No Noun Tags")
 
     def buttinpropercase(self, wordtobutt, buttoreplace):
         if wordtobutt.istitle():
@@ -222,17 +226,20 @@ class WordReplacer:
         else:
             return True
 
-    def pickwordtobutt(self, nouns, unedited_message):
+    def pickwordtobutt(self, nouns, unedited_message, messageobject):
         wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
                                'means']
-
+        notfunnyfound = False
         if any(t for t in nouns if t in wordsthatarentfunny):
             # one of the tagged words is in the not funny list
             # we're going to remove the unfunny words before picking one to use
             nouns = [var for var in nouns if var not in wordsthatarentfunny]
+            notfunnyfound = True
 
         buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
-
+        self.stats.disposition_store(messageobject.server.id, messageobject.channel.id, "Butt Replaced",
+                                     "%s %s" % (nouns[buttword], "(Unfunny=true)" if notfunnyfound else ""),
+                                     unedited_message)
         lemmatizer = WordNetLemmatizer()
         if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
             # the lemmatizer thinks that this is a plural
