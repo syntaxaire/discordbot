@@ -130,7 +130,6 @@ class buttbot:
                     if random.randint(1, 100) == 44:
                         await self.doComms('suck my dick F under cooldown', message.channel)
 
-
         elif is_word_in_text('butt', message.content) == True:
             if self.allowed_in_channel(message.channel.id):
                 if random.randint(1, 6) == 3:
@@ -159,7 +158,7 @@ class buttbot:
                 pass
             else:
                 if self.allowed_in_channel(message.channel):
-                    #do not send to shitpost module if we aren't allowed to talk in the channel in question
+                    # do not send to shitpost module if we aren't allowed to talk in the channel in question
                     rshitpost = self.shitpost.tobuttornottobutt(message, str(message.author))
             try:
                 if rshitpost:
@@ -167,7 +166,7 @@ class buttbot:
             except UnboundLocalError:
                 pass
 
-    def allowed_in_channel(self,channel):
+    def allowed_in_channel(self, channel):
         allowed_channels = self.config.get("allowed_channels", "channels").split(",")
         if channel.id in allowed_channels:
             return True
