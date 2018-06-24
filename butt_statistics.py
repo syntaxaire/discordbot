@@ -1,5 +1,6 @@
 import datetime
 import json
+
 from butt_database import db
 
 
@@ -9,6 +10,8 @@ class ButtStatistics:
         self.database = db(database, db_user, db_pass)
         self.dispositions = []
         self.messages = []
+        self.disposition_load()
+        self.message_load()
 
     def serialize_all_stats_to_disk(self):
         self.message_serialize()
@@ -23,7 +26,7 @@ class ButtStatistics:
                 '`instance_guid`,' \
                 '`channel_guid`,' \
                 '`disposition`,' \
-                '`additional info`,' \
+                '`additional_info`,' \
                 '`untagged_sentence`)' \
                 'VALUES (%s, %s, %s, %s, %s, %s)'
         self.database.do_insertmany(query, self.dispositions)
@@ -31,9 +34,10 @@ class ButtStatistics:
 
     def _messages_build_insert_query(self):
         data = []
-        query = 'INSERT into channels (`channel_guid`, `number_of_messages`) VALUES (%s, %s)'
+        query = "INSERT into channels (`channel_guid`, `number_of_messages`) VALUES ('%s', %s)" \
+                "ON DUPLICATE KEY UPDATE number_of_messages = number_of_messages+%s"
         for i, t in enumerate(self.messages):
-            data.append((i, t))
+            data.append((int(t[0]), t[1], t[1]))
         self.database.do_insertmany(query, data)
         self._messages_delete_all()
 
@@ -42,8 +46,13 @@ class ButtStatistics:
         self.dispositions.append(
             (datetime.datetime.utcnow(), server_guid, channel_guid, disposition, additional_info, untagged_sentence))
 
-    def message_store(self, channel):
-        self.messages[channel] += 1
+    def message_store(self, channel_guid):
+        index = next((index for (index, d) in enumerate(self.messages) if d[0] == channel_guid), None)
+        if index is not None:
+            self.messages[index][1] += 1
+        else:
+            # channel id doesnt exist - create it
+            self.messages.append([channel_guid, 1])
 
     def _messages_delete_all(self):
         self.messages = []
@@ -67,7 +76,7 @@ class ButtStatistics:
 
     def message_serialize(self):
         with open('stat_messages.txt', 'w') as f:
-            json.dump(self.dispositions, f, ensure_ascii=False, default=str)
+            json.dump(self.messages, f, ensure_ascii=False, default=str)
 
     def message_load(self):
         try:
