@@ -110,10 +110,13 @@ class WordReplacer:
                     # It is not sent to the word classifier to prevent a bunch of silly issues
                     tagged_sentence = self.wordtagger(strip_IRI(message.split(" ", 1)[1]))
                     nouns, targeted = self.findnounsbyprevioustag(tagged_sentence)
+                else:
+                    return
 
             else:
                 tagged_sentence = self.wordtagger(strip_IRI(message))
                 nouns, targeted = self.findnounsbyprevioustag(tagged_sentence)
+            self.stats.message_store(message.channel.id)
             try:
                 print("------------------------------------------------------------------------------------")
                 print("tagged sentence: %s" % self.wordtagger(message))
@@ -146,7 +149,6 @@ class WordReplacer:
                 # noun list is empty
                 pass
             try:
-                self.stats.message_store(messageobject.channel.id)
                 if self.checklengthofsentencetobutt(tagged_sentence):
                     # DPT feature.  default is 9999 but DPT wants it to be shorter for more impact.
                     if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):

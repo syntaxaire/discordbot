@@ -94,6 +94,7 @@ class buttbot:
 
     async def doreact(self, message, channel, emojis):
         if self.allowed_in_channel(channel):
+            self.stats.message_store(message.channel.id)
             self.stats.disposition_store(message.server.id, message.channel.id,
                                          "React", emojis, message.content)
             await self.comm.do_react(message, self.discordBot, emojis)
@@ -105,6 +106,7 @@ class buttbot:
                 self.vacuum.add_death_message(message.content)
             else:
                 if self.allowed_in_channel(message.channel.id):
+                    self.stats.message_store(message.channel.id)
                     if 'rip' not in self.used or time.time() - self.used['rip'] > self.min_call_freq:
                         self.used['rip'] = time.time()
                         self.stats.disposition_store(message.server.id, message.channel.id,
@@ -119,6 +121,7 @@ class buttbot:
 
         elif is_word_in_text("F", message.content):
             if self.allowed_in_channel(message.channel.id):
+                self.stats.message_store(message.channel.id)
                 if 'f' not in self.used or time.time() - self.used['f'] > self.min_call_freq:
                     self.used['f'] = time.time()
                     self.stats.disposition_store(message.server.id, message.channel.id,
@@ -132,6 +135,7 @@ class buttbot:
 
         elif is_word_in_text('butt', message.content) == True:
             if self.allowed_in_channel(message.channel.id):
+                self.stats.message_store(message.channel.id)
                 if random.randint(1, 6) == 3:
                     if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
                         self.used['r_shitpost'] = time.time()
