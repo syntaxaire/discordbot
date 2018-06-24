@@ -1,11 +1,12 @@
 import datetime
 import json
+from butt_database import db
 
 
-class buttStatistics:
+class ButtStatistics:
 
-    def __init__(self, db, db_user, db_pass):
-        self.database = db(db, db_user, db_pass)
+    def __init__(self, database, db_user, db_pass):
+        self.database = db(database, db_user, db_pass)
         self.dispositions = []
         self.messages = []
 
