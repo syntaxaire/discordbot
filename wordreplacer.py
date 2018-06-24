@@ -116,7 +116,7 @@ class WordReplacer:
             else:
                 tagged_sentence = self.wordtagger(strip_IRI(message))
                 nouns, targeted = self.findnounsbyprevioustag(tagged_sentence)
-            self.stats.message_store(message.channel.id)
+            self.stats.message_store(messageobject.channel.id)
             try:
                 print("------------------------------------------------------------------------------------")
                 print("tagged sentence: %s" % self.wordtagger(message))
