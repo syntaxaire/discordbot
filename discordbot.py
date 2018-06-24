@@ -1,10 +1,11 @@
+import asyncio
+
 from discord.ext.commands import Bot
 
 import butt_library as butt_lib
 from butt_statistics import ButtStatistics
 from buttbot import buttbot
 from config import *
-import asyncio
 
 stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1])
 
@@ -60,16 +61,18 @@ async def on_message(message):
         # send_to_butt_instance = default_channel.chat_dispatch
         pass
 
+
 async def serializeloop():
     await client.wait_until_ready()
-    print("Stat module serialization loop started")
+    await asyncio.sleep(5)
     while not client.is_closed:
         stat_module.serialize_all_stats_to_disk()
-        await asyncio.sleep(30)
+        await asyncio.sleep(10)
+
 
 async def send_stats_to_db():
     await client.wait_until_ready()
-    print("Stat module database loop started")
+    await asyncio.sleep(5)
     while not client.is_closed:
         stat_module.send_stats_to_db()
         await asyncio.sleep(300)
