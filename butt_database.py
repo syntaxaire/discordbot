@@ -11,7 +11,7 @@ class db:
         self.connection = pymysql.connect(host='fartcannon.com', user=self.user, password=self.passw,
                                           db=self._db, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
 
-    def do_query(self, db_, query, args=''):
+    def do_query(self, query, args=''):
         self.build()
         try:
             with self.connection.cursor() as cursor:
