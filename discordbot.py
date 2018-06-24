@@ -62,15 +62,18 @@ async def on_message(message):
 
 async def serializeloop():
     await client.wait_until_ready()
+    print("Stat module serialization loop started")
     while not client.is_closed:
-        await asyncio.sleep(30)
         stat_module.serialize_all_stats_to_disk()
+        await asyncio.sleep(30)
 
 async def send_stats_to_db():
-    await client.waituntilready()
+    await client.wait_until_ready()
+    print("Stat module database loop started")
     while not client.is_closed:
-        await asyncio.sleep(300)
         stat_module.send_stats_to_db()
+        await asyncio.sleep(300)
+
 
 client.loop.create_task(serializeloop())
 client.loop.create_task(send_stats_to_db())
