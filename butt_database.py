@@ -41,13 +41,16 @@ class db:
 
     def do_insertmany(self, query, args):
         self.build()
-        try:
-            with self.connection.cursor() as cursor:
+        with self.connection.cursor() as cursor:
+            try:
                 cursor.executemany(query, args)
                 self.connection.commit()
                 cursor.close()
-        finally:
-            pass
+            except:
+                print("Error executing this mysql query: %s" % cursor._last_executed)
+                raise
+            finally:
+                pass
 
     def close(self):
         self.connection.close()
