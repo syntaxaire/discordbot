@@ -93,6 +93,11 @@ class buttbot:
         if channel.id in allowed_channels:
             await self.comm.do_send_message(channel, self.discordBot, message)
 
+    async def doreact(self, message, channel, emojis):
+        allowed_channels = self.config.get("allowed_channels", "channels").split(",")
+        if channel.id in allowed_channels:
+            await self.comm.do_react(message, self.discordBot, emojis)
+
     async def chat_dispatch(self, message):
         if is_word_in_text("rip", message.content) == True:
             if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
@@ -125,7 +130,7 @@ class buttbot:
             elif random.randint(1, 3) == 3:
                 if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
                     self.used['r_shitpost'] = time.time()
-                    await self.comm.do_react(message, self.discordBot, random.choice(
+                    await self.doreact(message, message.channel, random.choice(
                         self.config.get('discordbot', 'butt_response_emojis').split(",")))
 
         else:
