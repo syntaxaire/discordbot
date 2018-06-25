@@ -217,8 +217,9 @@ class WordReplacer:
 
     def removestopwords(self, nouns):
         # list comprehension to remove words that shouldn't be included in the list
-        badwords = ['i', 'gon', 'dont', 'lol', 'yeah', 'tho', '>', '@', 'lmao', 'yes', '%', "**", "[", "]", ]
-        return [var for var in nouns if var not in badwords]
+        badwords = ['gon', 'dont', 'lol', 'yeah', 'tho', 'lmao', 'yes']
+        nouns = [var for var in nouns if var not in badwords]
+        return [var for var in nouns if len(var) > 1] #remove all single character everythings
 
     def checklengthofsentencetobutt(self, message):
         # DPT feature
