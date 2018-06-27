@@ -219,7 +219,7 @@ class WordReplacer:
         # list comprehension to remove words that shouldn't be included in the list
         badwords = ['gon', 'dont', 'lol', 'yeah', 'tho', 'lmao', 'yes']
         nouns = [var for var in nouns if var not in badwords]
-        return [var for var in nouns if len(var) > 1] #remove all single character everythings
+        return [var for var in nouns if len(var) > 1]  # remove all single character everythings
 
     def checklengthofsentencetobutt(self, message):
         # DPT feature
@@ -231,7 +231,7 @@ class WordReplacer:
 
     def pickwordtobutt(self, nouns, unedited_message, messageobject):
         wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
-                               'means']
+                               'means', 'gonorrhea'] #actually, gonorrhea is a funny word
         notfunnyfound = False
         if any(t for t in nouns if t in wordsthatarentfunny):
             # one of the tagged words is in the not funny list
@@ -241,7 +241,8 @@ class WordReplacer:
 
         buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
         self.stats.disposition_store(messageobject.server.id, messageobject.channel.id, "Butt Replaced",
-                                     "%s%s" % (nouns[buttword], " (Unfunny=true)" if notfunnyfound else ""),
+                                     # "%s%s" % (nouns[buttword], " (Unfunny=true)" if notfunnyfound else ""),
+                                     "%s" % nouns[buttword],
                                      unedited_message)
         lemmatizer = WordNetLemmatizer()
         if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
