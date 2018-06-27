@@ -241,7 +241,7 @@ class WordReplacer:
 
         buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
         self.stats.disposition_store(messageobject.server.id, messageobject.channel.id, "Butt Replaced",
-                                     "%s %s" % (nouns[buttword], "(Unfunny=true)" if notfunnyfound else ""),
+                                     "%s%s" % (nouns[buttword], " (Unfunny=true)" if notfunnyfound else ""),
                                      unedited_message)
         lemmatizer = WordNetLemmatizer()
         if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
