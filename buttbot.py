@@ -106,34 +106,36 @@ class buttbot:
                 self.vacuum.add_death_message(message.content)
             else:
                 if self.allowed_in_channel(message.channel):
-                    self.stats.message_store(message.channel.id)
-                    if 'rip' not in self.used or time.time() - self.used['rip'] > self.min_call_freq:
-                        self.used['rip'] = time.time()
-                        self.stats.disposition_store(message.server.id, message.channel.id,
-                                                     "RIP", "RIP")
-                        if random.randint(1, 20) == 5:
-                            await self.doComms('Ya, butts', message.channel)
+                    if self.config.getboolean('discordbot', 'RIP'):
+                        self.stats.message_store(message.channel.id)
+                        if 'rip' not in self.used or time.time() - self.used['rip'] > self.min_call_freq:
+                            self.used['rip'] = time.time()
+                            self.stats.disposition_store(message.server.id, message.channel.id,
+                                                         "RIP", "RIP")
+                            if random.randint(1, 20) == 5:
+                                await self.doComms('Ya, butts', message.channel)
+                            else:
+                                await self.doComms('Ya, RIP', message.channel)
                         else:
-                            await self.doComms('Ya, RIP', message.channel)
-                    else:
-                        self.stats.disposition_store(message.server.id, message.channel.id,
-                                                     "RIP cooldown", "RIP cooldown")
+                            self.stats.disposition_store(message.server.id, message.channel.id,
+                                                         "RIP cooldown", "RIP cooldown")
 
         elif is_word_in_text("F", message.content):
             if self.allowed_in_channel(message.channel):
-                self.stats.message_store(message.channel.id)
-                if 'f' not in self.used or time.time() - self.used['f'] > self.min_call_freq:
-                    self.used['f'] = time.time()
-                    self.stats.disposition_store(message.server.id, message.channel.id,
-                                                 "F", "F")
-                    await self.doComms('Ya, F', message.channel)
-                else:
-                    self.stats.disposition_store(message.server.id, message.channel.id,
-                                                 "F cooldown", "F cooldown")
-                    if random.randint(1, 100) == 44:
-                        await self.doComms('suck my dick F under cooldown', message.channel)
+                if self.config.getboolean('discordbot', 'F'):
+                    self.stats.message_store(message.channel.id)
+                    if 'f' not in self.used or time.time() - self.used['f'] > self.min_call_freq:
+                        self.used['f'] = time.time()
+                        self.stats.disposition_store(message.server.id, message.channel.id,
+                                                     "F", "F")
+                        await self.doComms('Ya, F', message.channel)
+                    else:
+                        self.stats.disposition_store(message.server.id, message.channel.id,
+                                                     "F cooldown", "F cooldown")
+                        if random.randint(1, 100) == 44:
+                            await self.doComms('suck my dick F under cooldown', message.channel)
 
-        elif is_word_in_text('butt', message.content) == True:
+        elif is_word_in_text('butt', message.content) == True or is_word_in_text('butts', message.content) == True:
             if self.allowed_in_channel(message.channel):
                 self.stats.message_store(message.channel.id)
                 if random.randint(1, 6) == 3:
