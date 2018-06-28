@@ -94,7 +94,7 @@ class buttbot:
 
     async def doreact(self, message, channel, emojis):
         if self.allowed_in_channel(channel):
-            self.stats.message_store(message.channel)
+            self.stats.message_store(message.channel.id)
             self.stats.disposition_store(message.server.id, message.channel.id,
                                          "React", emojis, message.content)
             await self.comm.do_react(message, self.discordBot, emojis)
