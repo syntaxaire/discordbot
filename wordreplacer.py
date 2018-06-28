@@ -231,7 +231,7 @@ class WordReplacer:
 
     def pickwordtobutt(self, nouns, unedited_message, messageobject):
         wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
-                               'means', 'gonorrhea', 'self'] #actually, gonorrhea is a funny word
+                               'means', 'gonorrhea', 'self']  # actually, gonorrhea is a funny word
         notfunnyfound = False
         if any(t for t in nouns if t in wordsthatarentfunny):
             # one of the tagged words is in the not funny list
