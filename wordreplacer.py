@@ -180,7 +180,7 @@ class WordReplacer:
         # we prioritize possessive pronouns (his, her, my, etc)
         nouns = []
         wordtagstocheckprioritized = ['PRP$']
-        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'CD']
+        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR']
         tagstoacceptasnouns = ['NN', 'NNS']
         tagstoskipword = ['TO']
         if prioritized == True:
@@ -232,7 +232,7 @@ class WordReplacer:
     def pickwordtobutt(self, nouns, unedited_message, messageobject):
         wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
                                'means', 'gonorrhea', 'self', 'bit', 'hour', 'minute', 'second', 'year', 'hours',
-                               'minutes', 'seconds', 'years']  # actually, gonorrhea is a funny word
+                               'minutes', 'seconds', 'years', 'lot']  # actually, gonorrhea is a funny word
         notfunnyfound = False
         if any(t for t in nouns if t in wordsthatarentfunny):
             # one of the tagged words is in the not funny list
