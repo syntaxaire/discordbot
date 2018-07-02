@@ -13,13 +13,15 @@ client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
 channel_configs = butt_lib.load_all_config_files()  # global that will hold channel IDs that have configs
 command_channels = {}
-for i in channel_configs:
-    # override for development
-    if i.split("/")[1][:-4] == "408168696834424832" and test_environment == True:
-        command_channels[i.split("/")[1][:-4]] = buttbot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
-                                                         stat_module)
-    else:
-        command_channels[i.split("/")[1][:-4]] = buttbot(client, i, db_, db_secrets[0], db_secrets[1], stat_module)
+
+if test_environment == True:
+    command_channels["408168696834424832"] = buttbot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
+                                                     stat_module)
+    command_channels["199981748098957312"] = buttbot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
+                                                     stat_module)
+else:
+    for i in channel_configs:
+            command_channels[i.split("/")[1][:-4]] = buttbot(client, i, db_, db_secrets[0], db_secrets[1], stat_module)
 
 
 @client.event
