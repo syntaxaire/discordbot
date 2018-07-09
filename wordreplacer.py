@@ -12,13 +12,14 @@ from butt_library import *
 
 class WordReplacer:
 
-    def __init__(self, timer, sentence_max_length, stat_module):
+    def __init__(self, timer, sentence_max_length, stat_module,test_environment):
         self.stats = stat_module
         self.wlist = self.load()
         self.timer = timer
         self.used = {}
         self.set_max_sentence_length(sentence_max_length)
         self.command = {"nltk": 'wordreplacer'}
+        self.test_environment=test_environment
 
     def set_max_sentence_length(self, length):
         # DPT requested feature
@@ -148,24 +149,25 @@ class WordReplacer:
             except UnboundLocalError:
                 # noun list is empty
                 pass
-            try:
-                if self.checklengthofsentencetobutt(tagged_sentence):
-                    # DPT feature.  default is 9999 but DPT wants it to be shorter for more impact.
-                    if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
-                        if randint(1, 5) == 3:
-                            if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
-                                self.used['shitpost'] = time.time()
-                                return self.pickwordtobutt(nouns, unedited_message, messageobject)
+            else:
+                try:
+                    if self.checklengthofsentencetobutt(tagged_sentence):
+                        # DPT feature.  default is 9999 but DPT wants it to be shorter for more impact.
+                        if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
+                            if randint(1, 5) == 3:
+                                if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
+                                    self.used['shitpost'] = time.time()
+                                    return self.pickwordtobutt(nouns, unedited_message, messageobject)
+                                else:
+                                    self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
+                                                                 "Config Timeout", "Config Timeout")
                             else:
                                 self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
-                                                             "Config Timeout", "Config Timeout")
-                        else:
-                            self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
-                                                         "20% Threshold", "20% Threshold")
-            except UnboundLocalError:
-                # no tags
-                self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
-                                             "No Noun Tags", "No Noun Tags")
+                                                             "20% Threshold", "20% Threshold")
+                except UnboundLocalError:
+                    # no tags
+                    self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
+                                                 "No Noun Tags", "No Noun Tags")
 
     def buttinpropercase(self, wordtobutt, buttoreplace):
         if wordtobutt.istitle():
@@ -180,7 +182,7 @@ class WordReplacer:
         # we prioritize possessive pronouns (his, her, my, etc)
         nouns = []
         wordtagstocheckprioritized = ['PRP$']
-        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR']
+        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'IN']
         tagstoacceptasnouns = ['NN', 'NNS']
         tagstoskipword = ['TO']
         if prioritized == True:
@@ -193,8 +195,14 @@ class WordReplacer:
                 try:
                     if taggedsentence[i + 1][1] in tagstoacceptasnouns:
                         # TODO: fix the verb catch
-                        # this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB"
-                        nouns.append(taggedsentence[i + 1][0])
+                        # this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB
+
+                        if taggedsentence[i][1] == 'IN':
+                            #DEV - trap for IN NN
+                            self.stats.disposition_store(0, 0, "TOI", "IN NN", str(taggedsentence))
+                        else:
+                            nouns.append(taggedsentence[i + 1][0])
+
                 except IndexError:
                     # end of the noun list so we don't really care.
                     pass
@@ -232,7 +240,7 @@ class WordReplacer:
     def pickwordtobutt(self, nouns, unedited_message, messageobject):
         wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
                                'means', 'gonorrhea', 'self', 'bit', 'hour', 'minute', 'second', 'year', 'hours',
-                               'minutes', 'seconds', 'years', 'lot']  # actually, gonorrhea is a funny word
+                               'minutes', 'seconds', 'years', 'lot', 'feel', 'feels', 'couple', 'some']  # actually, gonorrhea is a funny word
         notfunnyfound = False
         if any(t for t in nouns if t in wordsthatarentfunny):
             # one of the tagged words is in the not funny list
