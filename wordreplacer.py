@@ -9,17 +9,16 @@ from nltk.stem import WordNetLemmatizer
 
 from butt_library import *
 
-
 class WordReplacer:
 
-    def __init__(self, timer, sentence_max_length, stat_module,test_environment):
+    def __init__(self, timer, sentence_max_length, stat_module, test_environment):
         self.stats = stat_module
         self.wlist = self.load()
         self.timer = timer
         self.used = {}
         self.set_max_sentence_length(sentence_max_length)
         self.command = {"nltk": 'wordreplacer'}
-        self.test_environment=test_environment
+        self.test_environment = test_environment
 
     def set_max_sentence_length(self, length):
         # DPT requested feature
@@ -198,7 +197,7 @@ class WordReplacer:
                         # this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB
 
                         if taggedsentence[i][1] == 'IN':
-                            #DEV - trap for IN NN
+                            # DEV - trap for IN NN
                             self.stats.disposition_store(0, 0, "TOI", "IN NN", str(taggedsentence))
                         else:
                             nouns.append(taggedsentence[i + 1][0])
@@ -240,7 +239,8 @@ class WordReplacer:
     def pickwordtobutt(self, nouns, unedited_message, messageobject):
         wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
                                'means', 'gonorrhea', 'self', 'bit', 'hour', 'minute', 'second', 'year', 'hours',
-                               'minutes', 'seconds', 'years', 'lot', 'feel', 'feels', 'couple', 'some']  # actually, gonorrhea is a funny word
+                               'minutes', 'seconds', 'years', 'lot', 'feel', 'feels', 'couple',
+                               'some', 'cost']  # actually, gonorrhea is a funny word
         notfunnyfound = False
         if any(t for t in nouns if t in wordsthatarentfunny):
             # one of the tagged words is in the not funny list
