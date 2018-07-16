@@ -12,7 +12,8 @@ from wordreplacer import WordReplacer
 
 
 class buttbot:
-    def __init__(self, BotObject, conf, db_, db_user, db_pass, stat_module):
+    def __init__(self, BotObject, conf, db_, db_user, db_pass, stat_module, test_environment):
+        self.test_environment = test_environment
         self.stats = stat_module
         self.config = configparser.ConfigParser()
         self.config.read_file(open(conf))
@@ -24,7 +25,7 @@ class buttbot:
         self.discordBot = BotObject
         self.used = {}
         self.shitpost = WordReplacer(self.min_call_freq, int(self.config.get('wordreplacer', 'max_sentence_length')),
-                                     self.stats)
+                                     self.stats, test_environment)
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
@@ -163,8 +164,9 @@ class buttbot:
                 # this is a join or part message and we are going to ignore it
                 pass
             else:
-                if self.allowed_in_channel(message.channel):
-                    # do not send to shitpost module if we aren't allowed to talk in the channel in question
+                if self.allowed_in_channel(message.channel) or self.test_environment:
+                    # do not send to shitpost module if we aren't allowed to talk in the channel in question.
+                    # exception: always send if test environment is turned on.
                     rshitpost = self.shitpost.tobuttornottobutt(message, str(message.author))
             try:
                 if rshitpost:
