@@ -166,7 +166,8 @@ class buttbot:
             else:
                 if self.allowed_in_channel(message.channel) or self.test_environment:
                     # do not send to shitpost module if we aren't allowed to talk in the channel in question.
-                    # exception: always send if test environment is turned on.
+                    # exception: always send if test environment is turned on. the function to send the message to the
+                    # discord API will not transmit the message.
                     rshitpost = self.shitpost.tobuttornottobutt(message, str(message.author))
             try:
                 if rshitpost:
