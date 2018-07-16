@@ -185,6 +185,7 @@ class WordReplacer:
         wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'IN']
         tagstoacceptasnouns = ['NN', 'NNS']
         tagstoskipword = ['TO']
+        wordsthatarenotadjectives = ['i'] #lower case i is tagged as a adjective for some reason
         if prioritized == True:
             tagstocheck = wordtagstocheckprioritized
         else:
@@ -192,20 +193,21 @@ class WordReplacer:
 
         for i in range(len(taggedsentence) - 1):  # *jiggling intensifies*
             if taggedsentence[i][1] in tagstocheck:
-                try:
-                    if taggedsentence[i + 1][1] in tagstoacceptasnouns:
-                        # TODO: fix the verb catch
-                        # this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB
+                if taggedsentence[i][0] not in wordsthatarenotadjectives: #fix some words getting tagged weird
+                    try:
+                        if taggedsentence[i + 1][1] in tagstoacceptasnouns:
+                            # TODO: fix the verb catch
+                            # this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB
 
-                        if taggedsentence[i][1] == 'IN':
-                            # DEV - trap for IN NN
-                            self.stats.disposition_store(0, 0, "TOI", "IN NN", str(taggedsentence))
-                        else:
-                            nouns.append(taggedsentence[i + 1][0])
+                            if taggedsentence[i][1] == 'IN':
+                                # DEV - trap for IN NN
+                                self.stats.disposition_store(0, 0, "TOI", "IN NN", str(taggedsentence))
+                            else:
+                                nouns.append(taggedsentence[i + 1][0])
 
-                except IndexError:
-                    # end of the noun list so we don't really care.
-                    pass
+                    except IndexError:
+                        # end of the noun list so we don't really care.
+                        pass
 
         return nouns
 
