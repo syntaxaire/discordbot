@@ -9,6 +9,7 @@ from nltk.stem import WordNetLemmatizer
 
 from butt_library import *
 
+
 class WordReplacer:
 
     def __init__(self, timer, sentence_max_length, stat_module, test_environment):
