@@ -182,7 +182,7 @@ class WordReplacer:
         # we prioritize possessive pronouns (his, her, my, etc)
         nouns = []
         wordtagstocheckprioritized = ['PRP$']
-        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'IN', 'WP$']
+        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'WP$', 'WP']
         tagstoacceptasnouns = ['NN', 'NNS']
         tagstoskipword = ['TO']
         wordsthatarenotadjectives = ['i'] #lower case i is tagged as a adjective for some reason
@@ -199,9 +199,9 @@ class WordReplacer:
                             # TODO: fix the verb catch
                             # this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB
 
-                            if taggedsentence[i][1] == 'IN':
+                            if taggedsentence[i][1] == 'WP':
                                 # DEV - trap for IN NN
-                                self.stats.disposition_store(0, 0, "TOI", "IN NN", str(taggedsentence))
+                                self.stats.disposition_store(0, 0, "TOI", "IN WP", str(taggedsentence))
                             else:
                                 nouns.append(taggedsentence[i + 1][0])
 
