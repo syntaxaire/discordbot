@@ -1,5 +1,6 @@
-import re
 import glob
+import re
+
 from rfc3987 import parse
 
 
@@ -40,3 +41,7 @@ def detect_code_block(text):
 
 def load_all_config_files():
     return glob.glob("config/*.ini")
+
+
+def get_indexes(list, word):
+    return [i for (y, i) in zip(word, range(len(word))) if list == y]
