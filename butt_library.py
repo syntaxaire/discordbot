@@ -44,4 +44,4 @@ def load_all_config_files():
 
 
 def get_indexes(list, word):
-    return [i for (y, i) in zip(word, range(len(word))) if list == y]
+    return [i for (y, i) in zip(list, range(len(list))) if word == y]
