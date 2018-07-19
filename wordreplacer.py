@@ -250,7 +250,8 @@ class WordReplacer:
             # need to replace an with a.
             for i in indexes:
                 try:
-                        message[i - 1] = "a"
+                    if message[i - 1] == "an":
+                        message[i -1] = "a"
                 except IndexError:
                     # could be possible but we don't care
                     pass
