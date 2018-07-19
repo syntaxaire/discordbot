@@ -159,7 +159,6 @@ class WordReplacer:
                                     self.used['shitpost'] = time.time()
                                     new_sentence, replaced_with = self.pickwordtobutt(nouns, unedited_message,
                                                                                       messageobject)
-
                                     return self.replace_an_to_a_in_sentence(new_sentence, replaced_with)
                                 else:
                                     self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
