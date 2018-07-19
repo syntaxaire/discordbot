@@ -157,7 +157,10 @@ class WordReplacer:
                             if randint(1, 5) == 3:
                                 if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
                                     self.used['shitpost'] = time.time()
-                                    return self.pickwordtobutt(nouns, unedited_message, messageobject)
+                                    new_sentence, replaced_with = self.pickwordtobutt(nouns, unedited_message,
+                                                                                      messageobject)
+
+                                    return self.replace_an_to_a_in_sentence(new_sentence, replaced_with)
                                 else:
                                     self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
                                                                  "Config Timeout", "Config Timeout")
@@ -185,7 +188,7 @@ class WordReplacer:
         wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'WP$', 'WP']
         tagstoacceptasnouns = ['NN', 'NNS']
         tagstoskipword = ['TO']
-        wordsthatarenotadjectives = ['i'] #lower case i is tagged as a adjective for some reason
+        wordsthatarenotadjectives = ['i']  # lower case i is tagged as a adjective for some reason
         if prioritized == True:
             tagstocheck = wordtagstocheckprioritized
         else:
@@ -193,7 +196,7 @@ class WordReplacer:
 
         for i in range(len(taggedsentence) - 1):  # *jiggling intensifies*
             if taggedsentence[i][1] in tagstocheck:
-                if taggedsentence[i][0] not in wordsthatarenotadjectives: #fix some words getting tagged weird
+                if taggedsentence[i][0] not in wordsthatarenotadjectives:  # fix some words getting tagged weird
                     try:
                         if taggedsentence[i + 1][1] in tagstoacceptasnouns:
                             # TODO: fix the verb catch
@@ -239,6 +242,33 @@ class WordReplacer:
         else:
             return True
 
+    def replace_an_to_a_in_sentence(self, message, butt_word):
+        print("****+*+*+*++*+*+*++*+*++*+*+*++*+*+*+*+*++*+*+*+*++*+*+*+*++*")
+        print("hello we are replaceing AN with A")
+        print("sentence is %s" % message)
+        print("butt word is %s" % butt_word)
+        print("****+*+*+*++*+*+*++*+*++*+*+*++*+*+*+*+*++*+*+*+*++*+*+*+*++*")
+        message = message.split(" ")
+        print(message)
+        indexes = get_indexes(message, butt_word)
+        if indexes:
+            print("found indexes: %s" % str(indexes))
+            # we found one or more instances of butt, we need to check the list index i-1 of that butt word to see if we
+            # need to replace an with a.
+            for i in indexes:
+                try:
+                    if message[i - 1] == "an":
+                        print("looks like i found one")
+                        message[i - 1] = "a"
+                    else:
+                        print("didnt find one.")
+                except IndexError:
+                    # could be possible but we don't care
+                    pass
+        else:
+            print("no indexes found")
+        return " ".join(message)
+
     def pickwordtobutt(self, nouns, unedited_message, messageobject):
         wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
                                'means', 'gonorrhea', 'self', 'bit', 'hour', 'minute', 'second', 'year', 'hours',
@@ -260,7 +290,7 @@ class WordReplacer:
         if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
             # the lemmatizer thinks that this is a plural
             return unedited_message.replace(nouns[buttword],
-                                            self.buttinpropercase(nouns[buttword], 'butts'))
+                                            self.buttinpropercase(nouns[buttword], 'butts')), 'butts'
         else:
             return unedited_message.replace(nouns[buttword],
-                                            self.buttinpropercase(nouns[buttword], 'butt'))
+                                            self.buttinpropercase(nouns[buttword], 'butt')), 'butt'
