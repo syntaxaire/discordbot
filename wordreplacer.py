@@ -182,7 +182,7 @@ class WordReplacer:
         # we prioritize possessive pronouns (his, her, my, etc)
         nouns = []
         wordtagstocheckprioritized = ['PRP$']
-        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'IN']
+        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'IN', 'WP$']
         tagstoacceptasnouns = ['NN', 'NNS']
         tagstoskipword = ['TO']
         wordsthatarenotadjectives = ['i'] #lower case i is tagged as a adjective for some reason
