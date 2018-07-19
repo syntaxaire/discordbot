@@ -242,30 +242,18 @@ class WordReplacer:
             return True
 
     def replace_an_to_a_in_sentence(self, message, butt_word):
-        print("****+*+*+*++*+*+*++*+*++*+*+*++*+*+*+*+*++*+*+*+*++*+*+*+*++*")
-        print("hello we are replaceing AN with A")
-        print("sentence is %s" % message)
-        print("butt word is %s" % butt_word)
-        print("****+*+*+*++*+*+*++*+*++*+*+*++*+*+*+*+*++*+*+*+*++*+*+*+*++*")
         message = message.split(" ")
         print(message)
         indexes = get_indexes(message, butt_word)
         if indexes:
-            print("found indexes: %s" % str(indexes))
             # we found one or more instances of butt, we need to check the list index i-1 of that butt word to see if we
             # need to replace an with a.
             for i in indexes:
                 try:
-                    if message[i - 1] == "an":
-                        print("looks like i found one")
                         message[i - 1] = "a"
-                    else:
-                        print("didnt find one.")
                 except IndexError:
                     # could be possible but we don't care
                     pass
-        else:
-            print("no indexes found")
         return " ".join(message)
 
     def pickwordtobutt(self, nouns, unedited_message, messageobject):
