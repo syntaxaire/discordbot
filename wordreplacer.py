@@ -260,7 +260,7 @@ class WordReplacer:
         wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
                                'means', 'gonorrhea', 'self', 'bit', 'hour', 'minute', 'second', 'year', 'hours',
                                'minutes', 'seconds', 'years', 'lot', 'feel', 'feels', 'couple',
-                               'some', 'cost', 'look']  # actually, gonorrhea is a funny word
+                               'some', 'cost', 'look', 'level']  # actually, gonorrhea is a funny word
         notfunnyfound = False
         if any(t for t in nouns if t in wordsthatarentfunny):
             # one of the tagged words is in the not funny list
