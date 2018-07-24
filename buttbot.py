@@ -3,6 +3,7 @@ import configparser
 import random
 
 import butt_timeout
+import butt_config
 import discord_comms
 import mojang as mj
 from butt_database import db
@@ -15,8 +16,7 @@ class buttbot:
     def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, test_environment):
         self.test_environment = test_environment
         self.stats = stat_module
-        self.config = configparser.ConfigParser()
-        self.config.read_file(open(conf))
+        self.config = butt_config.butt_config(conf)
         self.timer_module = butt_timeout.Timeout(self.config)
         self.db = db(db_, db_user, db_pass)
         if bool(self.config.get('vacuum', 'enabled')):
@@ -110,33 +110,31 @@ class buttbot:
                     str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
                 self.vacuum.add_death_message(message.content)
             else:
-                if self.allowed_in_channel(message.channel):
-                    if self.config.getboolean('discordbot', 'RIP'):
-                        self.stats.message_store(message.channel.id)
-                        if self.timer_module.check_timeout('rip', 'shitpost'):
-                            self.stats.disposition_store(message.server.id, message.channel.id,
-                                                         "RIP", "RIP")
-                            if random.randint(1, 20) == 5:
-                                await self.doComms('Ya, butts', message.channel)
-                            else:
-                                await self.doComms('Ya, RIP', message.channel)
-                        else:
-                            self.stats.disposition_store(message.server.id, message.channel.id,
-                                                         "RIP cooldown", "RIP cooldown")
-
-        elif is_word_in_text("F", message.content):
-            if self.allowed_in_channel(message.channel):
-                if self.config.getboolean('discordbot', 'F'):
+                if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'RIP'):
                     self.stats.message_store(message.channel.id)
-                    if self.timer_module.check_timeout('f', 'shitpost'):
+                    if self.timer_module.check_timeout('rip', 'shitpost'):
                         self.stats.disposition_store(message.server.id, message.channel.id,
-                                                     "F", "F")
-                        await self.doComms('Ya, F', message.channel)
+                                                     "RIP", "RIP")
+                        if random.randint(1, 20) == 5:
+                            await self.doComms('Ya, butts', message.channel)
+                        else:
+                            await self.doComms('Ya, RIP', message.channel)
                     else:
                         self.stats.disposition_store(message.server.id, message.channel.id,
-                                                     "F cooldown", "F cooldown")
-                        if random.randint(1, 100) == 44:
-                            await self.doComms('suck my dick F under cooldown', message.channel)
+                                                     "RIP cooldown", "RIP cooldown")
+
+        elif is_word_in_text("F", message.content):
+            if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'F'):
+                self.stats.message_store(message.channel.id)
+                if self.timer_module.check_timeout('f', 'shitpost'):
+                    self.stats.disposition_store(message.server.id, message.channel.id,
+                                                 "F", "F")
+                    await self.doComms('Ya, F', message.channel)
+                else:
+                    self.stats.disposition_store(message.server.id, message.channel.id,
+                                                 "F cooldown", "F cooldown")
+                    if random.randint(1, 100) == 44:
+                        await self.doComms('suck my dick F under cooldown', message.channel)
 
         elif is_word_in_text('butt', message.content) == True or is_word_in_text('butts', message.content) == True:
             if self.allowed_in_channel(message.channel):
