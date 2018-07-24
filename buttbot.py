@@ -5,6 +5,7 @@ import time
 
 import discord_comms
 import mojang as mj
+import butt_timeout
 from butt_database import db
 from butt_library import is_word_in_text
 from vacuum import Vacuum
@@ -12,20 +13,18 @@ from wordreplacer import WordReplacer
 
 
 class buttbot:
-    def __init__(self, BotObject, conf, db_, db_user, db_pass, stat_module, test_environment):
+    def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, test_environment):
         self.test_environment = test_environment
         self.stats = stat_module
         self.config = configparser.ConfigParser()
         self.config.read_file(open(conf))
+        self.timer_module = butt_timeout.Timeout(self.config)
         self.db = db(db_, db_user, db_pass)
         if bool(self.config.get('vacuum', 'enabled')):
             self.vacuum = Vacuum(self.db)
-        self.min_call_freq = int(self.config.get('discordbot', 'shitpost_call_freq'))
         self.comm = discord_comms.discord_comms()
-        self.discordBot = BotObject
-        self.used = {}
-        self.shitpost = WordReplacer(self.min_call_freq, int(self.config.get('wordreplacer', 'max_sentence_length')),
-                                     self.stats, test_environment)
+        self.discordBot = Botobject
+        self.shitpost = WordReplacer(self.config,self.stats, self.timer_module, test_environment)
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
@@ -44,7 +43,25 @@ class buttbot:
             await self.discordBot.leave_server(message.server)
         else:
             await self.doComms('fuck you youre not my real dad', message.channel)
-            print(self.discordBot.user)
+
+    def pick_correct_module(self, command):
+        # this returns the module that contains the command ran by the user.  The module must support the command and
+        # also be enabled to be returned.
+        # it defaults to the main buttbot module.
+        module = self
+        # pick which module has the command, and set the module var to the module object
+        if command in self.vacuum.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
+            # vacuum must be turned on for this to work.
+            module = self.vacuum
+
+        if command in self.shitpost.return_commands() and self.config.getboolean('wordreplacer', 'enabled') is True:
+            # wordreplacer must be turned on for this to work.
+            module = self.shitpost
+
+        if command in self.mojang.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
+            # we are using the vacuum config because both of these are for minecraft.
+            module = self.mojang
+        return module
 
     async def command_dispatch(self, message):
         try:
@@ -54,19 +71,7 @@ class buttbot:
             command = ''
         if command:
             command, se, arguments = command.partition(' ')
-            module = self
-            # pick which module has the command, and set the module var to the module object
-            if command in self.vacuum.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
-                # vacuum must be turned on for this to work.
-                module = self.vacuum
-
-            if command in self.shitpost.return_commands() and self.config.getboolean('wordreplacer', 'enabled') is True:
-                # wordreplacer must be turned on for this to work.
-                module = self.shitpost
-
-            if command in self.mojang.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
-                # we are using the vacuum config because both of these are for minecraft.
-                module = self.mojang
+            module = self.pick_correct_module(command)
             try:
                 if module:
                     func = getattr(module, 'do_' + command)
@@ -109,8 +114,7 @@ class buttbot:
                 if self.allowed_in_channel(message.channel):
                     if self.config.getboolean('discordbot', 'RIP'):
                         self.stats.message_store(message.channel.id)
-                        if 'rip' not in self.used or time.time() - self.used['rip'] > self.min_call_freq:
-                            self.used['rip'] = time.time()
+                        if self.timer_module.check_timeout('rip', 'shitpost'):
                             self.stats.disposition_store(message.server.id, message.channel.id,
                                                          "RIP", "RIP")
                             if random.randint(1, 20) == 5:
@@ -125,8 +129,7 @@ class buttbot:
             if self.allowed_in_channel(message.channel):
                 if self.config.getboolean('discordbot', 'F'):
                     self.stats.message_store(message.channel.id)
-                    if 'f' not in self.used or time.time() - self.used['f'] > self.min_call_freq:
-                        self.used['f'] = time.time()
+                    if self.timer_module.check_timeout('f', 'shitpost'):
                         self.stats.disposition_store(message.server.id, message.channel.id,
                                                      "F", "F")
                         await self.doComms('Ya, F', message.channel)
@@ -140,8 +143,7 @@ class buttbot:
             if self.allowed_in_channel(message.channel):
                 self.stats.message_store(message.channel.id)
                 if random.randint(1, 6) == 3:
-                    if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
-                        self.used['r_shitpost'] = time.time()
+                    if self.timer_module.check_timeout('rsp', 'shitpost'):
                         rshitpost = self.shitpost.rspeval(message.content)
                         if rshitpost:
                             self.stats.disposition_store(message.server.id, message.channel.id,
@@ -151,8 +153,7 @@ class buttbot:
                         self.stats.disposition_store(message.server.id, message.channel.id,
                                                      "RSP cooldown", "RSP cooldown")
                 elif random.randint(1, 3) == 3:
-                    if 'r_shitpost' not in self.used or time.time() - self.used['r_shitpost'] > self.min_call_freq:
-                        self.used['r_shitpost'] = time.time()
+                    if self.timer_module.check_timeout('rsp_emoji', 'shitpost'):
                         await self.doreact(message, message.channel, random.choice(
                             self.config.get('discordbot', 'butt_response_emojis').split(",")))
 
