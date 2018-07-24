@@ -12,12 +12,12 @@ from butt_library import *
 
 class WordReplacer:
 
-    def __init__(self, timer, sentence_max_length, stat_module, test_environment):
+    def __init__(self, config, stat_module, timer_module, test_environment):
+        self.config = config
+        self.timer_module = timer_module
         self.stats = stat_module
-        self.wlist = self.load()
-        self.timer = timer
-        self.used = {}
-        self.set_max_sentence_length(sentence_max_length)
+        self.wlist = self.load_word_list()
+        self.set_max_sentence_length(int(self.config.get('wordreplacer', 'max_sentence_length')))
         self.command = {"nltk": 'wordreplacer'}
         self.test_environment = test_environment
 
@@ -29,7 +29,7 @@ class WordReplacer:
         else:
             self.sentence_max_length = 9999
 
-    def load(self):
+    def load_word_list(self):
         try:
             with open('wordlist.txt') as f:
                 return json.load(f)
@@ -53,26 +53,9 @@ class WordReplacer:
         with open('wordlist.txt', 'w') as f:
             json.dump(self.wlist, f, ensure_ascii=False)
 
-    def eval(self, message):
-        if randint(1, 5) == 3:
-            message = message.lower()
-            try:
-                for s in self.wlist:
-                    if is_word_in_text(s, message) or is_word_in_text(s + 's', message):
-                        # found it
-                        # people want this to spew garbage so give the garbage to the people
-                        if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
-                            self.used['shitpost'] = time.time()
-                            for t in self.wlist:  # replace everything aaaaaaa
-                                message = message.replace(t, 'butt')
-                            return message
-            except TypeError:
-                self.wlist = self.load()
-
     def rspeval(self, message):
         message = message.lower()
-        if 'reverseshitpost' not in self.used or time.time() - self.used['reverseshitpost'] > self.timer:
-            self.used['reverseshitpost'] = time.time()
+        if self.timer_module.check_timeout('rsp','shitpost'):
             for t in self.wlist:  # replace everything aaaaaaa
                 message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
             return message
@@ -155,8 +138,7 @@ class WordReplacer:
                         # DPT feature.  default is 9999 but DPT wants it to be shorter for more impact.
                         if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
                             if randint(1, 5) == 3:
-                                if 'shitpost' not in self.used or time.time() - self.used['shitpost'] > self.timer:
-                                    self.used['shitpost'] = time.time()
+                                if self.timer_module.check_timeout('shitpost', 'shitpost'):
                                     new_sentence, replaced_with = self.pickwordtobutt(nouns, unedited_message,
                                                                                       messageobject)
                                     return self.replace_an_to_a_in_sentence(new_sentence, replaced_with)
@@ -251,7 +233,7 @@ class WordReplacer:
             for i in indexes:
                 try:
                     if message[i - 1] == "an":
-                        message[i -1] = "a"
+                        message[i - 1] = "a"
                 except IndexError:
                     # could be possible but we don't care
                     pass
