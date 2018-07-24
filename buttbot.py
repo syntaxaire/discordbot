@@ -1,11 +1,10 @@
 import asyncio
 import configparser
 import random
-import time
 
+import butt_timeout
 import discord_comms
 import mojang as mj
-import butt_timeout
 from butt_database import db
 from butt_library import is_word_in_text
 from vacuum import Vacuum
@@ -169,7 +168,7 @@ class buttbot:
                     # do not send to shitpost module if we aren't allowed to talk in the channel in question.
                     # exception: always send if test environment is turned on. the function to send the message to the
                     # discord API will not transmit the message.
-                    rshitpost = self.shitpost.tobuttornottobutt(message, str(message.author))
+                    rshitpost = self.shitpost.tobuttornottobutt(message)
             try:
                 if rshitpost:
                     await self.doComms(rshitpost, message.channel)
