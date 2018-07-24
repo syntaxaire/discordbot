@@ -39,6 +39,19 @@ async def on_ready():
 
 
 @client.event
+async def on_reaction_add(reaction,user):
+    if not user == client.user:
+        # i didnt react, c'est partie
+        if reaction.message.author == client.user:
+            #this is a message that I sent to a chat so people are reacting to it.
+            #store this.
+            print(reaction.message.content)
+            print(reaction.message.id)
+            print(reaction.count)
+            print(reaction.emoji)
+
+
+@client.event
 async def on_message(message):
     if message.author == client.user:
         return
