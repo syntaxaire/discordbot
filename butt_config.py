@@ -23,3 +23,6 @@ class butt_config():
 
     def process_list_from_configparser(self, section, key):
         return self.get(section, key).split(",")
+
+    def get_all_blacklisted_users(self):
+        return self.process_list_from_configparser('discordbot', 'always_ignore')
