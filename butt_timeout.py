@@ -5,7 +5,7 @@ class Timeout:
     def __init__(self, config):
         # load the shitpost and command call frequencies out of the passed config.
         self.config = config
-        self.type={}
+        self.type = {}
         self.type['shitpost'] = int(self.config.get('discordbot', 'shitpost_call_freq'))
         self.type['command'] = int(self.config.get('discordbot', 'command_call_freq'))
         self.timeout_storage_variable = {}
