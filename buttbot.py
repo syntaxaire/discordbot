@@ -1,9 +1,8 @@
 import asyncio
-import configparser
 import random
 
-import butt_timeout
 import butt_config
+import butt_timeout
 import discord_comms
 import mojang as mj
 from butt_database import db
@@ -23,7 +22,7 @@ class buttbot:
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.discord_comms()
         self.discordBot = Botobject
-        self.shitpost = WordReplacer(self.config,self.stats, self.timer_module, test_environment)
+        self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, test_environment)
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
@@ -63,6 +62,9 @@ class buttbot:
         return module
 
     async def command_dispatch(self, message):
+        if not self.should_i_reply_to_user(message):
+            # user is either a bot not on whitelist or is a user on the ignore list
+            return
         try:
             command = message.content.split("&", 1)[1]
         except IndexError:
@@ -104,7 +106,36 @@ class buttbot:
                                          "React", emojis, message.content)
             await self.comm.do_react(message, self.discordBot, emojis)
 
+    def _should_i_reply_to_bot(self, author):
+        """Checks to see if we should reply to message author - checks bot whitelist and general user ignore list"""
+        if author in self.config.get_all_whitelisted_bots():
+            # we should always talk to this bot
+            return True
+        else:
+            return False
+
+    def _should_i_reply_to_user(self, author):
+        if author not in self.config.get_all_blacklisted_users():
+            return True
+        else:
+            return False
+
+    def should_i_reply_to_user(self, message):
+        if message.author.bot:
+            # bot user (flag set by discord server)
+            if self._should_i_reply_to_bot(str(message.author)):
+                return True
+            else:
+                return False
+        if self._should_i_reply_to_user(str(message.author)):
+            return True
+        else:
+            return False
+
     async def chat_dispatch(self, message):
+        if not self.should_i_reply_to_user(message):
+            # user is either a bot not on whitelist or is a user on the ignore list
+            return
         if is_word_in_text("rip", message.content) == True:
             if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
                     str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
@@ -151,8 +182,7 @@ class buttbot:
                                                      "RSP cooldown", "RSP cooldown")
                 elif random.randint(1, 3) == 3:
                     if self.timer_module.check_timeout('rsp_emoji', 'shitpost'):
-                        await self.doreact(message, message.channel, random.choice(
-                            self.config.get('discordbot', 'butt_response_emojis').split(",")))
+                        await self.doreact(message, message.channel, random.choice(self.config.get_all_emojis()))
 
         else:
             # here's where im going to evaluate all other sentences for shitposting
