@@ -97,7 +97,8 @@ class buttbot:
 
     async def doComms(self, message, channel):
         if self.allowed_in_channel(channel):
-            await self.comm.do_send_message(channel, self.discordBot, message)
+            msg = await self.comm.do_send_message(channel, self.discordBot, message)
+            return msg #returns the message object of the message that was sent to discord
 
     async def doreact(self, message, channel, emojis):
         if self.allowed_in_channel(channel):
@@ -199,7 +200,8 @@ class buttbot:
                     rshitpost = self.shitpost.tobuttornottobutt(message)
             try:
                 if rshitpost:
-                    await self.doComms(rshitpost, message.channel)
+                    msg = await self.doComms(rshitpost, message.channel)
+
             except UnboundLocalError:
                 pass
 

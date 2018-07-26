@@ -16,7 +16,8 @@ class discord_comms:
             await asyncio.sleep(cooldown)
         else:
             await asyncio.sleep(rand.randint(2, 5))
-        await client.send_message(channel, message)  # dont remove await from here or this shit will break
+        msg = await client.send_message(channel, message)  # dont remove await from here or this shit will break
+        return msg
 
     async def do_react(self, message, client, emoji, cooldown=None):
         if cooldown:
