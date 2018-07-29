@@ -109,14 +109,14 @@ class buttbot:
 
     def _should_i_reply_to_bot(self, author):
         """Checks to see if we should reply to message author - checks bot whitelist and general user ignore list"""
-        if author in self.config.get_all_whitelisted_bots():
+        if author in self.config.get_all_allowed_bots():
             # we should always talk to this bot
             return True
         else:
             return False
 
     def _should_i_reply_to_user(self, author):
-        if author not in self.config.get_all_blacklisted_users():
+        if author not in self.config.get_all_banned_users():
             return True
         else:
             return False
@@ -197,7 +197,7 @@ class buttbot:
                     # do not send to shitpost module if we aren't allowed to talk in the channel in question.
                     # exception: always send if test environment is turned on. the function to send the message to the
                     # discord API will not transmit the message.
-                    rshitpost = self.shitpost.tobuttornottobutt(message)
+                    rshitpost = self.shitpost.performtexttobutt(message)
             try:
                 if rshitpost:
                     msg = await self.doComms(rshitpost, message.channel)
