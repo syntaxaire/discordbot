@@ -15,14 +15,17 @@ class butt_config():
         # passthrough function for backwards compatibility
         return self.config_file.getboolean(section, key)
 
-    def get_all_whitelisted_bots(self):
-        return self.process_list_from_configparser('discordbot', 'whitelisted_bots')
-
-    def get_all_emojis(self):
-        return self.get('discordbot', 'butt_response_emojis').split(",")
-
-    def process_list_from_configparser(self, section, key):
+    def _process_list_from_configparser(self, section, key):
         return self.get(section, key).split(",")
 
-    def get_all_blacklisted_users(self):
-        return self.process_list_from_configparser('discordbot', 'always_ignore')
+    def get_all_allowed_bots(self):
+        return self._process_list_from_configparser('discordbot', 'whitelisted_bots')
+
+    def get_all_emojis(self):
+        return self._process_list_from_configparser('discordbot', 'butt_response_emojis')
+
+    def get_all_banned_users(self):
+        return self._process_list_from_configparser('discordbot', 'always_ignore')
+
+    def get_all_stop_phrases(self):
+        return self._process_list_from_configparser('wordreplacer', 'stop_processing_phrases')
