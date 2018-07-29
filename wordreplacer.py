@@ -1,5 +1,4 @@
 import json
-import time
 from random import *
 
 import nltk
@@ -55,7 +54,7 @@ class WordReplacer:
 
     def rspeval(self, message):
         message = message.lower()
-        if self.timer_module.check_timeout('rsp','shitpost'):
+        if self.timer_module.check_timeout('rsp', 'shitpost'):
             for t in self.wlist:  # replace everything aaaaaaa
                 message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
             return message
@@ -63,20 +62,60 @@ class WordReplacer:
     def wordtagger(self, message):
         return nltk.pos_tag(nltk.word_tokenize(message))
 
-    def wordclassifier(self, message, author):
-        nouns = []
-        # function to test if something is a noun
-        # do the nlp stuff
-        li = self.wordtagger(message)
-        for w in li:
-            if w[0] == "<" or w[0] == ">":
-                # ignore this punctuation because for some reason NLTK doesnt always
-                pass
-            else:
-                if w[1] == "NN" or w[1] == "NNP" or w[1] == "NOUN" or w[1] == "NNSP":
-                    # NLTK categorized the word as either a noun or proper noun
-                    nouns.append(w[0])
-        return nouns
+    def getwordweight(self, word, source_weight):
+        # dummy for now
+        return 100 * source_weight
+
+    def isuseranallowedbot(self, author):
+        if author in self.config.get_all_allowed_bots():
+            return True
+        else:
+            return False
+
+    def doesmessagecontainstopphrases(self, message):
+        if not any(v for v in self.config.get_all_stop_phrases() if v in message) and \
+                not (message.startswith("*") and message.endswith("*")):
+            return False
+        else:
+            return True
+
+    def performtexttobutt(self, messageobject):
+        # we are going to manipulate this version of the message before sending it to the processing functions.
+        # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
+        message = messageobject.content
+
+        if not detect_code_block(message):
+            # passes code block test
+            if not self.doesmessagecontainstopphrases(str(messageobject.content)):
+                # message contains no stop phrases, let's proceed
+                self.stats.message_store(messageobject.channel.id)
+                if self.isuseranallowedbot(str(messageobject.author)):
+                    # message sender is allowed bot, we should separate the first word out of the message since that
+                    # is the user the bot is relaying for
+                    tagged_sentence = self.wordtagger(strip_IRI(message.split(" ", 1)[1]))
+                else:
+                    tagged_sentence = self.wordtagger(strip_IRI(message))
+                nouns=self.returnnounsfromallsources(tagged_sentence)
+
+    def returnnounsfromallsources(self, tagged_sentence):
+        prioritzed_sentence = self.doesmessagehaveprioritizedpartsofspeech(tagged_sentence)
+        if prioritzed_sentence:
+            prioritized_nouns = self._findweightednounsbyprevioustag(tagged_sentence, True)
+        non_prioritized_nouns = self._findweightednounsbyprevioustag(tagged_sentence, False)
+        combined_list=prioritized_nouns+non_prioritized_nouns
+        print(self.pickrandomwordbyweight(combined_list))
+
+
+    def pickrandomwordbyweight(self,word_list):
+        total_sum_of_weights = self.sumallweights(word_list)
+        randomweight = randrange(1,total_sum_of_weights)
+        for i in word_list:
+            randomweight=randomweight-i[1]
+            if randomweight<=0:
+                return i[0]
+
+    def sumallweights(self,word_list):
+        return sum(weight for words, weight in word_list)
 
     def tobuttornottobutt(self, messageobject, author):
         message = messageobject.content
@@ -100,33 +139,7 @@ class WordReplacer:
             else:
                 tagged_sentence = self.wordtagger(strip_IRI(message))
                 nouns, targeted = self.findnounsbyprevioustag(tagged_sentence)
-            self.stats.message_store(messageobject.channel.id)
-            try:
-                print("------------------------------------------------------------------------------------")
-                print("tagged sentence: %s" % self.wordtagger(message))
-                print("sentence tag length: %s " % str(len(tagged_sentence)))
-                print("-----------------------")
-                print("prioritized: %s" % str(targeted))
-                print("noun candidates: %s" % self.removestopwords(nouns))
 
-                if targeted == True:
-                    print("-------TARGETED--------")
-                    print("non prioritized nouns: %s" % self._findnounsbyprevioustag(nouns, False))
-                    print("-------IGNORE----------")
-                print("nouns ignored: %s" % [n for n in self.wordclassifier(message, "butt") if n not in nouns])
-                if not nouns == self.removestopwords(nouns):
-                    # stopwords applied
-                    print("-------STOPWORD--------")
-                    print(
-                        "nouns explicitly stopworded: %s " % [n for n in nouns if n not in self.removestopwords(nouns)])
-
-                print("------DECISION TREE--------")
-                arewebuttingthisshit = (True if len(nouns) > 1 or targeted == True and len(nouns) > 0 else False)
-                print("Butt this sentence? %s" % arewebuttingthisshit)
-                arewebuttinglength = (True if len(tagged_sentence) < 50 else "MAYBE (not DPT)")
-                print("does it meet length? %s" % arewebuttinglength)
-            except UnboundLocalError:
-                pass
             try:
                 nouns = self.removestopwords(nouns)
             except UnboundLocalError:
@@ -161,7 +174,7 @@ class WordReplacer:
         else:
             return buttoreplace
 
-    def _findnounsbyprevioustag(self, taggedsentence, prioritized):
+    def _findweightednounsbyprevioustag(self, taggedsentence, prioritized):
         # we construct a list of nouns if the previously tagged word has a certain tag.
         # we prioritize possessive pronouns (his, her, my, etc)
         nouns = []
@@ -172,42 +185,30 @@ class WordReplacer:
         wordsthatarenotadjectives = ['i']  # lower case i is tagged as a adjective for some reason
         if prioritized == True:
             tagstocheck = wordtagstocheckprioritized
+            source_weight = 25.0
         else:
             tagstocheck = wordtagstochecknotprioritized
+            source_weight = 1.0
 
         for i in range(len(taggedsentence) - 1):  # *jiggling intensifies*
             if taggedsentence[i][1] in tagstocheck:
                 if taggedsentence[i][0] not in wordsthatarenotadjectives:  # fix some words getting tagged weird
                     try:
                         if taggedsentence[i + 1][1] in tagstoacceptasnouns:
-                            # TODO: fix the verb catch
-                            # this should catch <verb> <noun> <to> to hopefully catch stuff like "needs/NN to/TO be/VB
-
-                            if taggedsentence[i][1] == 'WP':
-                                # DEV - trap for IN NN
-                                self.stats.disposition_store(0, 0, "TOI", "IN WP", str(taggedsentence))
-                            else:
-                                nouns.append(taggedsentence[i + 1][0])
-
+                            #append weighted version of the word using source weight (prioritized vs non pri mode)
+                            nouns.append((taggedsentence[i + 1][0], self.getwordweight(taggedsentence[i + 1][0],
+                                                                                       source_weight)))
                     except IndexError:
                         # end of the noun list so we don't really care.
                         pass
-
         return nouns
 
-    def findnounsbyprevioustag(self, taggedsentence):
+    def doesmessagehaveprioritizedpartsofspeech(self, taggedsentence):
         wordtagstocheckprioritized = ['PRP$']  # posessive personal pronoun
         if any(t for t in taggedsentence if t[1] in wordtagstocheckprioritized):
-            nouns = self._findnounsbyprevioustag(taggedsentence, True)
-            targeted = True
-            if len(nouns) == 0:
-                # nothing returned from the prioritized check, run a non prioritized check
-                nouns = self._findnounsbyprevioustag(taggedsentence, False)
-                targeted = False
+            return True
         else:
-            nouns = self._findnounsbyprevioustag(taggedsentence, False)
-            targeted = False
-        return nouns, targeted
+            return False
 
     def removestopwords(self, nouns):
         # list comprehension to remove words that shouldn't be included in the list
@@ -264,3 +265,34 @@ class WordReplacer:
         else:
             return unedited_message.replace(nouns[buttword],
                                             self.buttinpropercase(nouns[buttword], 'butt')), 'butt'
+
+
+"""
+    def printdebugmessage(self):
+        try:
+            print("------------------------------------------------------------------------------------")
+            print("tagged sentence: %s" % self.wordtagger(message))
+            print("sentence tag length: %s " % str(len(tagged_sentence)))
+            print("-----------------------")
+            print("prioritized: %s" % str(targeted))
+            print("noun candidates: %s" % self.removestopwords(nouns))
+
+            if targeted == True:
+                print("-------TARGETED--------")
+                print("non prioritized nouns: %s" % self._findnounsbyprevioustag(nouns, False))
+                print("-------IGNORE----------")
+            print("nouns ignored: %s" % [n for n in self.wordclassifier(message, "butt") if n not in nouns])
+            if not nouns == self.removestopwords(nouns):
+                # stopwords applied
+                print("-------STOPWORD--------")
+                print(
+                    "nouns explicitly stopworded: %s " % [n for n in nouns if n not in self.removestopwords(nouns)])
+
+            print("------DECISION TREE--------")
+            arewebuttingthisshit = (True if len(nouns) > 1 or targeted == True and len(nouns) > 0 else False)
+            print("Butt this sentence? %s" % arewebuttingthisshit)
+            arewebuttinglength = (True if len(tagged_sentence) < 50 else "MAYBE (not DPT)")
+            print("does it meet length? %s" % arewebuttinglength)
+        except UnboundLocalError:
+            pass
+"""
