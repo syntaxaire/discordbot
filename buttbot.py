@@ -17,7 +17,7 @@ class buttbot:
         self.stats = stat_module
         self.config = butt_config.butt_config(conf)
         self.timer_module = butt_timeout.Timeout(self.config)
-        self.db = db(db_, db_user, db_pass)
+        self.db = db(db_, db_user, db_pass, test_environment)
         if bool(self.config.get('vacuum', 'enabled')):
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.discord_comms()
