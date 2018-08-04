@@ -12,7 +12,7 @@ from wordreplacer import WordReplacer
 
 
 class buttbot:
-    def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, test_environment):
+    def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
         self.test_environment = test_environment
         self.stats = stat_module
         self.config = butt_config.butt_config(conf)
@@ -22,7 +22,7 @@ class buttbot:
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.discord_comms()
         self.discordBot = Botobject
-        self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, test_environment)
+        self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment)
         self.mojang = mj.mojang()
 
         if self.config.getboolean('vacuum', 'enabled') is True:
