@@ -12,19 +12,20 @@ weights = PhraseWeights()
 stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1], test_environment)
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
+event_loop = asyncio.AbstractEventLoop
 
 channel_configs = butt_lib.load_all_config_files()  # global that will hold channel IDs that have configs
 command_channels = {}
 
 if test_environment == True:
     command_channels["408168696834424832"] = buttbot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
-                                                     stat_module, weights, True)
+                                                     stat_module, weights, event_loop, True)
     command_channels["199981748098957312"] = buttbot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
-                                                     stat_module, weights, True)
+                                                     stat_module, weights, event_loop, True)
 else:
     for i in channel_configs:
         command_channels[i.split("/")[1][:-4]] = buttbot(client, i, db_, db_secrets[0], db_secrets[1], stat_module,
-                                                         weights, False)
+                                                         weights, event_loop, False)
 
 
 @client.event
@@ -38,20 +39,6 @@ async def on_ready():
     print('You are running FartBot V3.0.00')
     print('Created by Poop Poop')
     print('--------')
-
-
-@client.event
-async def on_reaction_add(reaction, user):
-    if not user == client.user:
-        # i didnt react, c'est partie
-        if reaction.message.author == client.user:
-            # this is a message that I sent to a chat so people are reacting to it.
-            # store this.
-            print(reaction.message.content)
-            print(reaction.message.id)
-            print(reaction.count)
-            print(reaction.emoji)
-
 
 @client.event
 async def on_message(message):
@@ -90,7 +77,7 @@ async def serializeloop():
     await asyncio.sleep(5)
     while not client.is_closed:
         stat_module.serialize_all_stats_to_disk()
-        await asyncio.sleep(10)
+        await asyncio.sleep(120)
 
 
 async def send_stats_to_db():
@@ -98,6 +85,8 @@ async def send_stats_to_db():
     await asyncio.sleep(5)
     while not client.is_closed:
         stat_module.send_stats_to_db()
+        #going to steal this timer to serialize phrase weights too
+        weights.save_to_file()
         await asyncio.sleep(300)
 
 
