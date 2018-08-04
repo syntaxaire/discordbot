@@ -56,7 +56,7 @@ class buttbot:
             # wordreplacer must be turned on for this to work.
             module = self.shitpost
 
-        if command in self.mojang.return_commands() and self.config.getboolean('vacuum', 'enabled') is True:
+        if command in self.mojang.return_commands() and self.config.getboolean('mojang', 'enabled') is True:
             # we are using the vacuum config because both of these are for minecraft.
             module = self.mojang
         return module
@@ -193,11 +193,13 @@ class buttbot:
                 # this is a join or part message and we are going to ignore it
                 pass
             else:
-                if self.allowed_in_channel(message.channel) or self.test_environment:
+                if self.allowed_in_channel(message.channel):
                     # do not send to shitpost module if we aren't allowed to talk in the channel in question.
-                    # exception: always send if test environment is turned on. the function to send the message to the
-                    # discord API will not transmit the message.
                     rshitpost = self.shitpost.performtexttobutt(message)
+                elif self.test_environment:
+                    # always send if test environment is turned on. the function to send the message to the
+                    # discord API will not transmit the message.
+                    self.shitpost.performtexttobutt(message)
             try:
                 if rshitpost:
                     msg = await self.doComms(rshitpost, message.channel)
