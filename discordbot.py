@@ -6,7 +6,9 @@ import butt_library as butt_lib
 from butt_statistics import ButtStatistics
 from buttbot import buttbot
 from config import *
+from phraseweights import PhraseWeights
 
+weights = PhraseWeights()
 stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1], test_environment)
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
@@ -16,13 +18,13 @@ command_channels = {}
 
 if test_environment == True:
     command_channels["408168696834424832"] = buttbot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
-                                                     stat_module, True)
+                                                     stat_module, weights, True)
     command_channels["199981748098957312"] = buttbot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
-                                                     stat_module, True)
+                                                     stat_module, weights, True)
 else:
     for i in channel_configs:
         command_channels[i.split("/")[1][:-4]] = buttbot(client, i, db_, db_secrets[0], db_secrets[1], stat_module,
-                                                         False)
+                                                         weights, False)
 
 
 @client.event
@@ -39,12 +41,12 @@ async def on_ready():
 
 
 @client.event
-async def on_reaction_add(reaction,user):
+async def on_reaction_add(reaction, user):
     if not user == client.user:
         # i didnt react, c'est partie
         if reaction.message.author == client.user:
-            #this is a message that I sent to a chat so people are reacting to it.
-            #store this.
+            # this is a message that I sent to a chat so people are reacting to it.
+            # store this.
             print(reaction.message.content)
             print(reaction.message.id)
             print(reaction.count)
