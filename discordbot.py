@@ -7,7 +7,7 @@ from butt_statistics import ButtStatistics
 from buttbot import buttbot
 from config import *
 
-stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1])
+stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1], test_environment)
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
