@@ -13,6 +13,7 @@ stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1], test_environ
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 event_loop = asyncio.AbstractEventLoop
+event_loop.run_forever()
 
 channel_configs = butt_lib.load_all_config_files()  # global that will hold channel IDs that have configs
 command_channels = {}
