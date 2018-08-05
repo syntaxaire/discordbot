@@ -131,6 +131,7 @@ class WordReplacer:
 
     def returnphrasesfromallsources(self, tagged_sentence):
         prioritzed_sentence = self.doesmessagehaveprioritizedpartsofspeech(tagged_sentence)
+        prioritized_nouns = []
         if prioritzed_sentence:
             prioritized_nouns = self._findweightednounsbyprevioustag(tagged_sentence, True)
         non_prioritized_nouns = self._findweightednounsbyprevioustag(tagged_sentence, False)
