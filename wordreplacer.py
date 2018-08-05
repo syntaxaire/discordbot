@@ -11,7 +11,7 @@ from butt_library import *
 
 class WordReplacer:
 
-    def __init__(self, config, stat_module, timer_module, test_environment):
+    def __init__(self, config, stat_module, timer_module, phrase_weights, test_environment):
         self.config = config
         self.timer_module = timer_module
         self.stats = stat_module
@@ -19,6 +19,7 @@ class WordReplacer:
         self.set_max_sentence_length(int(self.config.get('wordreplacer', 'max_sentence_length')))
         self.command = {"nltk": 'wordreplacer'}
         self.test_environment = test_environment
+        self.phraseweights = phrase_weights
 
     def set_max_sentence_length(self, length):
         # DPT requested feature
@@ -62,9 +63,8 @@ class WordReplacer:
     def wordtagger(self, message):
         return nltk.pos_tag(nltk.word_tokenize(message))
 
-    def getwordweight(self, word, source_weight):
-        # dummy for now
-        return 100 * source_weight
+    def getphraseweight(self, phrase):
+        return self.phraseweights.return_weight(phrase)
 
     def isuseranallowedbot(self, author):
         if author in self.config.get_all_allowed_bots():
@@ -79,10 +79,14 @@ class WordReplacer:
         else:
             return True
 
+    def simulate_performtexttobutt(self, messageobject):
+        return self.performtexttobutt(messageobject)
+
     def performtexttobutt(self, messageobject):
         # we are going to manipulate this version of the message before sending it to the processing functions.
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
         message = messageobject.content
+        unedited_message = message
 
         if not detect_code_block(message):
             # passes code block test
@@ -95,76 +99,73 @@ class WordReplacer:
                     tagged_sentence = self.wordtagger(strip_IRI(message.split(" ", 1)[1]))
                 else:
                     tagged_sentence = self.wordtagger(strip_IRI(message))
-                nouns=self.returnnounsfromallsources(tagged_sentence)
+                if self.checklengthofsentencetobutt(tagged_sentence):
+                    pri_nouns, non_pri_nouns = self.returnphrasesfromallsources(tagged_sentence)
+                    if len(pri_nouns) + len(non_pri_nouns) > 0:
+                        if self.test_environment:
+                            # always reply in test environment
+                            rv = [1, 1, 1]
+                        else:
+                            rv = [1, 5, 3]
+                        if randint(rv[0], rv[1]) == rv[2]:
+                            if self.timer_module.check_timeout('shitpost', 'shitpost'):
+                                picked_phrase = self.pickphrase(pri_nouns, non_pri_nouns)
+                                new_sentence, replaced_with = self.checkwordtobutt(picked_phrase[1], unedited_message,
+                                                                                   messageobject)
+                                if self.test_environment:
+                                    self.printdebugmessage(tagged_sentence, pri_nouns, non_pri_nouns, picked_phrase)
+                                return self.replace_an_to_a_in_sentence(new_sentence, replaced_with), \
+                                    picked_phrase[0], \
+                                    picked_phrase[1]
+                            else:
+                                # timeout fail
+                                pass
+                        else:
+                            # 20% chance fail
+                            pass
+                    else:
+                        # not enough nouns
+                        pass
+                else:
+                    # failed length check
+                    pass
 
-    def returnnounsfromallsources(self, tagged_sentence):
+    def returnphrasesfromallsources(self, tagged_sentence):
         prioritzed_sentence = self.doesmessagehaveprioritizedpartsofspeech(tagged_sentence)
+        prioritized_nouns = []
         if prioritzed_sentence:
             prioritized_nouns = self._findweightednounsbyprevioustag(tagged_sentence, True)
         non_prioritized_nouns = self._findweightednounsbyprevioustag(tagged_sentence, False)
-        combined_list=prioritized_nouns+non_prioritized_nouns
-        print(self.pickrandomwordbyweight(combined_list))
+        return prioritized_nouns, non_prioritized_nouns
 
+    def pickphrase(self, pri_nouns, non_pri_nouns):
+        combined_list = pri_nouns + non_pri_nouns
+        return self.pickrandomphrasebyweight(combined_list)
 
-    def pickrandomwordbyweight(self,word_list):
+    def printdebugmessage(self, message, pri_nouns, nouns, selected):
+        if selected is not None:
+            print("__________________________________________")
+            print(message)
+            print("prioritzed nouns: %s" % pri_nouns)
+            print("nouns: %s" % nouns)
+            print("noun selected: %s" % str(selected))
+            print("__________________________________________")
+            print("")
+
+    def pickrandomphrasebyweight(self, word_list):
         total_sum_of_weights = self.sumallweights(word_list)
-        randomweight = randrange(1,total_sum_of_weights)
-        for i in word_list:
-            randomweight=randomweight-i[1]
-            if randomweight<=0:
-                return i[0]
+        try:
+            randomweight = randrange(1, total_sum_of_weights)
+            for i in word_list:
+                randomweight = randomweight - i[2]
+                if randomweight <= 0:
+                    return tuple((i[0], i[1]))
+        except ValueError:
+            # no words to pick
+            return None
 
-    def sumallweights(self,word_list):
-        return sum(weight for words, weight in word_list)
-
-    def tobuttornottobutt(self, messageobject, author):
-        message = messageobject.content
-        # code block detection.  We are going to skip processing the entire message.
-        if detect_code_block(message) is not True:
-            unedited_message = message
-            if author == "Progress#6064" or author == "DPTBot#3069":
-                stupidDPTshit = ['contracted the Death', 'just gained the achievement', 'just left the server',
-                                 'just joined the server']
-                if not any(v for v in stupidDPTshit if v in message) and not (
-                        message.startswith("*") and message.endswith("*")):
-                    # specific catch for DPT death message and other dumb stuff they have go to chat like cheevos
-
-                    # this removes the character preamble for when Progress relays the chat message from in game.
-                    # It is not sent to the word classifier to prevent a bunch of silly issues
-                    tagged_sentence = self.wordtagger(strip_IRI(message.split(" ", 1)[1]))
-                    nouns, targeted = self.findnounsbyprevioustag(tagged_sentence)
-                else:
-                    return
-
-            else:
-                tagged_sentence = self.wordtagger(strip_IRI(message))
-                nouns, targeted = self.findnounsbyprevioustag(tagged_sentence)
-
-            try:
-                nouns = self.removestopwords(nouns)
-            except UnboundLocalError:
-                # noun list is empty
-                pass
-            else:
-                try:
-                    if self.checklengthofsentencetobutt(tagged_sentence):
-                        # DPT feature.  default is 9999 but DPT wants it to be shorter for more impact.
-                        if len(nouns) > 1 or (len(nouns) > 0 and targeted == True):
-                            if randint(1, 5) == 3:
-                                if self.timer_module.check_timeout('shitpost', 'shitpost'):
-                                    new_sentence, replaced_with = self.pickwordtobutt(nouns, unedited_message,
-                                                                                      messageobject)
-                                    return self.replace_an_to_a_in_sentence(new_sentence, replaced_with)
-                                else:
-                                    self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
-                                                                 "Config Timeout", "Config Timeout")
-                            else:
-                                self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
-                                                             "20% Threshold", "20% Threshold")
-                except UnboundLocalError:
-                    # no tags
-                    self.stats.disposition_store(messageobject.server.id, messageobject.channel.id,
-                                                 "No Noun Tags", "No Noun Tags")
+    def sumallweights(self, word_list):
+        return sum(weight for prefix, noun, weight in word_list)
 
     def buttinpropercase(self, wordtobutt, buttoreplace):
         if wordtobutt.istitle():
@@ -195,13 +196,23 @@ class WordReplacer:
                 if taggedsentence[i][0] not in wordsthatarenotadjectives:  # fix some words getting tagged weird
                     try:
                         if taggedsentence[i + 1][1] in tagstoacceptasnouns:
-                            #append weighted version of the word using source weight (prioritized vs non pri mode)
-                            nouns.append((taggedsentence[i + 1][0], self.getwordweight(taggedsentence[i + 1][0],
-                                                                                       source_weight)))
+                            # append weighted version of the word using source weight (prioritized vs non pri mode)
+                            if self.wordpassesstopwordcheck(taggedsentence[i + 1][1]):
+                                nouns.append((taggedsentence[i][0], taggedsentence[i + 1][0], self.getphraseweight(
+                                    "%s %s" % (taggedsentence[i][0], taggedsentence[i + 1][0]))))
                     except IndexError:
                         # end of the noun list so we don't really care.
                         pass
         return nouns
+
+    def wordpassesstopwordcheck(self, word):
+        stopwords = ['gon', 'dont', 'lol', 'yeah', 'tho', 'lmao', 'yes']
+        if len(word) < 2:
+            return False
+        elif word in stopwords:
+            return False
+        else:
+            return True
 
     def doesmessagehaveprioritizedpartsofspeech(self, taggedsentence):
         wordtagstocheckprioritized = ['PRP$']  # posessive personal pronoun
@@ -209,12 +220,6 @@ class WordReplacer:
             return True
         else:
             return False
-
-    def removestopwords(self, nouns):
-        # list comprehension to remove words that shouldn't be included in the list
-        badwords = ['gon', 'dont', 'lol', 'yeah', 'tho', 'lmao', 'yes']
-        nouns = [var for var in nouns if var not in badwords]
-        return [var for var in nouns if len(var) > 1]  # remove all single character everythings
 
     def checklengthofsentencetobutt(self, message):
         # DPT feature
@@ -226,7 +231,6 @@ class WordReplacer:
 
     def replace_an_to_a_in_sentence(self, message, butt_word):
         message = message.split(" ")
-        print(message)
         indexes = get_indexes(message, butt_word)
         if indexes:
             # we found one or more instances of butt, we need to check the list index i-1 of that butt word to see if we
@@ -240,59 +244,14 @@ class WordReplacer:
                     pass
         return " ".join(message)
 
-    def pickwordtobutt(self, nouns, unedited_message, messageobject):
-        wordsthatarentfunny = ['beat', 'works', 'fucking', 'cares', 'portion', 'way', 'aoe', 'whole', 'uh', 'use',
-                               'means', 'gonorrhea', 'self', 'bit', 'hour', 'minute', 'second', 'year', 'hours',
-                               'minutes', 'seconds', 'years', 'lot', 'feel', 'feels', 'couple',
-                               'some', 'cost', 'look', 'level', 'time']  # actually, gonorrhea is a funny word
-        notfunnyfound = False
-        if any(t for t in nouns if t in wordsthatarentfunny):
-            # one of the tagged words is in the not funny list
-            # we're going to remove the unfunny words before picking one to use
-            nouns = [var for var in nouns if var not in wordsthatarentfunny]
-            notfunnyfound = True
-
-        buttword = randint(0, len(nouns) - 1)  # this is the word we are replacing with butt.
+    def checkwordtobutt(self, noun, unedited_message, messageobject):
         self.stats.disposition_store(messageobject.server.id, messageobject.channel.id, "Butt Replaced",
                                      # "%s%s" % (nouns[buttword], " (Unfunny=true)" if notfunnyfound else ""),
-                                     "%s" % nouns[buttword],
+                                     "%s" % noun,
                                      unedited_message)
         lemmatizer = WordNetLemmatizer()
-        if lemmatizer.lemmatize(nouns[buttword]) is not nouns[buttword]:
+        if lemmatizer.lemmatize(noun) is not noun:
             # the lemmatizer thinks that this is a plural
-            return unedited_message.replace(nouns[buttword],
-                                            self.buttinpropercase(nouns[buttword], 'butts')), 'butts'
+            return unedited_message.replace(noun, self.buttinpropercase(noun, 'butts')), 'butts'
         else:
-            return unedited_message.replace(nouns[buttword],
-                                            self.buttinpropercase(nouns[buttword], 'butt')), 'butt'
-
-
-"""
-    def printdebugmessage(self):
-        try:
-            print("------------------------------------------------------------------------------------")
-            print("tagged sentence: %s" % self.wordtagger(message))
-            print("sentence tag length: %s " % str(len(tagged_sentence)))
-            print("-----------------------")
-            print("prioritized: %s" % str(targeted))
-            print("noun candidates: %s" % self.removestopwords(nouns))
-
-            if targeted == True:
-                print("-------TARGETED--------")
-                print("non prioritized nouns: %s" % self._findnounsbyprevioustag(nouns, False))
-                print("-------IGNORE----------")
-            print("nouns ignored: %s" % [n for n in self.wordclassifier(message, "butt") if n not in nouns])
-            if not nouns == self.removestopwords(nouns):
-                # stopwords applied
-                print("-------STOPWORD--------")
-                print(
-                    "nouns explicitly stopworded: %s " % [n for n in nouns if n not in self.removestopwords(nouns)])
-
-            print("------DECISION TREE--------")
-            arewebuttingthisshit = (True if len(nouns) > 1 or targeted == True and len(nouns) > 0 else False)
-            print("Butt this sentence? %s" % arewebuttingthisshit)
-            arewebuttinglength = (True if len(tagged_sentence) < 50 else "MAYBE (not DPT)")
-            print("does it meet length? %s" % arewebuttinglength)
-        except UnboundLocalError:
-            pass
-"""
+            return unedited_message.replace(noun, self.buttinpropercase(noun, 'butt')), 'butt'

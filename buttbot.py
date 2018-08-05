@@ -1,5 +1,8 @@
 import asyncio
 import random
+import time
+
+from discord.utils import get
 
 import butt_config
 import butt_timeout
@@ -12,8 +15,9 @@ from wordreplacer import WordReplacer
 
 
 class buttbot:
-    def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
+    def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, phrase_weights, events, test_environment):
         self.test_environment = test_environment
+        self.event_loop = events
         self.stats = stat_module
         self.config = butt_config.butt_config(conf)
         self.timer_module = butt_timeout.Timeout(self.config)
@@ -22,9 +26,10 @@ class buttbot:
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.discord_comms()
         self.discordBot = Botobject
+        self.phrase_weights = phrase_weights
         self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment)
         self.mojang = mj.mojang()
-
+        self.discordBot.loop.create_task(self.butt_message_processing())
         if self.config.getboolean('vacuum', 'enabled') is True:
             self.vacuum.update_url(self.config.get('vacuum', 'vacuum_update_json_url'))
             self.discordBot.loop.create_task(self.my_background_task())
@@ -34,6 +39,15 @@ class buttbot:
         while not self.discordBot.is_closed:
             await asyncio.sleep(10)
             self.vacuum.playtime_scraper()
+
+    async def butt_message_processing(self):
+        await self.discordBot.wait_until_ready()
+        while not self.discordBot.is_closed:
+            await asyncio.sleep(120)
+            self.check_stored_reactions()
+
+    async def task_process_emoji_reactions(self):
+        pass
 
     async def do_leave(self, message):
         if (str(message.author) in self.config.get('discordbot', 'bot_admin')) and str(self.discordBot.user) in str(
@@ -98,7 +112,7 @@ class buttbot:
     async def doComms(self, message, channel):
         if self.allowed_in_channel(channel):
             msg = await self.comm.do_send_message(channel, self.discordBot, message)
-            return msg #returns the message object of the message that was sent to discord
+            return msg  # returns the message object of the message that was sent to discord
 
     async def doreact(self, message, channel, emojis):
         if self.allowed_in_channel(channel):
@@ -195,7 +209,11 @@ class buttbot:
             else:
                 if self.allowed_in_channel(message.channel):
                     # do not send to shitpost module if we aren't allowed to talk in the channel in question.
-                    rshitpost = self.shitpost.performtexttobutt(message)
+                    try:
+                        rshitpost, trigger_word, noun = self.shitpost.performtexttobutt(message)
+                    except TypeError:
+                        # did not return anything, so we don't care
+                        pass
                 elif self.test_environment:
                     # always send if test environment is turned on. the function to send the message to the
                     # discord API will not transmit the message.
@@ -203,6 +221,7 @@ class buttbot:
             try:
                 if rshitpost:
                     msg = await self.doComms(rshitpost, message.channel)
+                    self.phrase_weights.add_message(msg.id, trigger_word, noun)
 
             except UnboundLocalError:
                 pass
@@ -213,3 +232,17 @@ class buttbot:
             return True
         else:
             return False
+
+    def process_cached_reaction_message(self, guid, trigger_word, noun):
+        if self.test_environment:
+            print("running on id %s" % guid)
+        phrase = "%s %s" % (trigger_word, noun)
+        msg_ = get(self.discordBot.messages, id=guid)
+        votes = self.phrase_weights.process_reactions(msg_.reactions)
+        self.phrase_weights.adjust_weight(phrase, votes)
+
+    def check_stored_reactions(self):
+        for items in self.phrase_weights.get_messages():
+            if time.time() - items[0] > 10:
+                self.process_cached_reaction_message(items[1], items[2], items[3])
+                self.phrase_weights.remove_message(items[0], items[1], items[2], items[3])
