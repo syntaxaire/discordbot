@@ -15,9 +15,8 @@ from wordreplacer import WordReplacer
 
 
 class buttbot:
-    def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, phrase_weights, events, test_environment):
+    def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
         self.test_environment = test_environment
-        self.event_loop = events
         self.stats = stat_module
         self.config = butt_config.butt_config(conf)
         self.timer_module = butt_timeout.Timeout(self.config)
