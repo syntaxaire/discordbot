@@ -87,7 +87,6 @@ class WordReplacer:
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
         message = messageobject.content
         unedited_message = message
-
         if not detect_code_block(message):
             # passes code block test
             if not self.doesmessagecontainstopphrases(str(messageobject.content)):
@@ -115,8 +114,8 @@ class WordReplacer:
                                 if self.test_environment:
                                     self.printdebugmessage(tagged_sentence, pri_nouns, non_pri_nouns, picked_phrase)
                                 return self.replace_an_to_a_in_sentence(new_sentence, replaced_with), \
-                                    picked_phrase[0], \
-                                    picked_phrase[1]
+                                       picked_phrase[0], \
+                                       picked_phrase[1]
                             else:
                                 # timeout fail
                                 pass
@@ -132,7 +131,6 @@ class WordReplacer:
 
     def returnphrasesfromallsources(self, tagged_sentence):
         prioritzed_sentence = self.doesmessagehaveprioritizedpartsofspeech(tagged_sentence)
-        prioritized_nouns = []
         if prioritzed_sentence:
             prioritized_nouns = self._findweightednounsbyprevioustag(tagged_sentence, True)
         non_prioritized_nouns = self._findweightednounsbyprevioustag(tagged_sentence, False)
@@ -197,9 +195,13 @@ class WordReplacer:
                     try:
                         if taggedsentence[i + 1][1] in tagstoacceptasnouns:
                             # append weighted version of the word using source weight (prioritized vs non pri mode)
-                            if self.wordpassesstopwordcheck(taggedsentence[i + 1][1]):
-                                nouns.append((taggedsentence[i][0], taggedsentence[i + 1][0], self.getphraseweight(
-                                    "%s %s" % (taggedsentence[i][0], taggedsentence[i + 1][0]))))
+                            if self.wordpassesstopwordcheck(taggedsentence[i + 1][0]):
+                                if taggedsentence[i][1] in wordtagstocheckprioritized:
+                                    nouns.append((taggedsentence[i][0], taggedsentence[i + 1][0], self.getphraseweight(
+                                        "%s %s" % (taggedsentence[i][0], taggedsentence[i + 1][0])) * 25))
+                                else:
+                                    nouns.append((taggedsentence[i][0], taggedsentence[i + 1][0], self.getphraseweight(
+                                        "%s %s" % (taggedsentence[i][0], taggedsentence[i + 1][0]))))
                     except IndexError:
                         # end of the noun list so we don't really care.
                         pass
