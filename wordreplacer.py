@@ -196,12 +196,8 @@ class WordReplacer:
                         if taggedsentence[i + 1][1] in tagstoacceptasnouns:
                             # append weighted version of the word using source weight (prioritized vs non pri mode)
                             if self.wordpassesstopwordcheck(taggedsentence[i + 1][0]):
-                                if taggedsentence[i][1] in wordtagstocheckprioritized:
-                                    nouns.append((taggedsentence[i][0], taggedsentence[i + 1][0], self.getphraseweight(
-                                        "%s %s" % (taggedsentence[i][0], taggedsentence[i + 1][0])) * 25))
-                                else:
-                                    nouns.append((taggedsentence[i][0], taggedsentence[i + 1][0], self.getphraseweight(
-                                        "%s %s" % (taggedsentence[i][0], taggedsentence[i + 1][0]))))
+                                nouns.append((taggedsentence[i][0], taggedsentence[i + 1][0], self.getphraseweight(
+                                    "%s %s" % (taggedsentence[i][0], taggedsentence[i + 1][0])) * source_weight))
                     except IndexError:
                         # end of the noun list so we don't really care.
                         pass
