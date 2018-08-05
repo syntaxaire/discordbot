@@ -12,8 +12,6 @@ weights = PhraseWeights()
 stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1], test_environment)
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
-event_loop = asyncio.AbstractEventLoop
-event_loop.run_forever()
 
 channel_configs = butt_lib.load_all_config_files()  # global that will hold channel IDs that have configs
 command_channels = {}
@@ -37,9 +35,10 @@ async def on_ready():
     print('Use this link to invite {}:'.format(client.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     print('--------')
-    print('You are running FartBot V3.0.00')
+    print('You are running FartBot V4.0.00')
     print('Created by Poop Poop')
     print('--------')
+
 
 @client.event
 async def on_message(message):
@@ -73,7 +72,7 @@ async def on_message(message):
         pass
 
 
-async def serializeloop():
+async def serialize_stats():
     await client.wait_until_ready()
     await asyncio.sleep(5)
     while not client.is_closed:
@@ -86,11 +85,20 @@ async def send_stats_to_db():
     await asyncio.sleep(5)
     while not client.is_closed:
         stat_module.send_stats_to_db()
-        #going to steal this timer to serialize phrase weights too
+        # going to steal this timer to serialize phrase weights too
         weights.save_to_file()
         await asyncio.sleep(300)
 
 
-client.loop.create_task(serializeloop())
+async def serialize_weights():
+    await client.wait_until_ready()
+    await asyncio.sleep(5)
+    while not client.is_closed:
+        weights.save_to_file()
+        await asyncio.sleep(300)
+
+
+client.loop.create_task(serialize_stats())
 client.loop.create_task(send_stats_to_db())
+client.loop.create_task(serialize_weights())
 client.run(secretkey)
