@@ -15,7 +15,7 @@ class db:
         except pymysql.err.OperationalError:
             if self.test_environment == True:
                 #bot was loaded with test environment enabled, ignore this error
-                pass
+                raise
             else:
                 #TODO: handle connection recovery when we can't connect.
                 raise
