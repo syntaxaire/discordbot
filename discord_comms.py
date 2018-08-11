@@ -28,3 +28,9 @@ class discord_comms:
             # custom emoji for channel. we need to get it
             emoji = get(client.get_all_emojis(), name=emoji[1:])
         await client.add_reaction(message, emoji)
+
+    async def do_react_no_delay(self, message, client, emoji):
+        if emoji[0] == ":":
+            # custom emoji for channel. we need to get it
+            emoji = get(client.get_all_emojis(), name=emoji[1:])
+        await client.add_reaction(message, emoji)
