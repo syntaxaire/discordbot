@@ -220,6 +220,8 @@ class buttbot:
             try:
                 if rshitpost:
                     msg = await self.doComms(rshitpost, message.channel)
+                    #await self.comm.do_react_no_delay(msg, self.discordBot, '👍')  #am i ever going to implement this?
+                    #await self.comm.do_react_no_delay(msg, self.discordBot, '👎')
                     self.phrase_weights.add_message(msg.id, trigger_word, noun)
 
             except UnboundLocalError:

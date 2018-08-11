@@ -17,7 +17,7 @@ class PhraseWeights:
             pass
 
     def save_to_file(self):
-        print("saving weights to file")
+        #print("saving weights to file")
         with open('phrase_weight_list.txt', 'w') as f:
             json.dump(self.phrases, f, ensure_ascii=False, default=str)
 
@@ -42,7 +42,7 @@ class PhraseWeights:
             return 1000
 
     def process_reactions(self, reactions):
-        negativeemojis = '😕', '🙁', '☹', '😨', '😦', '😧', '👎', '😠', '😭', '😖'
+        negativeemojis = '😕', '🙁', '☹', '😨', '😦', '😧', '👎', '😠', '😭', '😖', '👎'
         downvotes = 0
         upvotes = 0
         for items in reactions:
