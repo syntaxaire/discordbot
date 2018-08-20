@@ -85,8 +85,8 @@ class WordReplacer:
     def performtexttobutt(self, messageobject):
         # we are going to manipulate this version of the message before sending it to the processing functions.
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
-        message = messageobject.content
-        unedited_message = message
+        message = messageobject.content.replace("'", '')  #TODO: make this better
+        unedited_message = messageobject.content
         if not detect_code_block(message):
             # passes code block test
             if not self.doesmessagecontainstopphrases(str(messageobject.content)):
@@ -101,6 +101,11 @@ class WordReplacer:
                 if self.checklengthofsentencetobutt(tagged_sentence):
                     pri_nouns, non_pri_nouns = self.returnphrasesfromallsources(tagged_sentence)
                     if len(pri_nouns) + len(non_pri_nouns) > 0:
+                        if len(non_pri_nouns) == 1 and len(pri_nouns) == 0:
+                            #catch specific case for 1 non prioritized noun and 0 prioritized nouns
+                            if non_pri_nouns[0][2] <= 501:
+                                #dont send anything, this word probably sucks
+                                return
                         if self.test_environment:
                             # always reply in test environment
                             rv = [1, 1, 1]
