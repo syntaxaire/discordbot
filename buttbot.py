@@ -244,6 +244,6 @@ class buttbot:
 
     def check_stored_reactions(self):
         for items in self.phrase_weights.get_messages():
-            if time.time() - items[0] > 10:
+            if time.time() - items[0] > 300:
                 self.process_cached_reaction_message(items[1], items[2], items[3])
                 self.phrase_weights.remove_message(items[0], items[1], items[2], items[3])
