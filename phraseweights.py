@@ -47,7 +47,7 @@ class PhraseWeights:
         upvotes = 0
         for items in reactions:
             if items.emoji in negativeemojis:
-                downvotes = downvotes - items.count
+                downvotes = downvotes + items.count
             else:
                 upvotes = upvotes + items.count
         return (upvotes - downvotes)*20  #set weight change to 20 for each vote
