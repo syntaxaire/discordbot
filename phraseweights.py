@@ -42,7 +42,7 @@ class PhraseWeights:
             return 1000
 
     def process_reactions(self, reactions):
-        negativeemojis = '😕', '🙁', '☹', '😨', '😦', '😧', '👎', '😠', '😭', '😖', '👎'
+        negativeemojis = '😕', '🙁', '☹', '😨', '😦', '😧', '👎', '😠', '😭', '😖', '👎', '💤'
         downvotes = 0
         upvotes = 0
         for items in reactions:
