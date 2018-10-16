@@ -42,7 +42,10 @@ class buttbot:
     async def butt_message_processing(self):
         await self.discordBot.wait_until_ready()
         while not self.discordBot.is_closed:
-            await asyncio.sleep(120)
+            if self.test_environment:
+                await asyncio.sleep(10)
+            else:
+                await asyncio.sleep(120)
             self.check_stored_reactions()
 
     async def task_process_emoji_reactions(self):
@@ -244,6 +247,9 @@ class buttbot:
 
     def check_stored_reactions(self):
         for items in self.phrase_weights.get_messages():
-            if time.time() - items[0] > 300:
+            check_timer = 300
+            if self.test_environment:
+                check_timer = 15
+            if time.time() - items[0] > check_timer:
                 self.process_cached_reaction_message(items[1], items[2], items[3])
                 self.phrase_weights.remove_message(items[0], items[1], items[2], items[3])
