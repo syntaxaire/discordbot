@@ -85,8 +85,6 @@ async def send_stats_to_db():
     await asyncio.sleep(5)
     while not client.is_closed:
         stat_module.send_stats_to_db()
-        # going to steal this timer to serialize phrase weights too
-        weights.save_to_file()
         await asyncio.sleep(300)
 
 
@@ -95,7 +93,10 @@ async def serialize_weights():
     await asyncio.sleep(5)
     while not client.is_closed:
         weights.save_to_file()
-        await asyncio.sleep(300)
+        if test_environment:
+            await asyncio.sleep(10)
+        else:
+            await asyncio.sleep(300)
 
 
 client.loop.create_task(serialize_stats())
