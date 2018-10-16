@@ -85,7 +85,8 @@ class WordReplacer:
     def performtexttobutt(self, messageobject):
         # we are going to manipulate this version of the message before sending it to the processing functions.
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
-        message = messageobject.content.replace("'", '')  #TODO: make this better
+        #message = messageobject.content.replace("'", '')  #TODO: make this better
+        message = messageobject.content #actually that made it worse
         unedited_message = messageobject.content
         if not detect_code_block(message):
             # passes code block test
@@ -187,7 +188,7 @@ class WordReplacer:
         wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'WP$', 'WP']
         tagstoacceptasnouns = ['NN', 'NNS']
         tagstoskipword = ['TO']
-        wordsthatarenotadjectives = ['i']  # lower case i is tagged as a adjective for some reason
+        wordsthatarenotadjectives = ['i', 'kevin', 'armour']  # lower case i is tagged as a adjective for some reason
         if prioritized == True:
             tagstocheck = wordtagstocheckprioritized
             source_weight = 25.0
