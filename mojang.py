@@ -62,6 +62,6 @@ class mojang:
 
     def mojang_get_user_avatar(self, username):
         with urllib.request.urlopen(
-                "https://sessionserver.mojang.com/session/minecraft/profile/%s" % mojang_user_to_uuid(username)) as url:
+                "https://sessionserver.mojang.com/session/minecraft/profile/%s" % self.mojang_user_to_uuid(username)) as url:
             data = json.loads(url.read().decode())
         return data['properties'][0]['value']
