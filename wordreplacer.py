@@ -85,8 +85,8 @@ class WordReplacer:
     def performtexttobutt(self, messageobject):
         # we are going to manipulate this version of the message before sending it to the processing functions.
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
-        #message = messageobject.content.replace("'", '')  #TODO: make this better
-        message = messageobject.content #actually that made it worse
+        # message = messageobject.content.replace("'", '')  #TODO: make this better
+        message = messageobject.content  # actually that made it worse
         unedited_message = messageobject.content
         if not detect_code_block(message):
             # passes code block test
@@ -103,9 +103,9 @@ class WordReplacer:
                     pri_nouns, non_pri_nouns = self.returnphrasesfromallsources(tagged_sentence)
                     if len(pri_nouns) + len(non_pri_nouns) > 0:
                         if len(non_pri_nouns) == 1 and len(pri_nouns) == 0:
-                            #catch specific case for 1 non prioritized noun and 0 prioritized nouns
+                            # catch specific case for 1 non prioritized noun and 0 prioritized nouns
                             if non_pri_nouns[0][2] <= 501:
-                                #dont send anything, this word probably sucks
+                                # dont send anything, this word probably sucks
                                 return
                         if self.test_environment:
                             # always reply in test environment
@@ -114,14 +114,8 @@ class WordReplacer:
                             rv = [1, 5, 3]
                         if randint(rv[0], rv[1]) == rv[2]:
                             if self.timer_module.check_timeout('shitpost', 'shitpost'):
-                                picked_phrase = self.pickphrase(pri_nouns, non_pri_nouns)
-                                new_sentence, replaced_with = self.checkwordtobutt(picked_phrase[1], unedited_message,
-                                                                                   messageobject)
-                                if self.test_environment:
-                                    self.printdebugmessage(tagged_sentence, pri_nouns, non_pri_nouns, picked_phrase)
-                                return self.replace_an_to_a_in_sentence(new_sentence, replaced_with), \
-                                       picked_phrase[0], \
-                                       picked_phrase[1]
+                                return self.do_butting(pri_nouns, non_pri_nouns, unedited_message, messageobject,
+                                                       tagged_sentence)
                             else:
                                 # timeout fail
                                 pass
@@ -260,3 +254,13 @@ class WordReplacer:
             return unedited_message.replace(noun, self.buttinpropercase(noun, 'butts')), 'butts'
         else:
             return unedited_message.replace(noun, self.buttinpropercase(noun, 'butt')), 'butt'
+
+    def do_butting(self, pri_nouns, non_pri_nouns, unedited_message, messageobject, tagged_sentence):
+        picked_phrase = self.pickphrase(pri_nouns, non_pri_nouns)
+        new_sentence, replaced_with = self.checkwordtobutt(picked_phrase[1], unedited_message,
+                                                           messageobject)
+        if self.test_environment:
+            self.printdebugmessage(tagged_sentence, pri_nouns, non_pri_nouns, picked_phrase)
+        return self.replace_an_to_a_in_sentence(new_sentence, replaced_with), \
+               picked_phrase[0], \
+               picked_phrase[1]
