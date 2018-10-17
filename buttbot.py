@@ -58,15 +58,17 @@ class buttbot:
     async def do_config(self, message, arguments):
         if arguments == "allow":
             if message.channel.permissions_for(message.author).manage_messages:
-                #person has manage messages in this channel
+                # person has manage messages in this channel
                 self.config.add_channel_to_allowed_channel_list(message.channel.id)
                 await self.doComms(
-                    self.shitpost.do_butting_raw_sentnece("Buttbot will now talk in this wonderful channel and respond to any message")[0],
+                    self.shitpost.do_butting_raw_sentnece(
+                        "Buttbot will now talk in this wonderful channel and respond to any message")[0],
                     message.channel)
             else:
-                #person does not have manage messages in this channel
+                # person does not have manage messages in this channel
                 await self.doComms(
-                    self.shitpost.do_butting_raw_sentnece("You do not have permission to run this command in this channel")[0],
+                    self.shitpost.do_butting_raw_sentnece(
+                        "You do not have permission to run this command in this channel")[0],
                     message.channel)
         if arguments == "remove":
             if message.channel.permissions_for(message.author).manage_messages:
@@ -75,9 +77,10 @@ class buttbot:
                     self.shitpost.do_butting_raw_sentnece("Buttbot will longer reply to messages in this channel")[0],
                     message.channel)
             else:
-                #person does not have manage messages in this channel
+                # person does not have manage messages in this channel
                 await self.doComms(
-                    self.shitpost.do_butting_raw_sentnece("You do not have permission to run this command in this channel")[0],
+                    self.shitpost.do_butting_raw_sentnece(
+                        "You do not have permission to run this command in this channel")[0],
                     message.channel)
 
     def pick_correct_module(self, command):
@@ -245,8 +248,8 @@ class buttbot:
             try:
                 if rshitpost:
                     msg = await self.doComms(rshitpost, message.channel)
-                    #await self.comm.do_react_no_delay(msg, self.discordBot, '👍')  #am i ever going to implement this?
-                    #await self.comm.do_react_no_delay(msg, self.discordBot, '👎')
+                    # await self.comm.do_react_no_delay(msg, self.discordBot, '👍')  #am i ever going to implement this?
+                    # await self.comm.do_react_no_delay(msg, self.discordBot, '👎')
                     self.phrase_weights.add_message(msg.id, trigger_word, noun)
 
             except UnboundLocalError:
