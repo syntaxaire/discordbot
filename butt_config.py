@@ -4,6 +4,7 @@ import configparser
 class butt_config():
 
     def __init__(self, conf):
+        self.config_file_name = conf
         self.config_file = configparser.ConfigParser()
         self.config_file.read_file(open(conf))
 
@@ -29,3 +30,22 @@ class butt_config():
 
     def get_all_stop_phrases(self):
         return self._process_list_from_configparser('wordreplacer', 'stop_processing_phrases')
+
+    def add_channel_to_allowed_channel_list(self, channel):
+        self.config_file.set("allowed_channels", "channels",
+                             "%s,%s" % (self.config_file.get("allowed_channels", "channels"), channel))
+        self.save_config()
+
+    def remove_channel_from_allowed_channel_list(self, channel):
+        channels = self.config_file.get("allowed_channels", "channels").split(",")
+        try:
+            channels.remove(channel)
+            self.config_file.set("allowed_channels", "channels", ",".join(channels))
+            self.save_config()
+        except ValueError:
+            #channel provided not in list
+            pass
+
+    def save_config(self):
+        with open(self.config_file_name, 'w') as fp:
+            self.config_file.write(fp)

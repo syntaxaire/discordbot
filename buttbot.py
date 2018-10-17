@@ -48,15 +48,37 @@ class buttbot:
                 await asyncio.sleep(120)
             self.check_stored_reactions()
 
-    async def task_process_emoji_reactions(self):
-        pass
-
-    async def do_leave(self, message):
+    async def do_leave(self, message, arguments):
         if (str(message.author) in self.config.get('discordbot', 'bot_admin')) and str(self.discordBot.user) in str(
                 message.content):
             await self.discordBot.leave_server(message.server)
         else:
             await self.doComms('fuck you youre not my real dad', message.channel)
+
+    async def do_config(self, message, arguments):
+        if arguments == "allow":
+            if message.channel.permissions_for(message.author).manage_messages:
+                #person has manage messages in this channel
+                self.config.add_channel_to_allowed_channel_list(message.channel.id)
+                await self.doComms(
+                    self.shitpost.do_butting_raw_sentnece("Buttbot will now talk in this wonderful channel and respond to any message")[0],
+                    message.channel)
+            else:
+                #person does not have manage messages in this channel
+                await self.doComms(
+                    self.shitpost.do_butting_raw_sentnece("You do not have permission to run this command in this channel")[0],
+                    message.channel)
+        if arguments == "remove":
+            if message.channel.permissions_for(message.author).manage_messages:
+                self.config.remove_channel_from_allowed_channel_list(message.channel.id)
+                await self.doComms(
+                    self.shitpost.do_butting_raw_sentnece("Buttbot will longer reply to messages in this channel")[0],
+                    message.channel)
+            else:
+                #person does not have manage messages in this channel
+                await self.doComms(
+                    self.shitpost.do_butting_raw_sentnece("You do not have permission to run this command in this channel")[0],
+                    message.channel)
 
     def pick_correct_module(self, command):
         # this returns the module that contains the command ran by the user.  The module must support the command and
@@ -101,7 +123,7 @@ class buttbot:
             try:
                 if module is self:
                     # no module was found for the command.  We are going to try to run it in the base buttbot object
-                    back = await func(message)
+                    back = await func(message, arguments)
                 else:
                     back = func(arguments)
                 if back:
