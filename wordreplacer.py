@@ -82,6 +82,11 @@ class WordReplacer:
     def simulate_performtexttobutt(self, messageobject):
         return self.performtexttobutt(messageobject)
 
+    def do_butting_raw_sentnece(self, sentence):
+        tagged_sentence = self.wordtagger(sentence)
+        pri_nouns, non_pri_nouns = self.returnphrasesfromallsources(tagged_sentence)
+        return self.do_butting(pri_nouns, non_pri_nouns, sentence, None, self.wordtagger(sentence))
+
     def performtexttobutt(self, messageobject):
         # we are going to manipulate this version of the message before sending it to the processing functions.
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
@@ -244,10 +249,15 @@ class WordReplacer:
         return " ".join(message)
 
     def checkwordtobutt(self, noun, unedited_message, messageobject):
-        self.stats.disposition_store(messageobject.server.id, messageobject.channel.id, "Butt Replaced",
-                                     # "%s%s" % (nouns[buttword], " (Unfunny=true)" if notfunnyfound else ""),
-                                     "%s" % noun,
-                                     unedited_message)
+        try:
+            self.stats.disposition_store(messageobject.server.id, messageobject.channel.id, "Butt Replaced",
+                                         # "%s%s" % (nouns[buttword], " (Unfunny=true)" if notfunnyfound else ""),
+                                         "%s" % noun,
+                                         unedited_message)
+        except AttributeError:
+            #catching when we use raw sentence mode.  There is no messageobject to get server information from
+            #we do not care to add this to the disposition table anyways
+            pass
         lemmatizer = WordNetLemmatizer()
         if lemmatizer.lemmatize(noun) is not noun:
             # the lemmatizer thinks that this is a plural
