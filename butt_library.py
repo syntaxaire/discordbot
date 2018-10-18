@@ -43,5 +43,9 @@ def load_all_config_files():
     return glob.glob("config/*.ini")
 
 
+def load_config_file(id):
+    return glob.glob("config/%s.ini" % id)
+
+
 def get_indexes(list, word):
     return [i for (y, i) in zip(list, range(len(list))) if word == y]
