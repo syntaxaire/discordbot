@@ -72,10 +72,11 @@ class buttbot:
                     message.channel)
         if arguments == "remove":
             if message.channel.permissions_for(message.author).manage_messages:
-                self.config.remove_channel_from_allowed_channel_list(message.channel.id)
                 await self.doComms(
                     self.shitpost.do_butting_raw_sentnece("Buttbot will longer reply to messages in this channel")[0],
                     message.channel)
+                self.config.remove_channel_from_allowed_channel_list(message.channel.id) #change execution order so it
+                                                                                         #actually sends it
             else:
                 # person does not have manage messages in this channel
                 await self.doComms(
