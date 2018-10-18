@@ -255,10 +255,13 @@ class WordReplacer:
                                          "%s" % noun,
                                          unedited_message)
         except AttributeError:
-            #catching when we use raw sentence mode.  There is no messageobject to get server information from
-            #we do not care to add this to the disposition table anyways
+            # catching when we use raw sentence mode.  There is no messageobject to get server information from
+            # we do not care to add this to the disposition table anyways
             pass
         lemmatizer = WordNetLemmatizer()
+        for match in re.finditer(lemmatizer.lemmatize(noun), unedited_message, flags=re.IGNORECASE):
+            #fixes a kara problem
+            unedited_message = unedited_message.replace(match.group(0), self.buttinpropercase(match.group(0), 'butt'))
         if lemmatizer.lemmatize(noun) is not noun:
             # the lemmatizer thinks that this is a plural
             return unedited_message.replace(noun, self.buttinpropercase(noun, 'butts')), 'butts'
