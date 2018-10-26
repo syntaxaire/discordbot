@@ -14,8 +14,8 @@ from vacuum import Vacuum
 from wordreplacer import WordReplacer
 
 
-class buttbot:
-    def __init__(self, Botobject, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
+class ButtBot:
+    def __init__(self, bot_object, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
         self.test_environment = test_environment
         self.stats = stat_module
         self.config = butt_config.butt_config(conf)
@@ -24,7 +24,7 @@ class buttbot:
         if bool(self.config.get('vacuum', 'enabled')):
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.discord_comms()
-        self.discordBot = Botobject
+        self.discordBot = bot_object
         self.phrase_weights = phrase_weights
         self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment)
         self.mojang = mj.mojang()
@@ -75,8 +75,8 @@ class buttbot:
                 await self.doComms(
                     self.shitpost.do_butting_raw_sentnece("Buttbot will longer reply to messages in this channel")[0],
                     message.channel)
-                self.config.remove_channel_from_allowed_channel_list(message.channel.id) #change execution order so it
-                                                                                         #actually sends it
+                self.config.remove_channel_from_allowed_channel_list(message.channel.id)  # change execution order so it
+                # actually sends it
             else:
                 # person does not have manage messages in this channel
                 await self.doComms(
@@ -179,7 +179,7 @@ class buttbot:
         if not self.should_i_reply_to_user(message):
             # user is either a bot not on whitelist or is a user on the ignore list
             return
-        if is_word_in_text("rip", message.content) == True:
+        if is_word_in_text("rip", message.content):
             if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
                     str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
                 self.vacuum.add_death_message(message.content)
@@ -210,7 +210,7 @@ class buttbot:
                     if random.randint(1, 100) == 44:
                         await self.doComms('suck my dick F under cooldown', message.channel)
 
-        elif is_word_in_text('butt', message.content) == True or is_word_in_text('butts', message.content) == True:
+        elif is_word_in_text('butt', message.content) is True or is_word_in_text('butts', message.content) is True:
             if self.allowed_in_channel(message.channel):
                 self.stats.message_store(message.channel.id)
                 if random.randint(1, 6) == 3:
