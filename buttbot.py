@@ -53,33 +53,33 @@ class ButtBot:
                 message.content):
             await self.discordBot.leave_server(message.server)
         else:
-            await self.doComms('fuck you youre not my real dad', message.channel)
+            await self.docomms('fuck you youre not my real dad', message.channel)
 
     async def do_config(self, message, arguments):
         if arguments == "allow":
             if message.channel.permissions_for(message.author).manage_messages:
                 # person has manage messages in this channel
                 self.config.add_channel_to_allowed_channel_list(message.channel.id)
-                await self.doComms(
+                await self.docomms(
                     self.shitpost.do_butting_raw_sentnece(
                         "Buttbot will now talk in this wonderful channel and respond to any message")[0],
                     message.channel)
             else:
                 # person does not have manage messages in this channel
-                await self.doComms(
+                await self.docomms(
                     self.shitpost.do_butting_raw_sentnece(
                         "You do not have permission to run this command in this channel")[0],
                     message.channel)
         if arguments == "remove":
             if message.channel.permissions_for(message.author).manage_messages:
-                await self.doComms(
+                await self.docomms(
                     self.shitpost.do_butting_raw_sentnece("Buttbot will longer reply to messages in this channel")[0],
                     message.channel)
                 self.config.remove_channel_from_allowed_channel_list(message.channel.id)  # change execution order so it
                 # actually sends it
             else:
                 # person does not have manage messages in this channel
-                await self.doComms(
+                await self.docomms(
                     self.shitpost.do_butting_raw_sentnece(
                         "You do not have permission to run this command in this channel")[0],
                     message.channel)
@@ -131,13 +131,13 @@ class ButtBot:
                 else:
                     back = func(arguments)
                 if back:
-                    await self.doComms(back, message.channel)
+                    await self.docomms(back, message.channel)
             except UnboundLocalError:
                 # command not found in any module, including the base buttbot object.  skip for now
                 # todo: maybe default return option here too?
                 pass
 
-    async def doComms(self, message, channel):
+    async def docomms(self, message, channel):
         if self.allowed_in_channel(channel):
             msg = await self.comm.do_send_message(channel, self.discordBot, message)
             return msg  # returns the message object of the message that was sent to discord
@@ -190,9 +190,9 @@ class ButtBot:
                         self.stats.disposition_store(message.server.id, message.channel.id,
                                                      "RIP", "RIP")
                         if random.randint(1, 20) == 5:
-                            await self.doComms('Ya, butts', message.channel)
+                            await self.docomms('Ya, butts', message.channel)
                         else:
-                            await self.doComms('Ya, RIP', message.channel)
+                            await self.docomms('Ya, RIP', message.channel)
                     else:
                         self.stats.disposition_store(message.server.id, message.channel.id,
                                                      "RIP cooldown", "RIP cooldown")
@@ -203,12 +203,12 @@ class ButtBot:
                 if self.timer_module.check_timeout('f', 'shitpost'):
                     self.stats.disposition_store(message.server.id, message.channel.id,
                                                  "F", "F")
-                    await self.doComms('Ya, F', message.channel)
+                    await self.docomms('Ya, F', message.channel)
                 else:
                     self.stats.disposition_store(message.server.id, message.channel.id,
                                                  "F cooldown", "F cooldown")
                     if random.randint(1, 100) == 44:
-                        await self.doComms('suck my dick F under cooldown', message.channel)
+                        await self.docomms('suck my dick F under cooldown', message.channel)
 
         elif is_word_in_text('butt', message.content) is True or is_word_in_text('butts', message.content) is True:
             if self.allowed_in_channel(message.channel):
@@ -219,7 +219,7 @@ class ButtBot:
                         if rshitpost:
                             self.stats.disposition_store(message.server.id, message.channel.id,
                                                          "RSP", "RSP", message.content)
-                            await self.doComms(rshitpost, message.channel)
+                            await self.docomms(rshitpost, message.channel)
                     else:
                         self.stats.disposition_store(message.server.id, message.channel.id,
                                                      "RSP cooldown", "RSP cooldown")
@@ -248,7 +248,7 @@ class ButtBot:
                     self.shitpost.performtexttobutt(message)
             try:
                 if rshitpost:
-                    msg = await self.doComms(rshitpost, message.channel)
+                    msg = await self.docomms(rshitpost, message.channel)
                     # await self.comm.do_react_no_delay(msg, self.discordBot, '👍')  #am i ever going to implement this?
                     # await self.comm.do_react_no_delay(msg, self.discordBot, '👎')
                     self.phrase_weights.add_message(msg.id, trigger_word, noun)
