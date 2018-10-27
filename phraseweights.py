@@ -9,11 +9,12 @@ class PhraseWeights:
         # butted messages we need to store
         self.messages = []
 
-    def load_from_file(self):
+    @staticmethod
+    def load_from_file():
         try:
             with open('phrase_weight_list.txt') as f:
                 return json.load(f)
-        except Exception:
+        except IOError:
             pass
 
     def save_to_file(self):
@@ -41,7 +42,8 @@ class PhraseWeights:
             # no stored weight for this phrase so we will use the default weight
             return 1000
 
-    def process_reactions(self, reactions):
+    @staticmethod
+    def process_reactions(reactions):
         negativeemojis = '😕', '🙁', '☹', '😨', '😦', '😧', '👎', '😠', '😭', '😖', '👎', '💤', '🚫', '🔫', '❎'
         downvotes = 0
         upvotes = 0
@@ -58,5 +60,5 @@ class PhraseWeights:
     def get_messages(self):
         return self.messages
 
-    def remove_message(self, time, guid, trigger_word, noun):
-        self.messages.remove([time, guid, trigger_word, noun])
+    def remove_message(self, _time, guid, trigger_word, noun):
+        self.messages.remove([_time, guid, trigger_word, noun])

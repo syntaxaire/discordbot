@@ -19,7 +19,8 @@ class discord_comms:
         msg = await client.send_message(channel, message)  # dont remove await from here or this shit will break
         return msg
 
-    async def do_react(self, message, client, emoji, cooldown=None):
+    @staticmethod
+    async def do_react(message, client, emoji, cooldown=None):
         if cooldown:
             await asyncio.sleep(cooldown)
         else:
@@ -29,7 +30,8 @@ class discord_comms:
             emoji = get(client.get_all_emojis(), name=emoji[1:])
         await client.add_reaction(message, emoji)
 
-    async def do_react_no_delay(self, message, client, emoji):
+    @staticmethod
+    async def do_react_no_delay(message, client, emoji):
         if emoji[0] == ":":
             # custom emoji for channel. we need to get it
             emoji = get(client.get_all_emojis(), name=emoji[1:])
