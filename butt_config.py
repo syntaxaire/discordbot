@@ -1,7 +1,7 @@
 import configparser
 
 
-class butt_config():
+class ButtConfig:
 
     def __init__(self, conf):
         self.config_file_name = conf
@@ -43,9 +43,60 @@ class butt_config():
             self.config_file.set("allowed_channels", "channels", ",".join(channels))
             self.save_config()
         except ValueError:
-            #channel provided not in list
+            # channel provided not in list
             pass
 
     def save_config(self):
         with open(self.config_file_name, 'w') as fp:
             self.config_file.write(fp)
+
+    def get_channel_name(self):
+        return self.getboolean('discordbot', 'plain_language_name')
+
+    def set_channel_name(self, name):
+        self.config_file.set('discordbot', 'plain_language_name', name)
+        self.save_config()
+
+    def get_rip_setting(self):
+        return self.getboolean('discordbot', 'rip')
+
+    def set_rip_config(self, setting):
+        self.config_file.set('discordbot', 'rip', bool(setting))
+        self.save_config()
+
+    def get_f_setting(self):
+        return self.getboolean('discordbot', 'rip')
+
+    def set_f_config(self, setting):
+        self.config_file.set('discordbot', 'rip', bool(setting))
+        self.save_config()
+
+    def add_always_ignore(self, user_guid):
+        self.config_file.set("discordbot", "always_ignore",
+                             "%s,%s" % (self.config_file.get("discordbot", "always_ignore"), user_guid))
+        self.save_config()
+
+    def remove_always_ignore(self, user_guid):
+        users = self.config_file.get("discordbot", "always_ignore").split(",")
+        try:
+            users.remove(user_guid)
+            self.config_file.set("discordbot", "always_ignore", ",".join(users))
+            self.save_config()
+        except ValueError:
+            # user provided not in list
+            pass
+
+    def add_whitelisted_bots(self, user_guid):
+        self.config_file.set("discordbot", "whitelisted_bots",
+                             "%s,%s" % (self.config_file.get("discord_bot", "whitelisted_bots"), user_guid))
+        self.save_config()
+
+    def remove_whitelisted_bots(self, user_guid):
+        users = self.config_file.get("discordbot", "whitelisted_bots").split(",")
+        try:
+            users.remove(user_guid)
+            self.config_file.set("discordbot", "whitelisted_bots", ",".join(users))
+            self.save_config()
+        except ValueError:
+            # user provided not in list
+            pass
