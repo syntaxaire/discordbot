@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 import time
 
@@ -13,12 +14,17 @@ from butt_library import is_word_in_text
 from vacuum import Vacuum
 from wordreplacer import WordReplacer
 
+logger = logging.getLogger("discordbot.buttbot")
+
 
 class ButtBot:
     def __init__(self, bot_object, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
+        self.logger = logging.getLogger("discordbot.buttbot.buttbot")
+        self.config = butt_config.ButtConfig(conf)
+        self.logger.info("loading new buttbot instance for guild %s (%s)" %
+                         (self.config.get_plain_language_name(), str(self.config.get_guild_guid())))
         self.test_environment = test_environment
         self.stats = stat_module
-        self.config = butt_config.butt_config(conf)
         self.timer_module = butt_timeout.Timeout(self.config)
         self.db = db(db_, db_user, db_pass, test_environment)
         if bool(self.config.get('vacuum', 'enabled')):
@@ -48,6 +54,7 @@ class ButtBot:
                 await asyncio.sleep(120)
             self.check_stored_reactions()
 
+    # noinspection PyUnusedLocal
     async def do_leave(self, message, arguments):
         if (str(message.author) in self.config.get('discordbot', 'bot_admin')) and str(self.discordBot.user) in str(
                 message.content):
@@ -127,8 +134,10 @@ class ButtBot:
             try:
                 if module is self:
                     # no module was found for the command.  We are going to try to run it in the base buttbot object
+                    # noinspection PyUnboundLocalVariable
                     back = await func(message, arguments)
                 else:
+                    # noinspection PyUnboundLocalVariable
                     back = func(arguments)
                 if back:
                     await self.docomms(back, message.channel)
@@ -247,10 +256,13 @@ class ButtBot:
                     # discord API will not transmit the message.
                     self.shitpost.performtexttobutt(message)
             try:
+                # noinspection PyUnboundLocalVariable
                 if rshitpost:
+                    # noinspection PyUnboundLocalVariable
                     msg = await self.docomms(rshitpost, message.channel)
                     # await self.comm.do_react_no_delay(msg, self.discordBot, '👍')  #am i ever going to implement this?
                     # await self.comm.do_react_no_delay(msg, self.discordBot, '👎')
+                    # noinspection PyUnboundLocalVariable,PyUnboundLocalVariable
                     self.phrase_weights.add_message(msg.id, trigger_word, noun)
 
             except UnboundLocalError:
