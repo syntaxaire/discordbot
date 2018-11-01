@@ -1,7 +1,7 @@
 import pymysql.cursors
 
 
-class db:
+class Db:
     def __init__(self, _db, username, password, test_environment):
         self._db = _db
         self.user = username
@@ -13,13 +13,12 @@ class db:
             self.connection = pymysql.connect(host='fartcannon.com', user=self.user, password=self.passw,
                                               db=self._db, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
         except pymysql.err.OperationalError:
-            if self.test_environment == True:
+            if self.test_environment:
                 #bot was loaded with test environment enabled, ignore this error
                 raise
             else:
                 #TODO: handle connection recovery when we can't connect.
                 raise
-
 
     def do_query(self, query, args=''):
         self.build()
@@ -61,6 +60,3 @@ class db:
                 raise
             finally:
                 pass
-
-    def close(self):
-        self.connection.close()
