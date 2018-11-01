@@ -26,7 +26,7 @@ class ButtBot:
         self.db = db(db_, db_user, db_pass, test_environment)
         if bool(self.config.get('vacuum', 'enabled')):
             self.vacuum = Vacuum(self.db)
-        self.comm = discord_comms.discord_comms()
+        self.comm = discord_comms.DiscordComms()
         self.phrase_weights = phrase_weights
         self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment)
         self.mojang = mj.mojang()

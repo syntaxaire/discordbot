@@ -4,11 +4,12 @@ import random as rand
 from discord.utils import get
 
 
-class discord_comms:
+class DiscordComms:
     def __init__(self):
         pass
 
-    async def do_send_message(self, channel, client, message, cooldown=None):
+    @staticmethod
+    async def do_send_message(channel, client, message, cooldown=None):
         # this shit sends the messages to the peeps
         await asyncio.sleep(1)
         await client.send_typing(channel)
