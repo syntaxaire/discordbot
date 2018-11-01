@@ -13,7 +13,8 @@ class Vacuum:
         self.playtime_load()
         self.db = db
         self.command = {'lastseen': 'vacuum', 'playtime': 'vacuum', 'howchies': 'vacuum', 'ouchies': 'vacuum'}
-        self.updateurl=""
+        self.updateurl = ""
+        self.config = ""
 
         try:
             if self.players:
@@ -25,8 +26,8 @@ class Vacuum:
     def return_commands(self):
         return self.command
 
-    def update_url(self,url):
-        self.updateurl=url
+    def update_url(self, url):
+        self.updateurl = url
 
     ################################################################################
     #                               commands                                       #
@@ -38,7 +39,7 @@ class Vacuum:
                 if returnz:
                     return returnz
         except IndexError:
-            return ("who am i looking for?")
+            return "who am i looking for?"
 
     def do_playtime(self, player):
         try:
@@ -51,15 +52,15 @@ class Vacuum:
 
     def do_howchies(self, message):
         if message:
-            return ("People who died to " + message + ": " + self.howchies_profile(message))
+            return "People who died to " + message + ": " + self.howchies_profile(message)
         else:
-            return ('Heres whats killing you: ' + self.top_10_death_reasons())
+            return 'Heres whats killing you: ' + self.top_10_death_reasons()
 
     def do_ouchies(self, message):
         if message:
-            return ("Deaths for %s: %s" % (message, self.ouchies_profile(message)))
+            return "Deaths for %s: %s" % (message, self.ouchies_profile(message))
         else:
-            return ('Top 10 ouchies: %s' % self.top_10_deaths())
+            return 'Top 10 ouchies: %s' % self.top_10_deaths()
 
     ################################################################################
     #                               end commands                                   #
@@ -71,7 +72,8 @@ class Vacuum:
 
     def playtime_global(self):
         players = self.db.do_query(
-            "select abs(sum(timedelta)) as seconds, count(timedelta) as sessions, player from progress_playertracker_v2 group by player")
+            "select abs(sum(timedelta)) as seconds, count(timedelta)"
+            " as sessions, player from progress_playertracker_v2 group by player")
         self.db.close()
         total_seconds = 0
         total_sessions = 0
@@ -85,7 +87,8 @@ class Vacuum:
 
     def playtime_single(self, player):
         time = self.db.do_query(
-            "select sum(timedelta) as seconds, count(timedelta) as sessions from progress_playertracker_v2 where player=%s",
+            "select sum(timedelta) as seconds, count(timedelta) as"
+            " sessions from progress_playertracker_v2 where player=%s",
             player)
         self.db.close()
         return [time[0]['seconds'], time[0]['sessions']]
@@ -156,8 +159,9 @@ class Vacuum:
             self.players = []
             self.playtime_player_checkplayers(players)
 
-    def playtime_player_deltaseconds(self, startTime):
-        d = startTime - datetime.datetime.utcnow()
+    @staticmethod
+    def playtime_player_deltaseconds(starttime):
+        d = starttime - datetime.datetime.utcnow()
         d = abs(int(d.total_seconds()))
         if d > 20:
             d = d - 10
@@ -172,7 +176,7 @@ class Vacuum:
     def playtime_player_record(self, player, deltatime):
         print("going to do query: user is %s and timedetla is %s" % (player, deltatime))
         self.db.do_insert("INSERT into `progress_playertracker_v2` (`player`,`timedelta`,`datetime`) values (%s,%s,%s)",
-                       (player, deltatime, datetime.datetime.utcnow()))
+                          (player, deltatime, datetime.datetime.utcnow()))
         self.db.close()
 
     def playtime_player_addplayer(self, player):
@@ -221,12 +225,13 @@ class Vacuum:
             if seconds > 15:
                 days, remainder = divmod(seconds, 86400)
                 hours, remainder = divmod(remainder, 3600)
-                return ('last saw %s %s days %s hours ago' % (player, int(days), int(hours)))
+                return 'last saw %s %s days %s hours ago' % (player, int(days), int(hours))
             else:
-                return ("Did you remember to wear your helmet today, honey?")
+                return "Did you remember to wear your helmet today, honey?"
         except IndexError:
-            return ("Havent seen em")
+            return "Havent seen em"
 
+    # noinspection PyBroadException
     def get_player_coords(self, player):
         try:
             with urllib.request.urlopen(self.updateurl) as url:
@@ -244,7 +249,8 @@ class Vacuum:
         m = message.split()
         m[1] = m[1].lower()  # case insensitivity support for player name
         coords = self.get_player_coords(m[1])
-        # now i need to combine the death reason into a string, which will be words in positions 2-n of the death message 'm'
+        # now i need to combine the death reason into a string, which will be words in positions 2-n of the death
+        # message 'm'
         dmsg = ''
         if m[2] == 'was':
             for i in m[3:]:
@@ -255,12 +261,14 @@ class Vacuum:
         dmsg = dmsg.strip()
         try:
             self.db.do_insert(
-                "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`) VALUES(%s, %s, %s, %s, %s, %s, %s);",
+                "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`)"
+                "VALUES(%s, %s, %s, %s, %s, %s, %s);",
                 (m[1], dmsg, coords['world'], coords['x'], coords['y'], coords['z'], datetime.datetime.utcnow()))
         except TypeError:
             # catch this error, something that i dont believe should be possible with how this is set up but?????
             self.db.do_insert(
-                "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`) VALUES(%s, %s, %s, %s, %s, %s, %s);",
+                "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`)"
+                "VALUES(%s, %s, %s, %s, %s, %s, %s);",
                 (m[1], dmsg, "Exception Handling", 0, 0, 0, datetime.datetime.utcnow()))
         self.db.close()
 
@@ -277,7 +285,8 @@ class Vacuum:
 
     def howchies_profile(self, message):
         result = self.db.do_query(
-            "SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (%s) GROUP BY player ORDER by count DESC",
+            "SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (%s)"
+            "GROUP BY player ORDER by count DESC",
             message)
         self.db.close()
         if result:
@@ -287,7 +296,8 @@ class Vacuum:
 
     def ouchies_profile(self, player):
         result = self.db.do_query(
-            "SELECT message,count(*) as `count` FROM `progress_deaths` WHERE player=%s GROUP BY message ORDER BY count DESC",
+            "SELECT message,count(*) as `count` FROM `progress_deaths` WHERE player=%s"
+            " GROUP BY message ORDER BY count DESC",
             player)
         self.db.close()
         if result:
@@ -297,7 +307,8 @@ class Vacuum:
 
     def top_10_death_reasons(self):
         result = self.db.do_query(
-            "SELECT message, count(*) as `count` FROM `progress_deaths` GROUP BY message ORDER BY count DESC LIMIT 10",
+            "SELECT message, count(*) as `count` FROM `progress_deaths` "
+            "GROUP BY message ORDER BY count DESC LIMIT 10",
             '')
         self.db.close()
         if result:
@@ -305,7 +316,8 @@ class Vacuum:
         else:
             pass
 
-    def sort(self, target, t1, t2):
+    @staticmethod
+    def sort(target, t1, t2):
         cmsg = ''
         i = 1
         for d in target:
