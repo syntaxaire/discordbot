@@ -25,13 +25,13 @@ class ButtConfig:
         return self.get(section, key).split(",")
 
     def get_guild_guid(self):
-        return self.guild_guid
+        return str(self.guild_guid)
 
     def get_plain_language_name(self):
         return self.get('discordbot', 'plain_language_name')
 
     def set_plain_language_name(self, pla):
-        self.config_file.set('discordbot', 'plain_language_name', bool(pla))
+        self.config_file.set('discordbot', 'plain_language_name', str(pla))
         self.save_config()
 
     def get_all_allowed_bots(self):
