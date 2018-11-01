@@ -82,7 +82,7 @@ class WordReplacer:
     def simulate_performtexttobutt(self, messageobject):
         return self.performtexttobutt(messageobject)
 
-    def do_butting_raw_sentnece(self, sentence):
+    def do_butting_raw_sentence(self, sentence):
         tagged_sentence = self.wordtagger(sentence)
         pri_nouns, non_pri_nouns = self.returnphrasesfromallsources(tagged_sentence)
         return self.do_butting(pri_nouns, non_pri_nouns, sentence, None, self.wordtagger(sentence))
