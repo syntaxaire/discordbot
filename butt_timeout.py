@@ -5,7 +5,7 @@ class Timeout:
     def __init__(self, config):
         # load the shitpost and command call frequencies out of the passed config.
         self.config = config
-        self.type = {}
+        self.type = dict()
         self.type['shitpost'] = int(self.config.get('discordbot', 'shitpost_call_freq'))
         self.type['command'] = int(self.config.get('discordbot', 'command_call_freq'))
         self.timeout_storage_variable = {}
@@ -21,7 +21,8 @@ class Timeout:
         else:
             return False
 
-    def _check_timeout_type(self, timeout_type):
+    @staticmethod
+    def _check_timeout_type(timeout_type):
         # make sure the timeout_type sent to the object is useful.
         if not (timeout_type == "shitpost" or timeout_type == "command"):
             raise ValueError("Timeout type was not shitpost or command.")
