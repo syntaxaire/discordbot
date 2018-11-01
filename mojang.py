@@ -2,7 +2,7 @@ import json
 import urllib.request
 
 
-class mojang:
+class Mojang:
 
     def __init__(self):
         self.command = {'mojang': 'mojang'}
@@ -11,7 +11,7 @@ class mojang:
     #                               commands                                       #
     ################################################################################
 
-    def do_mojang(self,message):
+    def do_mojang(self, message):
         msg = self.mojang_status_requested()
         for t in msg:
             return t
@@ -23,7 +23,8 @@ class mojang:
     def return_commands(self):
         return self.command
 
-    def mojang_status(self):
+    @staticmethod
+    def mojang_status():
         with urllib.request.urlopen("https://status.mojang.com/check") as url:
             data = json.loads(url.read().decode())
             yellow = []
@@ -55,13 +56,15 @@ class mojang:
         # todo: probably should finish this
         pass
 
-    def mojang_user_to_uuid(self, username):
+    @staticmethod
+    def mojang_user_to_uuid(username):
         with urllib.request.urlopen("https://api.mojang.com/users/profiles/minecraft/%s" % username) as url:
             data = json.loads(url.read().decode())
         return data['id']
 
     def mojang_get_user_avatar(self, username):
         with urllib.request.urlopen(
-                "https://sessionserver.mojang.com/session/minecraft/profile/%s" % self.mojang_user_to_uuid(username)) as url:
+                "https://sessionserver.mojang.com/session/minecraft/profile/%s" %
+                self.mojang_user_to_uuid(username)) as url:
             data = json.loads(url.read().decode())
         return data['properties'][0]['value']
