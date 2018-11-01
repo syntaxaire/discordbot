@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import random
 import time
 
@@ -14,15 +13,10 @@ from butt_library import is_word_in_text
 from vacuum import Vacuum
 from wordreplacer import WordReplacer
 
-logger = logging.getLogger("discordbot.buttbot")
-
 
 class ButtBot:
     def __init__(self, bot_object, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
-        self.logger = logging.getLogger("discordbot.buttbot.buttbot")
         self.config = butt_config.ButtConfig(conf)
-        self.logger.info("loading new buttbot instance for guild %s (%s)" %
-                         (self.config.get_plain_language_name(), str(self.config.get_guild_guid())))
         self.test_environment = test_environment
         self.stats = stat_module
         self.timer_module = butt_timeout.Timeout(self.config)
@@ -38,6 +32,12 @@ class ButtBot:
         if self.config.getboolean('vacuum', 'enabled') is True:
             self.vacuum.update_url(self.config.get('vacuum', 'vacuum_update_json_url'))
             self.discordBot.loop.create_task(self.my_background_task())
+
+    async def do_security_log(self, message):
+        await self.comm.do_send_message(self.discordBot.get_channel("505226379487346690"), self.discordBot, message, 0)
+
+    async def do_info_log(self, message):
+        await self.comm.do_send_message(self.discordBot.get_channel("505226325511110658"), self.discordBot, message, 0)
 
     async def my_background_task(self):
         await self.discordBot.wait_until_ready()
@@ -61,6 +61,8 @@ class ButtBot:
             await self.discordBot.leave_server(message.server)
         else:
             await self.docomms('fuck you youre not my real dad', message.channel)
+            await self.do_security_log("%s tried do_leave in server %s (%s)" %
+                                       (message.author.name, message.server.name, message.server.id))
 
     async def do_config(self, message, arguments):
         if arguments == "allow":
@@ -68,28 +70,40 @@ class ButtBot:
                 # person has manage messages in this channel
                 self.config.add_channel_to_allowed_channel_list(message.channel.id)
                 await self.docomms(
-                    self.shitpost.do_butting_raw_sentnece(
+                    self.shitpost.do_butting_raw_sentence(
                         "Buttbot will now talk in this wonderful channel and respond to any message")[0],
                     message.channel)
+                await self.do_security_log("%s did permit in %s (%s)  in server %s (%s)" %
+                                           (message.author, message.channel, str(message.channel.id),
+                                            message.server.name, str(message.server.id)))
             else:
                 # person does not have manage messages in this channel
                 await self.docomms(
-                    self.shitpost.do_butting_raw_sentnece(
+                    self.shitpost.do_butting_raw_sentence(
                         "You do not have permission to run this command in this channel")[0],
                     message.channel)
+                await self.do_security_log("%s tried to permit in %s (%s) in server %s (%s), but no permissions" %
+                                           (message.author, message.channel, str(message.channel.id),
+                                            message.server.name, str(message.server.id)))
         if arguments == "remove":
             if message.channel.permissions_for(message.author).manage_messages:
                 await self.docomms(
-                    self.shitpost.do_butting_raw_sentnece("Buttbot will longer reply to messages in this channel")[0],
+                    self.shitpost.do_butting_raw_sentence("Buttbot will longer reply to messages in this channel")[0],
                     message.channel)
                 self.config.remove_channel_from_allowed_channel_list(message.channel.id)  # change execution order so it
                 # actually sends it
+                await self.do_security_log("%s removed in %s (%s)  in server %s (%s)" %
+                                           (message.author, message.channel, str(message.channel.id),
+                                            message.server.name, str(message.server.id)))
             else:
                 # person does not have manage messages in this channel
                 await self.docomms(
-                    self.shitpost.do_butting_raw_sentnece(
+                    self.shitpost.do_butting_raw_sentence(
                         "You do not have permission to run this command in this channel")[0],
                     message.channel)
+                await self.do_security_log("%s tried to remove in %s (%s)  in server %s (%s), but no permissions" %
+                                           (message.author, message.channel, str(message.channel.id),
+                                            message.server.name, str(message.server.id)))
 
     def pick_correct_module(self, command):
         # this returns the module that contains the command ran by the user.  The module must support the command and
