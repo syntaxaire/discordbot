@@ -29,7 +29,7 @@ class ButtBot:
         self.comm = discord_comms.DiscordComms()
         self.phrase_weights = phrase_weights
         self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment)
-        self.mojang = mj.mojang()
+        self.mojang = mj.Mojang()
         self.discordBot.loop.create_task(self.butt_message_processing())
         if self.config.getboolean('vacuum', 'enabled') is True:
             self.vacuum.update_url(self.config.get('vacuum', 'vacuum_update_json_url'))
