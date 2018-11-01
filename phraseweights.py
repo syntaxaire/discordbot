@@ -18,7 +18,6 @@ class PhraseWeights:
             pass
 
     def save_to_file(self):
-        # print("saving weights to file")
         with open('phrase_weight_list.txt', 'w') as f:
             json.dump(self.phrases, f, ensure_ascii=False, default=str)
 
