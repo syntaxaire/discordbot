@@ -7,6 +7,11 @@ class ButtConfig:
         self.config_file_name = conf
         self.config_file = configparser.ConfigParser()
         self.config_file.read_file(open(conf))
+        try:
+            self.guild_guid = conf.split("/")[1][:-4]
+        except IndexError:
+            #we are loading a test config file, not a real one.
+            self.guild_guid = conf[:-4]
 
     def get(self, section, key):
         # passthrough function for backwards compatibility
@@ -18,6 +23,16 @@ class ButtConfig:
 
     def _process_list_from_configparser(self, section, key):
         return self.get(section, key).split(",")
+
+    def get_guild_guid(self):
+        return self.guild_guid
+
+    def get_plain_language_name(self):
+        return self.get('discordbot', 'plain_language_name')
+
+    def set_plain_language_name(self, pla):
+        self.config_file.set('discordbot', 'plain_language_name', bool(pla))
+        self.save_config()
 
     def get_all_allowed_bots(self):
         return self._process_list_from_configparser('discordbot', 'whitelisted_bots')
@@ -32,9 +47,10 @@ class ButtConfig:
         return self._process_list_from_configparser('wordreplacer', 'stop_processing_phrases')
 
     def add_channel_to_allowed_channel_list(self, channel):
-        self.config_file.set("allowed_channels", "channels",
-                             "%s,%s" % (self.config_file.get("allowed_channels", "channels"), channel))
-        self.save_config()
+        if channel not in self.config_file.get("allowed_channels", "channels"):
+            self.config_file.set("allowed_channels", "channels",
+                                 "%s,%s" % (self.config_file.get("allowed_channels", "channels"), channel))
+            self.save_config()
 
     def remove_channel_from_allowed_channel_list(self, channel):
         channels = self.config_file.get("allowed_channels", "channels").split(",")
@@ -72,9 +88,10 @@ class ButtConfig:
         self.save_config()
 
     def add_always_ignore(self, user_guid):
-        self.config_file.set("discordbot", "always_ignore",
-                             "%s,%s" % (self.config_file.get("discordbot", "always_ignore"), user_guid))
-        self.save_config()
+        if user_guid not in self.config_file.get("discordbot", "always_ignore"):
+            self.config_file.set("discordbot", "always_ignore",
+                                 "%s,%s" % (self.config_file.get("discordbot", "always_ignore"), user_guid))
+            self.save_config()
 
     def remove_always_ignore(self, user_guid):
         users = self.config_file.get("discordbot", "always_ignore").split(",")
@@ -87,9 +104,10 @@ class ButtConfig:
             pass
 
     def add_whitelisted_bots(self, user_guid):
-        self.config_file.set("discordbot", "whitelisted_bots",
-                             "%s,%s" % (self.config_file.get("discord_bot", "whitelisted_bots"), user_guid))
-        self.save_config()
+        if user_guid not in self.config_file.get("discordbot", "whitelisted_bots"):
+            self.config_file.set("discordbot", "whitelisted_bots",
+                                 "%s,%s" % (self.config_file.get("discord_bot", "whitelisted_bots"), user_guid))
+            self.save_config()
 
     def remove_whitelisted_bots(self, user_guid):
         users = self.config_file.get("discordbot", "whitelisted_bots").split(",")
