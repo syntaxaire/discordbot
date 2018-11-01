@@ -16,7 +16,10 @@ from wordreplacer import WordReplacer
 
 class ButtBot:
     def __init__(self, bot_object, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
+        self.discordBot = bot_object
         self.config = butt_config.ButtConfig(conf)
+        if not self.config.get_plain_language_name():
+            self.configure_buttbot_instance()
         self.test_environment = test_environment
         self.stats = stat_module
         self.timer_module = butt_timeout.Timeout(self.config)
@@ -24,7 +27,6 @@ class ButtBot:
         if bool(self.config.get('vacuum', 'enabled')):
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.discord_comms()
-        self.discordBot = bot_object
         self.phrase_weights = phrase_weights
         self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment)
         self.mojang = mj.mojang()
@@ -53,6 +55,9 @@ class ButtBot:
             else:
                 await asyncio.sleep(120)
             self.check_stored_reactions()
+
+    def configure_buttbot_instance(self):
+        self.config.set_plain_language_name(self.discordBot.get_server("507477640375042049"))
 
     # noinspection PyUnusedLocal
     async def do_leave(self, message, arguments):

@@ -17,17 +17,6 @@ client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 channel_configs = butt_library.load_all_config_files()  # global that will hold channel IDs that have configs
 command_channels = {}
 
-if test_environment:
-    command_channels["408168696834424832"] = ButtBot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
-                                                     stat_module, weights, True)
-    command_channels["199981748098957312"] = ButtBot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
-                                                     stat_module, weights, True)
-else:
-    for i in channel_configs:
-        command_channels[i.split("/")[1][:-4]] = ButtBot(client, i, db_, db_secrets[0], db_secrets[1], stat_module,
-                                                         weights, False)
-
-
 @client.event
 async def on_ready():
     print('Logged in as ' + client.user.name + ' (ID:' + client.user.id + ') | Connected to ' + str(
@@ -39,6 +28,18 @@ async def on_ready():
     print('You are running FartBot V4.3.00')
     print('Created by Poop Poop')
     print('--------')
+    if test_environment:
+        command_channels["408168696834424832"] = ButtBot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
+                                                         stat_module, weights, True)
+        command_channels["199981748098957312"] = ButtBot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
+                                                         stat_module, weights, True)
+        command_channels["507477640375042049"] = ButtBot(client, "config/507477640375042049.ini", db_, db_secrets[0],
+                                                         db_secrets[1],
+                                                         stat_module, weights, True)
+    else:
+        for i in channel_configs:
+            command_channels[i.split("/")[1][:-4]] = ButtBot(client, i, db_, db_secrets[0], db_secrets[1], stat_module,
+                                                             weights, False)
 
 
 @client.event
