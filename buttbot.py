@@ -8,7 +8,7 @@ import butt_config
 import butt_timeout
 import discord_comms
 import mojang as mj
-from butt_database import db
+from butt_database import Db
 from butt_library import is_word_in_text
 from vacuum import Vacuum
 from wordreplacer import WordReplacer
@@ -23,7 +23,7 @@ class ButtBot:
         self.test_environment = test_environment
         self.stats = stat_module
         self.timer_module = butt_timeout.Timeout(self.config)
-        self.db = db(db_, db_user, db_pass, test_environment)
+        self.db = Db(db_, db_user, db_pass, test_environment)
         if bool(self.config.get('vacuum', 'enabled')):
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.DiscordComms()
