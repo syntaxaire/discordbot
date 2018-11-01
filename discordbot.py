@@ -17,6 +17,7 @@ client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 channel_configs = butt_library.load_all_config_files()  # global that will hold channel IDs that have configs
 command_channels = {}
 
+
 @client.event
 async def on_ready():
     print('Logged in as ' + client.user.name + ' (ID:' + client.user.id + ') | Connected to ' + str(
