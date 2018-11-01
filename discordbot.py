@@ -1,10 +1,11 @@
 import asyncio
+from shutil import copyfile
 
 from discord.ext.commands import Bot
 
-import butt_library as butt_lib
+import butt_library
 from butt_statistics import ButtStatistics
-from buttbot import buttbot
+from buttbot import ButtBot
 from config import *
 from phraseweights import PhraseWeights
 
@@ -13,17 +14,17 @@ stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1], test_environ
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
-channel_configs = butt_lib.load_all_config_files()  # global that will hold channel IDs that have configs
+channel_configs = butt_library.load_all_config_files()  # global that will hold channel IDs that have configs
 command_channels = {}
 
-if test_environment == True:
-    command_channels["408168696834424832"] = buttbot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
+if test_environment:
+    command_channels["408168696834424832"] = ButtBot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
                                                      stat_module, weights, True)
-    command_channels["199981748098957312"] = buttbot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
+    command_channels["199981748098957312"] = ButtBot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
                                                      stat_module, weights, True)
 else:
     for i in channel_configs:
-        command_channels[i.split("/")[1][:-4]] = buttbot(client, i, db_, db_secrets[0], db_secrets[1], stat_module,
+        command_channels[i.split("/")[1][:-4]] = ButtBot(client, i, db_, db_secrets[0], db_secrets[1], stat_module,
                                                          weights, False)
 
 
@@ -35,9 +36,29 @@ async def on_ready():
     print('Use this link to invite {}:'.format(client.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     print('--------')
-    print('You are running FartBot V4.0.00')
+    print('You are running FartBot V4.3.00')
     print('Created by Poop Poop')
     print('--------')
+
+
+@client.event
+async def on_server_join(server):
+    print("joined a server: %s " % server.name)
+    if server.id not in command_channels:
+        await command_channels["408168696834424832"].do_info_log(
+            "discordbot:on_join:Joined server %s (%s). Server ID is not found, creating/loading config" %
+            (server.name, str(server.id)))
+        # copy the config template
+        copyfile("config/_config_template", "config/%s.ini" % str(server.id))
+        # load it
+        await asyncio.sleep(1)
+        command_channels[server.id] = ButtBot(client, "config/%s.ini" % server.id, db_,
+                                              db_secrets[0], db_secrets[1], stat_module,
+                                              weights, False)
+    else:
+        await command_channels["408168696834424832"].do_info_log(
+            "discordbot:on_join: Joined server %s (%s). Server config already exists." %
+            (server.name, str(server.id)))
 
 
 @client.event
@@ -46,10 +67,9 @@ async def on_message(message):
         return
 
     if message.author == "BroBot#4514":
-        # we dont give a shit about anything this bot says
+        # we dont give a shit about anything this bot says, ever.
         return
 
-    # try:
     try:
         if str(message.content)[:1] == "&" or str(message.content).partition(" ")[2][0] == "&":
             # command sent from inside of mc server
