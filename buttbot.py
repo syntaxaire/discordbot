@@ -69,7 +69,8 @@ class ButtBot:
             await self.do_security_log("%s tried do_leave in server %s (%s)" %
                                        (message.author.name, message.server.name, message.server.id))
 
-    async def do_config(self, message, arguments):
+    async def do_config(self, message, arg):
+        arguments, junk, guid = arg.partition(' ')
         if arguments == "allow":
             if message.channel.permissions_for(message.author).manage_messages:
                 # person has manage messages in this channel
@@ -78,7 +79,7 @@ class ButtBot:
                     self.shitpost.do_butting_raw_sentence(
                         "Buttbot will now talk in this wonderful channel and respond to any message")[0],
                     message.channel)
-                await self.do_security_log("%s did permit in %s (%s)  in server %s (%s)" %
+                await self.do_security_log("%s did permit in %s (%s) in server %s (%s)" %
                                            (message.author, message.channel, str(message.channel.id),
                                             message.server.name, str(message.server.id)))
             else:
@@ -97,7 +98,7 @@ class ButtBot:
                     message.channel)
                 self.config.remove_channel_from_allowed_channel_list(message.channel.id)  # change execution order so it
                 # actually sends it
-                await self.do_security_log("%s removed in %s (%s)  in server %s (%s)" %
+                await self.do_security_log("%s removed in %s (%s) in server %s (%s)" %
                                            (message.author, message.channel, str(message.channel.id),
                                             message.server.name, str(message.server.id)))
             else:
@@ -106,9 +107,44 @@ class ButtBot:
                     self.shitpost.do_butting_raw_sentence(
                         "You do not have permission to run this command in this channel")[0],
                     message.channel)
-                await self.do_security_log("%s tried to remove in %s (%s)  in server %s (%s), but no permissions" %
+                await self.do_security_log("%s tried to remove in %s (%s) in server %s (%s), but no permissions" %
                                            (message.author, message.channel, str(message.channel.id),
                                             message.server.name, str(message.server.id)))
+        if arguments == "botallow":
+            if message.channel.permissions_for(message.author).manage_messages:
+                await self.docomms(
+                    self.shitpost.do_butting_raw_sentence("I will now reply to the bot on this guild")[0],
+                    message.channel)
+                self.config.add_whitelisted_bots(guid)  # change execution order so it
+                # actually sends it
+                await self.do_security_log("%s added bot %s in server %s (%s)" %
+                                           (message.author, guid, message.server.name, str(message.server.id)))
+            else:
+                # person does not have manage messages in this channel
+                await self.docomms(
+                    self.shitpost.do_butting_raw_sentence(
+                        "You do not have permission to run this command in this channel")[0],
+                    message.channel)
+                await self.do_security_log("%s tried to add bot %s in server %s (%s), but no permissions" %
+                                           (message.author, guid, message.server.name, str(message.server.id)))
+
+        if arguments == "botremove":
+            if message.channel.permissions_for(message.author).manage_messages:
+                await self.docomms(
+                    self.shitpost.do_butting_raw_sentence("I will no longer reply to the bot on this guild")[0],
+                    message.channel)
+                self.config.remove_whitelisted_bots(guid)  # change execution order so it
+                # actually sends it
+                await self.do_security_log("%s removed bot %s in server %s (%s)" %
+                                           (message.author, guid, message.server.name, str(message.server.id)))
+            else:
+                # person does not have manage messages in this channel
+                await self.docomms(
+                    self.shitpost.do_butting_raw_sentence(
+                        "You do not have permission to run this command in this channel")[0],
+                    message.channel)
+                await self.do_security_log("%s tried to remove bot %s in server %s (%s), but no permissions" %
+                                           (message.author, guid, message.server.name, str(message.server.id)))
 
     def pick_correct_module(self, command):
         # this returns the module that contains the command ran by the user.  The module must support the command and
