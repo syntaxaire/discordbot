@@ -106,7 +106,7 @@ class ButtConfig:
     def add_whitelisted_bots(self, user_guid):
         if user_guid not in self.config_file.get("discordbot", "whitelisted_bots"):
             self.config_file.set("discordbot", "whitelisted_bots",
-                                 "%s,%s" % (self.config_file.get("discord_bot", "whitelisted_bots"), user_guid))
+                                 "%s,%s" % (self.config_file.get("discordbot", "whitelisted_bots"), user_guid))
             self.save_config()
 
     def remove_whitelisted_bots(self, user_guid):
