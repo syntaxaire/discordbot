@@ -47,6 +47,8 @@ class Vacuum:
                 returnz = self.playtime_insult(player)
                 if returnz:
                     return returnz
+            else:
+                return self.playtime_global()
         except IndexError:
             return self.playtime_global()
 
