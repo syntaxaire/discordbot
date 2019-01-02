@@ -98,7 +98,7 @@ class WordReplacer:
             if not self.doesmessagecontainstopphrases(str(messageobject.content)):
                 # message contains no stop phrases, let's proceed
                 self.stats.message_store(messageobject.channel.id)
-                if self.isuseranallowedbot(str(messageobject.author)):
+                if self.isuseranallowedbot(messageobject.author.id):
                     # message sender is allowed bot, we should separate the first word out of the message since that
                     # is the user the bot is relaying for
                     tagged_sentence = self.wordtagger(strip_IRI(message.split(" ", 1)[1]))
