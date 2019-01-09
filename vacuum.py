@@ -103,7 +103,11 @@ class Vacuum:
             m, s = divmod(totaltime, 60)
             h, m = divmod(m, 60)
             insult = ""
-            if h > 80:
+            if h > 450:
+                insult = ". i found kurr lol"
+            elif h > 150:
+                insult = ". why are you still so bad at this game"
+            elif h > 80:
                 insult = ". is this shit your full time job or something"
             elif h > 50:
                 insult = ". go outside you fuckin nerd"
