@@ -55,10 +55,9 @@ class WordReplacer:
 
     def rspeval(self, message):
         message = message.lower()
-        if self.timer_module.check_timeout('rsp', 'shitpost'):
-            for t in self.wlist:  # replace everything aaaaaaa
-                message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
-            return message
+        for t in self.wlist:  # replace everything aaaaaaa
+            message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
+        return message
 
     def wordtagger(self, message):
         return nltk.pos_tag(nltk.word_tokenize(message))
@@ -259,10 +258,14 @@ class WordReplacer:
             # we do not care to add this to the disposition table anyways
             pass
         lemmatizer = WordNetLemmatizer()
+        words_that_arent_plural = ['ass']  # FML
         for match in re.finditer(lemmatizer.lemmatize(noun), unedited_message, flags=re.IGNORECASE):
-            #fixes a kara problem
+            # fixes a kara problem
             unedited_message = unedited_message.replace(match.group(0), self.buttinpropercase(match.group(0), 'butt'))
-        if lemmatizer.lemmatize(noun) is not noun:
+        if noun in words_that_arent_plural:
+            # catch words that the lemmatizer thinks is plural but are not
+            return unedited_message.replace(noun, self.buttinpropercase(noun, 'butt')), 'butt'
+        elif lemmatizer.lemmatize(noun) is not noun:
             # the lemmatizer thinks that this is a plural
             return unedited_message.replace(noun, self.buttinpropercase(noun, 'butts')), 'butts'
         else:
