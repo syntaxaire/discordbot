@@ -34,13 +34,11 @@ async def on_ready():
                                                          stat_module, weights, True)
         command_channels["199981748098957312"] = ButtBot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
                                                          stat_module, weights, True)
-        command_channels["507477640375042049"] = ButtBot(client, "config/507477640375042049.ini", db_, db_secrets[0],
-                                                         db_secrets[1],
-                                                         stat_module, weights, True)
     else:
         for i in channel_configs:
             command_channels[i.split("/")[1][:-4]] = ButtBot(client, i, db_, db_secrets[0], db_secrets[1], stat_module,
                                                              weights, False)
+            print("started on guild GUID %s" % str(i.split("/")[1][:-4]))
 
 
 @client.event
