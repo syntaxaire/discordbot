@@ -186,7 +186,7 @@ class WordReplacer:
         wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'WP$', 'WP']
         tagstoacceptasnouns = ['NN', 'NNS']
         tagstoskipword = ['TO']
-        wordsthatarenotadjectives = ['i', 'kevin', 'armour']  # lower case i is tagged as a adjective for some reason
+        wordsthatarenotadjectives = ['i', 'kevin', 'armour', 'mic']  # lower case i is tagged as a adjective for some reason
         if prioritized == True:
             tagstocheck = wordtagstocheckprioritized
             source_weight = 25.0
@@ -259,9 +259,9 @@ class WordReplacer:
             pass
         lemmatizer = WordNetLemmatizer()
         words_that_arent_plural = ['ass']  # FML
-        for match in re.finditer(lemmatizer.lemmatize(noun), unedited_message, flags=re.IGNORECASE):
+        #for match in re.finditer(lemmatizer.lemmatize(noun), unedited_message, flags=re.IGNORECASE):
             # fixes a kara problem
-            unedited_message = unedited_message.replace(match.group(0), self.butt_in_proper_case(match.group(0), 'butt'))
+        #    unedited_message = unedited_message.replace(match.group(0), self.butt_in_proper_case(match.group(0), 'butt'))
         if noun in words_that_arent_plural:
             # catch words that the lemmatizer thinks is plural but are not
             return unedited_message.replace(noun, self.butt_in_proper_case(noun, 'butt')), 'butt'
