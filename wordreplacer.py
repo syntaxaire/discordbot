@@ -6,30 +6,43 @@ import nltk.data
 import nltk.tag
 from nltk.stem import WordNetLemmatizer
 
-from butt_library import *
+import butt_library as buttlib
 
 
 class WordReplacer:
 
     def __init__(self, config, stat_module, timer_module, phrase_weights, test_environment):
-        self.config = config
-        self.timer_module = timer_module
-        self.stats = stat_module
-        self.wlist = self.load_word_list()
-        self.set_max_sentence_length(int(self.config.get('wordreplacer', 'max_sentence_length')))
-        self.command = {"nltk": 'wordreplacer'}
-        self.test_environment = test_environment
-        self.phraseweights = phrase_weights
+        self.__config = config
+        self.__timer_module = timer_module
+        self.__stats = stat_module
+        self.__wlist = self.__load_word_list()
+        self.__set_max_sentence_length(int(self.__config.get('wordreplacer', 'max_sentence_length')))
+        self.__command = {"nltk": 'wordreplacer'}
+        self.__test_environment = test_environment
+        self.__phraseweights = phrase_weights
 
-    def set_max_sentence_length(self, length):
+        # state variables
+        self._priority_nouns = []
+        self._non_priority_nouns = []
+        self._word_is_plural = False
+        self._tagged_sentence = ""
+        self._original_sentence = ""
+        self._weight_of_picked_word = 0
+        self._word_passed_weight_check = False
+        self._final_sentence = ""
+        self._sentence_contains_stop_words = False
+        self._selected_noun_pair_to_butt = []
+
+    def __set_max_sentence_length(self, length):
         # DPT requested feature
         # a length of 0 will default to any word length.
         if length > 0:
-            self.sentence_max_length = length
+            self._sentence_max_length = length
         else:
-            self.sentence_max_length = 9999
+            self._sentence_max_length = 9999
 
-    def load_word_list(self):
+    @staticmethod
+    def __load_word_list():
         try:
             with open('wordlist.txt') as f:
                 return json.load(f)
@@ -37,126 +50,111 @@ class WordReplacer:
             pass
 
     def return_commands(self):
-        return self.command
+        return self.__command
 
     ################################################################################
     #                               commands                                       #
     ################################################################################
     def do_nltk(self, message):
-        return self.wordtagger(message)
+        return self.__wordtagger(message)
 
     ################################################################################
     #                               end commands                                   #
     ################################################################################
 
-    def save(self):
+    def __save(self):
         with open('wordlist.txt', 'w') as f:
-            json.dump(self.wlist, f, ensure_ascii=False)
+            json.dump(self.__wlist, f, ensure_ascii=False)
 
     def rspeval(self, message):
         message = message.lower()
-        for t in self.wlist:  # replace everything aaaaaaa
-            message = message.replace('butt', self.wlist[randint(0, len(self.wlist) - 1)], 1)
+        for t in self.__wlist:  # replace everything aaaaaaa
+            message = message.replace('butt', self.__wlist[randint(0, len(self.__wlist) - 1)], 1)
         return message
 
-    def wordtagger(self, message):
+    @staticmethod
+    def __wordtagger(message):
         return nltk.pos_tag(nltk.word_tokenize(message))
 
-    def get_phrase_weight(self, phrase):
-        return self.phraseweights.return_weight(phrase)
+    def __get_phrase_weight(self, phrase):
+        return self.__phraseweights.return_weight(phrase)
 
-    def is_user_an_allowed_bot(self, author):
-        if author in self.config.get_all_allowed_bots():
+    def __is_user_an_allowed_bot(self, author):
+        if author in self.__config.get_all_allowed_bots():
             return True
         else:
             return False
 
-    def does_message_contain_stop_phrases(self, message):
-        if not any(v for v in self.config.get_all_stop_phrases() if v in message) and \
-                not (message.startswith("*") and message.endswith("*")):
+    def print_debug_message(self):
+        print("--------------------------------------------------------------------------------------------------")
+        print("Original message: %s" % self._original_sentence)
+        print("Message contain stop phrase? %s" % str(self.__does_message_contain_stop_phrases()))
+        print("Message meet length requirement? (server setting: %i) %s" % (
+            self._sentence_max_length, self.__check_length_of_sentence_to_butt()))
+        print("Tagged sentence: %s" % self._tagged_sentence)
+        print("Prioritized noun pair(s): %s" % self._priority_nouns)
+        print("Non-Prioritized noun pair(s): %s" % self._non_priority_nouns)
+        print("Selected noun pair: %s" % str(self._selected_noun_pair_to_butt))
+        print("Passes weight minimum? %s" % self.__check_if_picked_phrase_weight_passes_minimum())
+
+        print("--------------------------------------------------------------------------------------------------")
+
+    def __does_message_contain_stop_phrases(self):
+        if not any(v for v in self.__config.get_all_stop_phrases() if v in self._original_sentence) and \
+                not (self._original_sentence.startswith("*") and self._original_sentence.endswith("*")):
             return False
         else:
             return True
-
-    def simulate_perform_text_to_butt(self, messageobject):
-        return self.perform_text_to_butt(messageobject)
-
-    def do_butting_raw_sentence(self, sentence):
-        tagged_sentence = self.wordtagger(sentence)
-        pri_nouns, non_pri_nouns = self.return_phrases_from_all_sources(tagged_sentence)
-        return self.do_butting(pri_nouns, non_pri_nouns, sentence, None, self.wordtagger(sentence))
 
     def perform_text_to_butt(self, messageobject):
         # we are going to manipulate this version of the message before sending it to the processing functions.
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
-        # message = messageobject.content.replace("'", '')  #TODO: make this better
-        message = messageobject.content  # actually that made it worse
-        unedited_message = messageobject.content
-        if not detect_code_block(message):
+        self._original_sentence = str(messageobject.content)
+        if not buttlib.detect_code_block(self._original_sentence):
             # passes code block test
-            if not self.does_message_contain_stop_phrases(str(messageobject.content)):
+            if not self.__does_message_contain_stop_phrases():
                 # message contains no stop phrases, let's proceed
-                self.stats.message_store(messageobject.channel.id)
-                if self.is_user_an_allowed_bot(messageobject.author.id):
-                    # message sender is allowed bot, we should separate the first word out of the message since that
-                    # is the user the bot is relaying for
-                    tagged_sentence = self.wordtagger(strip_IRI(message.split(" ", 1)[1]))
-                else:
-                    tagged_sentence = self.wordtagger(strip_IRI(message))
-                if self.check_length_of_sentence_to_butt(tagged_sentence):
-                    pri_nouns, non_pri_nouns = self.return_phrases_from_all_sources(tagged_sentence)
-                    if len(pri_nouns) + len(non_pri_nouns) > 0:
-                        if len(non_pri_nouns) == 1 and len(pri_nouns) == 0:
-                            # catch specific case for 1 non prioritized noun and 0 prioritized nouns
-                            if non_pri_nouns[0][2] <= 501:
-                                # dont send anything, this word probably sucks
-                                return
-                        if self.test_environment:
-                            # always reply in test environment
-                            rv = [1, 1, 1]
-                        else:
-                            rv = [1, 5, 3]
-                        if randint(rv[0], rv[1]) == rv[2]:
-                            if self.timer_module.check_timeout('shitpost', 'shitpost'):
-                                return self.do_butting(pri_nouns, non_pri_nouns, unedited_message, messageobject,
-                                                       tagged_sentence)
-                            else:
-                                # timeout fail
-                                pass
-                        else:
-                            # 20% chance fail
-                            pass
-                    else:
-                        # not enough nouns
-                        pass
-                else:
-                    # failed length check
-                    pass
 
-    def return_phrases_from_all_sources(self, tagged_sentence):
-        prioritzed_sentence = self.does_message_have_prioritized_parts_of_speech(tagged_sentence)
-        prioritized_nouns = []
-        if prioritzed_sentence:
-            prioritized_nouns = self._find_weighted_nouns_by_previous_tag(tagged_sentence, True)
-        non_prioritized_nouns = self._find_weighted_nouns_by_previous_tag(tagged_sentence, False)
-        return prioritized_nouns, non_prioritized_nouns
+                self.__preprocess_message_for_allowed_bots(messageobject.author.id)
+                if self.__check_length_of_sentence_to_butt():
+                    # message is below length limit set on a per-guild basis
+                    self.__get_word_pairs_from_all_sources()
+                    self.__pick_word_pair_to_butt()
+                    if self.__check_if_picked_phrase_weight_passes_minimum():
+                        self.print_debug_message()
 
-    def pick_phrase(self, pri_nouns, non_pri_nouns):
-        combined_list = pri_nouns + non_pri_nouns
-        return self.pick_random_phrase_by_weight(combined_list)
+    def __preprocess_message_for_allowed_bots(self, author_id):
+        """splits message content if user is in allowed bot list. we assume these bots are relaying chat message from
+        games such as minecraft or factorio."""
+        if self.__is_user_an_allowed_bot(author_id):
+            # message sender is allowed bot, we should separate the first word out of the message since that
+            # is the user the bot is relaying for
+            self._tagged_sentence = self.__wordtagger(buttlib.strip_IRI(self._original_sentence.split(" ", 1)[1]))
+        else:
+            self._tagged_sentence = self.__wordtagger(buttlib.strip_IRI(self._original_sentence))
 
-    def print_debug_message(self, message, pri_nouns, nouns, selected):
-        if selected is not None:
-            print("__________________________________________")
-            print(message)
-            print("prioritzed nouns: %s" % pri_nouns)
-            print("nouns: %s" % nouns)
-            print("noun selected: %s" % str(selected))
-            print("__________________________________________")
-            print("")
+    def __check_if_picked_phrase_weight_passes_minimum(self):
+        if len(self._priority_nouns) + len(self._non_priority_nouns) > 0:
+            if len(self._non_priority_nouns) == 1 and len(self._priority_nouns) == 0:
+                # catch specific case for 1 non prioritized noun and 0 prioritized nouns
+                # we should see what weight this word has and not butt it if it is low.
+                if self._non_priority_nouns[0][2] <= 501:
+                    # dont send anything, this word probably sucks
+                    return False
+            return True
 
-    def pick_random_phrase_by_weight(self, word_list):
-        total_sum_of_weights = self.sum_all_weights(word_list)
+    def __get_word_pairs_from_all_sources(self):
+        if self.__does_message_have_prioritized_parts_of_speech():
+            self._priority_nouns = self.__find_weighted_nouns_by_previous_tag(True)
+        self._non_priority_nouns = self.__find_weighted_nouns_by_previous_tag(False)
+
+    def __pick_word_pair_to_butt(self):
+        """randomly selects a word pair to be the target of replacement."""
+        combined_list = self._priority_nouns + self._non_priority_nouns
+        self._selected_noun_pair_to_butt = self.__pick_random_phrase_by_weight(combined_list)
+
+    def __pick_random_phrase_by_weight(self, word_list):
+        total_sum_of_weights = self.__sum_all_weights(word_list)
         try:
             randomweight = randrange(1, total_sum_of_weights)
             for i in word_list:
@@ -167,10 +165,12 @@ class WordReplacer:
             # no words to pick
             return None
 
-    def sum_all_weights(self, word_list):
+    @staticmethod
+    def __sum_all_weights(word_list):
         return sum(weight for prefix, noun, weight in word_list)
 
-    def butt_in_proper_case(self, wordtobutt, buttoreplace):
+    @staticmethod
+    def __butt_in_proper_case(wordtobutt, buttoreplace):
         if wordtobutt.istitle():
             return buttoreplace.title()
         elif wordtobutt.isupper():
@@ -178,63 +178,70 @@ class WordReplacer:
         else:
             return buttoreplace
 
-    def _find_weighted_nouns_by_previous_tag(self, taggedsentence, prioritized):
+    def __find_weighted_nouns_by_previous_tag(self, prioritized):
         # we construct a list of nouns if the previously tagged word has a certain tag.
         # we prioritize possessive pronouns (his, her, my, etc)
         nouns = []
-        wordtagstocheckprioritized = ['PRP$']
-        wordtagstochecknotprioritized = ['DT', 'JJ', 'JJS', 'JJR', 'WP$', 'WP']
-        tagstoacceptasnouns = ['NN', 'NNS']
-        tagstoskipword = ['TO']
-        wordsthatarenotadjectives = ['i', 'kevin', 'armour', 'mic']  # lower case i is tagged as a adjective for some reason
-        if prioritized == True:
-            tagstocheck = wordtagstocheckprioritized
+        word_tags_to_check_prioritized = ['PRP$']
+        word_tags_to_check_not_prioritized = ['DT', 'JJ', 'JJS', 'JJR', 'WP$', 'WP']
+        tags_to_accept_as_nouns = ['NN', 'NNS']
+        words_that_are_not_adjectives = ['i', 'kevin', 'armour', 'mic']
+        if prioritized:
+            tagstocheck = word_tags_to_check_prioritized
             source_weight = 25.0
         else:
-            tagstocheck = wordtagstochecknotprioritized
+            tagstocheck = word_tags_to_check_not_prioritized
             source_weight = 1.0
 
-        for i in range(len(taggedsentence) - 1):  # *jiggling intensifies*
-            if taggedsentence[i][1] in tagstocheck:
-                if taggedsentence[i][0] not in wordsthatarenotadjectives:  # fix some words getting tagged weird
+        for i in range(len(self._tagged_sentence) - 1):  # *jiggling intensifies*
+            if self._tagged_sentence[i][1] in tagstocheck:
+                if self._tagged_sentence[i][0] not in words_that_are_not_adjectives:
+                    # fix some words getting tagged weird
                     try:
-                        if taggedsentence[i + 1][1] in tagstoacceptasnouns:
+                        if self._tagged_sentence[i + 1][1] in tags_to_accept_as_nouns:
                             # append weighted version of the word using source weight (prioritized vs non pri mode)
-                            if self.word_passes_stop_word_check(taggedsentence[i + 1][0]):
-                                nouns.append((taggedsentence[i][0], taggedsentence[i + 1][0], self.get_phrase_weight(
-                                    "%s %s" % (taggedsentence[i][0], taggedsentence[i + 1][0])) * source_weight))
+                            if self.__word_passes_stop_word_check(self._tagged_sentence[i + 1][0]):
+                                nouns.append((self._tagged_sentence[i][0], self._tagged_sentence[i + 1][0],
+                                              self.__get_phrase_weight(
+                                                  "%s %s" % (self._tagged_sentence[i][0],
+                                                             self._tagged_sentence[i + 1][0])) * source_weight))
                     except IndexError:
                         # end of the noun list so we don't really care.
                         pass
         return nouns
 
-    def word_passes_stop_word_check(self, word):
+    @staticmethod
+    def __word_passes_stop_word_check(word):
+        """checks to see if selected word passes stopword check - eliminates common crappy words and internet slang
+         that are tagged as nouns but either aren't funny to replace or aren't nouns."""
         stopwords = ['gon', 'dont', 'lol', 'yeah', 'tho', 'lmao', 'yes']
-        if len(word) < 2:
-            return False
-        elif word in stopwords:
+        if len(word) < 2 or word in stopwords:
             return False
         else:
             return True
 
-    def does_message_have_prioritized_parts_of_speech(self, taggedsentence):
+    def __does_message_have_prioritized_parts_of_speech(self):
+        """takes a tagged sentence and checks if it contains a personal posessive pronoun - we want to specially
+        target that for funny replaces like "my butt" """
         wordtagstocheckprioritized = ['PRP$']  # posessive personal pronoun
-        if any(t for t in taggedsentence if t[1] in wordtagstocheckprioritized):
+        if any(t for t in self._tagged_sentence if t[1] in wordtagstocheckprioritized):
             return True
         else:
             return False
 
-    def check_length_of_sentence_to_butt(self, message):
-        # DPT feature
-        # we need a tagged sentence.
-        if len(message) > self.sentence_max_length:
+    def __check_length_of_sentence_to_butt(self):
+        """checks to see if the tagged message length is lower than the limit set in the guild configuration file.
+        this feature was originally requested by DPT."""
+        if len(self._original_sentence) > self._sentence_max_length:
             return False
         else:
             return True
 
-    def replace_an_to_a_in_sentence(self, message, butt_word):
+    @staticmethod
+    def __replace_an_to_a_in_sentence(message, butt_word):
+        """replaces an to a in a sentence, such as in the case where we replace "an apple" with "a butt" """
         message = message.split(" ")
-        indexes = get_indexes(message, butt_word)
+        indexes = buttlib.get_indexes(message, butt_word)
         if indexes:
             # we found one or more instances of butt, we need to check the list index i-1 of that butt word to see if we
             # need to replace an with a.
@@ -247,36 +254,24 @@ class WordReplacer:
                     pass
         return " ".join(message)
 
-    def check_word_to_butt(self, noun, unedited_message, messageobject):
-        try:
-            self.stats.disposition_store(messageobject.server.id, messageobject.channel.id, "Butt Replaced",
-                                         # "%s%s" % (nouns[buttword], " (Unfunny=true)" if notfunnyfound else ""),
-                                         "%s" % noun,
-                                         unedited_message)
-        except AttributeError:
-            # catching when we use raw sentence mode.  There is no messageobject to get server information from
-            # we do not care to add this to the disposition table anyways
-            pass
-        lemmatizer = WordNetLemmatizer()
-        words_that_arent_plural = ['ass']  # FML
-        #for match in re.finditer(lemmatizer.lemmatize(noun), unedited_message, flags=re.IGNORECASE):
-            # fixes a kara problem
-        #    unedited_message = unedited_message.replace(match.group(0), self.butt_in_proper_case(match.group(0), 'butt'))
-        if noun in words_that_arent_plural:
-            # catch words that the lemmatizer thinks is plural but are not
-            return unedited_message.replace(noun, self.butt_in_proper_case(noun, 'butt')), 'butt'
-        elif lemmatizer.lemmatize(noun) is not noun:
+    def __check_word_to_butt(self, noun, unedited_message):
+        if self.__check_if_words_are_plural(noun) is True:
             # the lemmatizer thinks that this is a plural
-            return unedited_message.replace(noun, self.butt_in_proper_case(noun, 'butts')), 'butts'
+            return unedited_message.replace(noun, self.__butt_in_proper_case(noun, 'butts')), 'butts'
         else:
-            return unedited_message.replace(noun, self.butt_in_proper_case(noun, 'butt')), 'butt'
+            return unedited_message.replace(noun, self.__butt_in_proper_case(noun, 'butt')), 'butt'
 
-    def do_butting(self, pri_nouns, non_pri_nouns, unedited_message, messageobject, tagged_sentence):
-        picked_phrase = self.pick_phrase(pri_nouns, non_pri_nouns)
-        new_sentence, replaced_with = self.check_word_to_butt(picked_phrase[1], unedited_message,
-                                                           messageobject)
-        if self.test_environment:
-            self.print_debug_message(tagged_sentence, pri_nouns, non_pri_nouns, picked_phrase)
-        return self.replace_an_to_a_in_sentence(new_sentence, replaced_with), \
-               picked_phrase[0], \
-               picked_phrase[1]
+    def __check_if_words_are_plural(self, noun):
+        """uses the NLTK lemmatizer module to check if a word is plural.  this will also catch words that are not plural
+        but are unknown to the NLTK lemmatizer database."""
+        lemmatizer = WordNetLemmatizer()
+        words_that_arent_plural = ['ass', 'boss']  # FML
+        # for match in re.finditer(lemmatizer.lemmatize(noun), unedited_message, flags=re.IGNORECASE):
+        # fixes a kara problem
+        # unedited_message = unedited_message.replace(match.group(0), self.butt_in_proper_case(match.group(0), 'butt'))
+        if noun in words_that_arent_plural:
+            return False
+        elif lemmatizer.lemmatize(noun) is not noun:
+            self.word_is_plural = False
+        else:
+            self.word_is_plural = True

@@ -243,85 +243,17 @@ class ButtBot:
         if not self.should_i_reply_to_user(message):
             # user is either a bot not on whitelist or is a user on the ignore list
             return
-        if is_word_in_text("rip", message.content):
-            if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
-                    str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
-                self.vacuum.add_death_message(message.content)
-            else:
-                if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'RIP'):
-                    self.stats.message_store(message.channel.id)
-                    if self.timer_module.check_timeout('rip', 'shitpost'):
-                        self.stats.disposition_store(message.server.id, message.channel.id,
-                                                     "RIP", "RIP")
-                        if random.randint(1, 20) == 5:
-                            await self.docomms('Ya, butts', message.channel)
-                        else:
-                            await self.docomms('Ya, RIP', message.channel)
-                    else:
-                        self.stats.disposition_store(message.server.id, message.channel.id,
-                                                     "RIP cooldown", "RIP cooldown")
+        elif is_word_in_text("rip", message.content):
+            await self._process_RIP_message(message)
 
         elif is_word_in_text("F", message.content):
-            if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'F'):
-                self.stats.message_store(message.channel.id)
-                if self.timer_module.check_timeout('f', 'shitpost'):
-                    self.stats.disposition_store(message.server.id, message.channel.id,
-                                                 "F", "F")
-                    await self.docomms('Ya, F', message.channel)
-                else:
-                    self.stats.disposition_store(message.server.id, message.channel.id,
-                                                 "F cooldown", "F cooldown")
-                    if random.randint(1, 100) == 44:
-                        await self.docomms('suck my dick F under cooldown', message.channel)
+            await self._process_F_message(message)
 
         elif is_word_in_text('butt', message.content) is True or is_word_in_text('butts', message.content) is True:
-            if self.allowed_in_channel(message.channel):
-                self.stats.message_store(message.channel.id)
-                if random.randint(1, 6) == 3:
-                    if self.timer_module.check_timeout('rsp', 'shitpost'):
-                        rshitpost = self.shitpost.rspeval(message.content)
-                        if rshitpost:
-                            self.stats.disposition_store(message.server.id, message.channel.id,
-                                                         "RSP", "RSP", message.content)
-                            await self.docomms(rshitpost, message.channel)
-                    else:
-                        self.stats.disposition_store(message.server.id, message.channel.id,
-                                                     "RSP cooldown", "RSP cooldown")
-                elif random.randint(1, 3) == 3:
-                    if self.timer_module.check_timeout('rsp_emoji', 'shitpost'):
-                        await self.doreact(message, message.channel, random.choice(self.config.get_all_emojis()))
+            await self._process_butt_message(message)
 
         else:
-            # here's where im going to evaluate all other sentences for shitposting
-            # rshitpost=shitpost.eval(message.content)
-            # NLTK test
-            if is_word_in_text("left the game", message.content) or is_word_in_text("joined the game", message.content):
-                # this is a join or part message and we are going to ignore it
-                pass
-            else:
-                if self.allowed_in_channel(message.channel):
-                    # do not send to shitpost module if we aren't allowed to talk in the channel in question.
-                    try:
-                        rshitpost, trigger_word, noun = self.shitpost.performtexttobutt(message)
-                    except TypeError:
-                        # did not return anything, so we don't care
-                        pass
-                elif self.test_environment:
-                    # always send if test environment is turned on. the function to send the message to the
-                    # discord API will not transmit the message.
-                    self.shitpost.performtexttobutt(message)
-            try:
-                # noinspection PyUnboundLocalVariable
-                if rshitpost:
-                    # noinspection PyUnboundLocalVariable
-                    msg = await self.docomms(rshitpost, message.channel)
-                    # await self.comm.do_react_no_delay(msg, self.discordBot, '👍')  #am i ever going to implement this?
-                    # await self.comm.do_react_no_delay(msg, self.discordBot, '👎')
-                    # noinspection PyUnboundLocalVariable,PyUnboundLocalVariable
-                    self.phrase_weights.add_message(msg.id, trigger_word, noun)
-
-            except UnboundLocalError:
-                pass
+            await self._process_all_other_messages(message)
 
     def allowed_in_channel(self, channel):
         allowed_channels = self.config.get("allowed_channels", "channels").split(",")
@@ -346,3 +278,88 @@ class ButtBot:
             if time.time() - items[0] > check_timer:
                 self.process_cached_reaction_message(items[1], items[2], items[3])
                 self.phrase_weights.remove_message(items[0], items[1], items[2], items[3])
+
+    async def _process_RIP_message(self, message):
+        if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
+                str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
+            self.vacuum.add_death_message(message.content)
+        else:
+
+            if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'RIP'):
+                self.stats.message_store(message.channel.id)
+                if self.timer_module.check_timeout('rip', 'shitpost'):
+                    self.stats.disposition_store(message.server.id, message.channel.id,
+                                                 "RIP", "RIP")
+                    if random.randint(1, 20) == 5:
+                        await self.docomms('Ya, butts', message.channel)
+                    else:
+                        await self.docomms('Ya, RIP', message.channel)
+                else:
+                    self.stats.disposition_store(message.server.id, message.channel.id,
+                                                 "RIP cooldown", "RIP cooldown")
+
+    async def _process_F_message(self, message):
+        if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'F'):
+            self.stats.message_store(message.channel.id)
+            if self.timer_module.check_timeout('f', 'shitpost'):
+                self.stats.disposition_store(message.server.id, message.channel.id,
+                                             "F", "F")
+                await self.docomms('Ya, F', message.channel)
+            else:
+                self.stats.disposition_store(message.server.id, message.channel.id,
+                                             "F cooldown", "F cooldown")
+                if random.randint(1, 100) == 44:
+                    await self.docomms('suck my dick F under cooldown', message.channel)
+
+    async def _process_butt_message(self, message):
+        if self.allowed_in_channel(message.channel):
+            self.stats.message_store(message.channel.id)
+            if random.randint(1, 6) == 3:
+                if self.timer_module.check_timeout('rsp', 'shitpost'):
+                    rshitpost = self.shitpost.rspeval(message.content)
+                    if rshitpost:
+                        self.stats.disposition_store(message.server.id, message.channel.id,
+                                                     "RSP", "RSP", message.content)
+                        await self.docomms(rshitpost, message.channel)
+                else:
+                    self.stats.disposition_store(message.server.id, message.channel.id,
+                                                 "RSP cooldown", "RSP cooldown")
+            elif random.randint(1, 3) == 3:
+                if self.timer_module.check_timeout('rsp_emoji', 'shitpost'):
+                    await self.doreact(message, message.channel, random.choice(self.config.get_all_emojis()))
+
+    async def _process_all_other_messages(self, message):
+        # here's where im going to evaluate all other sentences for shitposting
+        if is_word_in_text("left the game", message.content) or is_word_in_text("joined the game", message.content):
+            # this is a join or part message and we are going to ignore it
+            pass
+        else:
+            if self.allowed_in_channel(message.channel):
+                # do not send to shitpost module if we aren't allowed to talk in the channel in question.
+                if self.test_environment:
+                    # always reply in test environment
+                    rv = [1, 1, 1]
+                else:
+                    rv = [1, 5, 3]
+                if random.randint(rv[0], rv[1]) == rv[2]:
+                    if self.timer_module.check_timeout('shitpost', 'shitpost'):
+                        # passed timer check
+                        #try:
+                        rshitpost = self.shitpost.perform_text_to_butt(message)
+                        #except TypeError:
+                            # did not return anything, so we don't care
+                        #   pass
+                        try:
+                            # noinspection PyUnboundLocalVariable
+                            if rshitpost:
+                                # noinspection PyUnboundLocalVariable
+                                msg = await self.docomms(rshitpost, message.channel)
+                                # am i ever going to implement this?
+                                # last opinion was that it was easier to use on mobile versions of discord
+                                # but you lose the 'organic feel' of buttbot
+                                # await self.comm.do_react_no_delay(msg, self.discordBot, '👍')
+                                # await self.comm.do_react_no_delay(msg, self.discordBot, '👎')
+                                # noinspection PyUnboundLocalVariable,PyUnboundLocalVariable
+                                self.phrase_weights.add_message(msg.id, trigger_word, noun)
+                        except UnboundLocalError:
+                            pass

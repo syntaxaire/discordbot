@@ -34,7 +34,7 @@ def strip_IRI(text):
 def detect_code_block(text):
     words = text.split(" ")
     for w in words:
-        if w == "```" or w[:3] == "```" or w[-3:] == "```" or w == "`" or w[:1] == "`" or w[-1:] == "`":
+        if w == "```" or w[:3] == "```" or w[-3:] == "```":
             return True
     return False
 
