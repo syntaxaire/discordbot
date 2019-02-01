@@ -22,6 +22,7 @@ class WordReplacer:
         self.__phraseweights = phrase_weights
 
         # state variables
+        self.should_we_butt = False  # this is the state variable that means butting should continue
         self._priority_nouns = []
         self._non_priority_nouns = []
         self._word_is_plural = False
@@ -32,6 +33,21 @@ class WordReplacer:
         self._final_sentence = ""
         self._sentence_contains_stop_words = False
         self._selected_noun_pair_to_butt = []
+        self.butted_sentence = ""
+
+    def __state_reset(self):
+        self.should_we_butt = False  # this is the state variable that means butting should continue
+        self._priority_nouns = []
+        self._non_priority_nouns = []
+        self._word_is_plural = False
+        self._tagged_sentence = ""
+        self._original_sentence = ""
+        self._weight_of_picked_word = 0
+        self._word_passed_weight_check = False
+        self._final_sentence = ""
+        self._sentence_contains_stop_words = False
+        self._selected_noun_pair_to_butt = []
+        self.butted_sentence = ""
 
     def __set_max_sentence_length(self, length):
         # DPT requested feature
@@ -96,7 +112,7 @@ class WordReplacer:
         print("Non-Prioritized noun pair(s): %s" % self._non_priority_nouns)
         print("Selected noun pair: %s" % str(self._selected_noun_pair_to_butt))
         print("Passes weight minimum? %s" % self.__check_if_picked_phrase_weight_passes_minimum())
-
+        print("Butted sentence: %s" % self.butted_sentence)
         print("--------------------------------------------------------------------------------------------------")
 
     def __does_message_contain_stop_phrases(self):
@@ -106,27 +122,44 @@ class WordReplacer:
         else:
             return True
 
+    def successful_butting(self):
+        return self.__check_if_picked_phrase_weight_passes_minimum()
+
     def perform_text_to_butt(self, messageobject):
+        """takes a messageobject from discord and sanity checks the butted phrase to determine if we should butt
+        the sentence"""
         # we are going to manipulate this version of the message before sending it to the processing functions.
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
+        self.__state_reset()
         self._original_sentence = str(messageobject.content)
         if not buttlib.detect_code_block(self._original_sentence):
             # passes code block test
             if not self.__does_message_contain_stop_phrases():
                 # message contains no stop phrases, let's proceed
-
-                self.__preprocess_message_for_allowed_bots(messageobject.author.id)
-                if self.__check_length_of_sentence_to_butt():
+                self.__tag_sentence()
+                if self._tagged_sentence and self.__check_length_of_sentence_to_butt():
                     # message is below length limit set on a per-guild basis
                     self.__get_word_pairs_from_all_sources()
                     self.__pick_word_pair_to_butt()
                     if self.__check_if_picked_phrase_weight_passes_minimum():
+                        # let's butt
+                        self.__make_butted_sentence()
                         self.print_debug_message()
 
-    def __preprocess_message_for_allowed_bots(self, author_id):
-        """splits message content if user is in allowed bot list. we assume these bots are relaying chat message from
+    def do_butting_raw_sentence(self, message):
+        """always makes butted sentence.  skip all sanity checks that perform_text_to_butt does."""
+        self.__state_reset()
+        self._original_sentence = str(message)
+        self.__tag_sentence()
+        self.__get_word_pairs_from_all_sources()
+        self.__pick_word_pair_to_butt()
+        self.__make_butted_sentence()
+        self.print_debug_message()
+
+    def __tag_sentence(self, split_for_bot=False):
+        """tags sentence properly based if user is a bot. we assume these bots are relaying chat message from
         games such as minecraft or factorio."""
-        if self.__is_user_an_allowed_bot(author_id):
+        if split_for_bot:
             # message sender is allowed bot, we should separate the first word out of the message since that
             # is the user the bot is relaying for
             self._tagged_sentence = self.__wordtagger(buttlib.strip_IRI(self._original_sentence.split(" ", 1)[1]))
@@ -254,12 +287,16 @@ class WordReplacer:
                     pass
         return " ".join(message)
 
-    def __check_word_to_butt(self, noun, unedited_message):
-        if self.__check_if_words_are_plural(noun) is True:
+    def __make_butted_sentence(self):
+        if self.__check_if_words_are_plural(self._selected_noun_pair_to_butt[1]) is True:
             # the lemmatizer thinks that this is a plural
-            return unedited_message.replace(noun, self.__butt_in_proper_case(noun, 'butts')), 'butts'
+            self.butted_sentence = self._original_sentence.replace(self._selected_noun_pair_to_butt[1],
+                                                                   self.__butt_in_proper_case(
+                                                                       self._selected_noun_pair_to_butt[1], 'butts'))
         else:
-            return unedited_message.replace(noun, self.__butt_in_proper_case(noun, 'butt')), 'butt'
+            self.butted_sentence = self._original_sentence.replace(self._selected_noun_pair_to_butt[1],
+                                                                   self.__butt_in_proper_case(
+                                                                       self._selected_noun_pair_to_butt[1], 'butt'))
 
     def __check_if_words_are_plural(self, noun):
         """uses the NLTK lemmatizer module to check if a word is plural.  this will also catch words that are not plural
