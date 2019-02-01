@@ -354,3 +354,8 @@ class ButtBot:
                             msg = await self.docomms(self.shitpost.butted_sentence, message.channel)
                             self.phrase_weights.add_message(msg.id, self.shitpost.get_trigger_word(),
                                                             self.shitpost.get_noun())
+            else:
+                if self.test_environment:
+                    #send to shitpost module for testing.
+                    self.shitpost.perform_text_to_butt(message)
+                    self.shitpost.print_debug_message()
