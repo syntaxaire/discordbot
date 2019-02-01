@@ -198,6 +198,12 @@ class WordReplacer:
             # no words to pick
             return None
 
+    def get_trigger_word(self):
+        return self._selected_noun_pair_to_butt[0]
+
+    def get_noun(self):
+        return self._selected_noun_pair_to_butt[1]
+
     @staticmethod
     def __sum_all_weights(word_list):
         return sum(weight for prefix, noun, weight in word_list)
