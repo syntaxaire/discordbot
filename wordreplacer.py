@@ -144,7 +144,6 @@ class WordReplacer:
                     if self.__check_if_picked_phrase_weight_passes_minimum():
                         # let's butt
                         self.__make_butted_sentence()
-                        self.print_debug_message()
 
     def do_butting_raw_sentence(self, message):
         """always makes butted sentence.  skip all sanity checks that perform_text_to_butt does."""
@@ -154,7 +153,6 @@ class WordReplacer:
         self.__get_word_pairs_from_all_sources()
         self.__pick_word_pair_to_butt()
         self.__make_butted_sentence()
-        self.print_debug_message()
 
     def __tag_sentence(self, split_for_bot=False):
         """tags sentence properly based if user is a bot. we assume these bots are relaying chat message from
