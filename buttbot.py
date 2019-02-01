@@ -214,7 +214,7 @@ class ButtBot:
             await self.comm.do_react(message, self.discordBot, emojis)
 
     def _should_i_reply_to_bot(self, author):
-        """Checks to see if we should reply to message author - checks bot whitelist and general user ignore list"""
+        """Checks to see if we should reply to message author.  specific to users discord flags as bots"""
         if author in self.config.get_all_allowed_bots():
             # we should always talk to this bot
             return True
@@ -228,6 +228,8 @@ class ButtBot:
             return False
 
     def should_i_reply_to_user(self, message):
+        """master clearinghouse for checking if bot should reply to user. checks user block list and accepted bot
+        list"""
         if message.author.bot:
             # bot user (flag set by discord server)
             if self._should_i_reply_to_bot(str(message.author)):
@@ -244,10 +246,10 @@ class ButtBot:
             # user is either a bot not on whitelist or is a user on the ignore list
             return
         elif is_word_in_text("rip", message.content):
-            await self._process_RIP_message(message)
+            await self._process_rip_message(message)
 
         elif is_word_in_text("F", message.content):
-            await self._process_F_message(message)
+            await self._process_f_message(message)
 
         elif is_word_in_text('butt', message.content) is True or is_word_in_text('butts', message.content) is True:
             await self._process_butt_message(message)
@@ -279,7 +281,7 @@ class ButtBot:
                 self.process_cached_reaction_message(items[1], items[2], items[3])
                 self.phrase_weights.remove_message(items[0], items[1], items[2], items[3])
 
-    async def _process_RIP_message(self, message):
+    async def _process_rip_message(self, message):
         if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
                 str(message.author) == '💩💩#4048' and message.content[:4] == 'RIP:'):
             self.vacuum.add_death_message(message.content)
@@ -298,7 +300,7 @@ class ButtBot:
                     self.stats.disposition_store(message.server.id, message.channel.id,
                                                  "RIP cooldown", "RIP cooldown")
 
-    async def _process_F_message(self, message):
+    async def _process_f_message(self, message):
         if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'F'):
             self.stats.message_store(message.channel.id)
             if self.timer_module.check_timeout('f', 'shitpost'):
@@ -344,22 +346,11 @@ class ButtBot:
                 if random.randint(rv[0], rv[1]) == rv[2]:
                     if self.timer_module.check_timeout('shitpost', 'shitpost'):
                         # passed timer check
-                        #try:
-                        rshitpost = self.shitpost.perform_text_to_butt(message)
-                        #except TypeError:
-                            # did not return anything, so we don't care
-                        #   pass
-                        try:
-                            # noinspection PyUnboundLocalVariable
-                            if rshitpost:
-                                # noinspection PyUnboundLocalVariable
-                                msg = await self.docomms(rshitpost, message.channel)
-                                # am i ever going to implement this?
-                                # last opinion was that it was easier to use on mobile versions of discord
-                                # but you lose the 'organic feel' of buttbot
-                                # await self.comm.do_react_no_delay(msg, self.discordBot, '👍')
-                                # await self.comm.do_react_no_delay(msg, self.discordBot, '👎')
-                                # noinspection PyUnboundLocalVariable,PyUnboundLocalVariable
-                                self.phrase_weights.add_message(msg.id, trigger_word, noun)
-                        except UnboundLocalError:
-                            pass
+                        # try:
+                        self.shitpost.perform_text_to_butt(message)
+
+                        if self.shitpost.successful_butting():
+                            # passes butt check
+                            msg = await self.docomms(self.shitpost.butted_sentence, message.channel)
+                            self.phrase_weights.add_message(msg.id, self.shitpost.get_trigger_word(),
+                                                            self.shitpost.get_noun())
