@@ -111,7 +111,7 @@ class WordReplacer:
         print("Prioritized noun pair(s): %s" % self._priority_nouns)
         print("Non-Prioritized noun pair(s): %s" % self._non_priority_nouns)
         print("Selected noun pair: %s" % str(self._selected_noun_pair_to_butt))
-        print("Passes weight minimum? %s" % self.__check_if_picked_phrase_weight_passes_minimum())
+        print("Passes weight minimum? %s" % str(self.__check_if_picked_phrase_weight_passes_minimum()))
         print("Butted sentence: %s" % self.butted_sentence)
         print("--------------------------------------------------------------------------------------------------")
 
@@ -136,7 +136,10 @@ class WordReplacer:
             # passes code block test
             if not self.__does_message_contain_stop_phrases():
                 # message contains no stop phrases, let's proceed
-                self.__tag_sentence()
+                if messageobject.author.bot:
+                    self.__tag_sentence(True)
+                else:
+                    self.__tag_sentence()
                 if self._tagged_sentence and self.__check_length_of_sentence_to_butt():
                     # message is below length limit set on a per-guild basis
                     self.__get_word_pairs_from_all_sources()
