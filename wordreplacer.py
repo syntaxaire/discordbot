@@ -297,13 +297,15 @@ class WordReplacer:
     def __make_butted_sentence(self):
         if self.__check_if_words_are_plural(self._selected_noun_pair_to_butt[1]) is True:
             # the lemmatizer thinks that this is a plural
-            self.butted_sentence = self._original_sentence.replace(self._selected_noun_pair_to_butt[1],
-                                                                   self.__butt_in_proper_case(
-                                                                       self._selected_noun_pair_to_butt[1], 'butts'))
+            self.butted_sentence = self.__replace_an_to_a_in_sentence(
+                self._original_sentence.replace(self._selected_noun_pair_to_butt[1],
+                                                self.__butt_in_proper_case(self._selected_noun_pair_to_butt[1],
+                                                                           'butts')), "butts")
         else:
-            self.butted_sentence = self._original_sentence.replace(self._selected_noun_pair_to_butt[1],
-                                                                   self.__butt_in_proper_case(
-                                                                       self._selected_noun_pair_to_butt[1], 'butt'))
+            self.butted_sentence = self.__replace_an_to_a_in_sentence(
+                self._original_sentence.replace(self._selected_noun_pair_to_butt[1],
+                                                self.__butt_in_proper_case(self._selected_noun_pair_to_butt[1],
+                                                                           'butt')), "butt")
 
     def __check_if_words_are_plural(self, noun):
         """uses the NLTK lemmatizer module to check if a word is plural.  this will also catch words that are not plural
