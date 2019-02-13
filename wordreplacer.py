@@ -318,6 +318,6 @@ class WordReplacer:
         if noun in words_that_arent_plural:
             return False
         elif lemmatizer.lemmatize(noun) is not noun:
-            self.word_is_plural = False
-        else:
             self.word_is_plural = True
+        else:
+            self.word_is_plural = False
