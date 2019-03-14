@@ -77,7 +77,7 @@ class ButtBot:
                 self.config.add_channel_to_allowed_channel_list(message.channel.id)
                 await self.docomms(
                     self.shitpost.do_butting_raw_sentence(
-                        "Buttbot will now talk in this wonderful channel and respond to any message")[0],
+                        "Buttbot will now talk in this wonderful channel and respond to any message"),
                     message.channel)
                 await self.do_security_log("%s did permit in %s (%s) in server %s (%s)" %
                                            (message.author, message.channel, str(message.channel.id),
@@ -86,7 +86,7 @@ class ButtBot:
                 # person does not have manage messages in this channel
                 await self.docomms(
                     self.shitpost.do_butting_raw_sentence(
-                        "You do not have permission to run this command in this channel")[0],
+                        "You do not have permission to run this command in this channel"),
                     message.channel)
                 await self.do_security_log("%s tried to permit in %s (%s) in server %s (%s), but no permissions" %
                                            (message.author, message.channel, str(message.channel.id),
@@ -94,7 +94,7 @@ class ButtBot:
         if arguments == "remove":
             if message.channel.permissions_for(message.author).manage_messages:
                 await self.docomms(
-                    self.shitpost.do_butting_raw_sentence("Buttbot will longer reply to messages in this channel")[0],
+                    self.shitpost.do_butting_raw_sentence("Buttbot will longer reply to messages in this channel"),
                     message.channel)
                 self.config.remove_channel_from_allowed_channel_list(message.channel.id)  # change execution order so it
                 # actually sends it
@@ -105,7 +105,7 @@ class ButtBot:
                 # person does not have manage messages in this channel
                 await self.docomms(
                     self.shitpost.do_butting_raw_sentence(
-                        "You do not have permission to run this command in this channel")[0],
+                        "You do not have permission to run this command in this channel"),
                     message.channel)
                 await self.do_security_log("%s tried to remove in %s (%s) in server %s (%s), but no permissions" %
                                            (message.author, message.channel, str(message.channel.id),
@@ -113,7 +113,7 @@ class ButtBot:
         if arguments == "botallow":
             if message.channel.permissions_for(message.author).manage_messages:
                 await self.docomms(
-                    self.shitpost.do_butting_raw_sentence("I will now reply to the bot on this guild")[0],
+                    self.shitpost.do_butting_raw_sentence("I will now reply to the bot on this guild"),
                     message.channel)
                 self.config.add_whitelisted_bots(guid)  # change execution order so it
                 # actually sends it
@@ -123,7 +123,7 @@ class ButtBot:
                 # person does not have manage messages in this channel
                 await self.docomms(
                     self.shitpost.do_butting_raw_sentence(
-                        "You do not have permission to run this command in this channel")[0],
+                        "You do not have permission to run this command in this channel"),
                     message.channel)
                 await self.do_security_log("%s tried to add bot %s in server %s (%s), but no permissions" %
                                            (message.author, guid, message.server.name, str(message.server.id)))
@@ -131,7 +131,7 @@ class ButtBot:
         if arguments == "botremove":
             if message.channel.permissions_for(message.author).manage_messages:
                 await self.docomms(
-                    self.shitpost.do_butting_raw_sentence("I will no longer reply to the bot on this guild")[0],
+                    self.shitpost.do_butting_raw_sentence("I will no longer reply to the bot on this guild"),
                     message.channel)
                 self.config.remove_whitelisted_bots(guid)  # change execution order so it
                 # actually sends it
@@ -141,7 +141,7 @@ class ButtBot:
                 # person does not have manage messages in this channel
                 await self.docomms(
                     self.shitpost.do_butting_raw_sentence(
-                        "You do not have permission to run this command in this channel")[0],
+                        "You do not have permission to run this command in this channel"),
                     message.channel)
                 await self.do_security_log("%s tried to remove bot %s in server %s (%s), but no permissions" %
                                            (message.author, guid, message.server.name, str(message.server.id)))
