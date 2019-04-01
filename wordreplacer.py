@@ -156,6 +156,7 @@ class WordReplacer:
         self.__get_word_pairs_from_all_sources()
         self.__pick_word_pair_to_butt()
         self.__make_butted_sentence()
+        return self.butted_sentence
 
     def __tag_sentence(self, split_for_bot=False):
         """tags sentence properly based if user is a bot. we assume these bots are relaying chat message from
