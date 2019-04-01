@@ -161,7 +161,6 @@ class ButtBot:
             module = self.shitpost
 
         if command in self.mojang.return_commands() and self.config.getboolean('mojang', 'enabled') is True:
-            # we are using the vacuum config because both of these are for minecraft.
             module = self.mojang
         return module
 
