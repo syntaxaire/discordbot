@@ -147,6 +147,7 @@ class WordReplacer:
                     if self.__check_if_picked_phrase_weight_passes_minimum():
                         # let's butt
                         self.__make_butted_sentence()
+                        self.print_debug_message()
 
     def do_butting_raw_sentence(self, message):
         """always makes butted sentence.  skip all sanity checks that perform_text_to_butt does."""
@@ -224,7 +225,7 @@ class WordReplacer:
         # we prioritize possessive pronouns (his, her, my, etc)
         nouns = []
         word_tags_to_check_prioritized = ['PRP$']
-        word_tags_to_check_not_prioritized = ['DT', 'JJ', 'JJS', 'JJR', 'WP$', 'WP']
+        word_tags_to_check_not_prioritized = ['DT', 'JJ', 'JJS', 'JJR', 'WP$', 'WP', 'VBG']
         tags_to_accept_as_nouns = ['NN', 'NNS']
         words_that_are_not_adjectives = ['i', 'kevin', 'armour', 'mic']
         if prioritized:
@@ -255,7 +256,7 @@ class WordReplacer:
     def __word_passes_stop_word_check(word):
         """checks to see if selected word passes stopword check - eliminates common crappy words and internet slang
          that are tagged as nouns but either aren't funny to replace or aren't nouns."""
-        stopwords = ['gon', 'dont', 'lol', 'yeah', 'tho', 'lmao', 'yes']
+        stopwords = ['gon', 'dont', 'lol', 'yeah', 'tho', 'lmao', 'yes', 'way']
         if len(word) < 2 or word in stopwords:
             return False
         else:
@@ -296,7 +297,8 @@ class WordReplacer:
         return " ".join(message)
 
     def __make_butted_sentence(self):
-        if self.__check_if_words_are_plural(self._selected_noun_pair_to_butt[1]) is True:
+        self.__check_if_words_are_plural(self._selected_noun_pair_to_butt[1])
+        if self.word_is_plural is True:
             # the lemmatizer thinks that this is a plural
             self.butted_sentence = self.__replace_an_to_a_in_sentence(
                 self._original_sentence.replace(self._selected_noun_pair_to_butt[1],
