@@ -12,7 +12,8 @@ class Vacuum:
         self.players = []
         self.playtime_load()
         self.db = db
-        self.command = {'lastseen': 'vacuum', 'playtime': 'vacuum', 'howchies': 'vacuum', 'ouchies': 'vacuum'}
+        self.command = {'lastseen': 'vacuum', 'playtime': 'vacuum', 'howchies': 'vacuum', 'ouchies': 'vacuum',
+                        'deathsperhour': 'vacuum'}
         self.updateurl = ""
         self.config = ""
 
@@ -63,6 +64,9 @@ class Vacuum:
             return "Deaths for %s: %s" % (message, self.ouchies_profile(message))
         else:
             return 'Top 10 ouchies: %s' % self.top_10_deaths()
+
+    def do_deathsperhour(self, message):
+        return self.deathsperhour(message)
 
     ################################################################################
     #                               end commands                                   #
@@ -237,7 +241,29 @@ class Vacuum:
         except IndexError:
             return "Havent seen em"
 
-    # noinspection PyBroadException
+    def deathsperhour(self, player):
+        dph = self.db.do_query(
+            "select T.player, COALESCE(D.deaths, 0) / (sum(T.timedelta)/60/60) as deaths_per_hour FROM "
+            "ligyptto_minecraft.progress_playertracker_v2 as T left join (SELECT count(D.player) as deaths, D.player"
+            " from ligyptto_minecraft.progress_deaths D where player='%s' GROUP BY D.player) D"
+            " ON T.player = D.player where T.player='%s' group by T.player" % (player, player))
+        self.db.close()
+
+        try:
+            if dph[0]['deaths_per_hour'] > 0:
+                # good return
+                if dph[0]['deaths_per_hour'] > 5:
+                    insult = "my hero"
+                else:
+                    insult = "you should try harder"
+                return "deaths per hour for %s is %s. %s" % (player, str(dph[0]['deaths_per_hour']), insult)
+            else:
+                return "%s is the most boring person on the server" % player
+        except IndexError:
+            return "%s doesnt play" % player
+
+        # noinspection PyBroadException
+
     def get_player_coords(self, player):
         try:
             with urllib.request.urlopen(self.updateurl) as url:
