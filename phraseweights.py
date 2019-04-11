@@ -48,11 +48,17 @@ class PhraseWeights:
         downvotes = 0
         upvotes = 0
         for items in reactions:
-            if items.emoji in negativeemojis or items.emoji.id in negative_emoji_guid:
-                downvotes = downvotes + items.count
-                print("negative")
-            else:
-                upvotes = upvotes + items.count
+            try:
+                if items.emoji in negativeemojis or items.emoji.id in negative_emoji_guid:
+                    downvotes = downvotes + items.count
+                else:
+                    upvotes = upvotes + items.count
+            except AttributeError:
+                #items.emoji.id not defined
+                if items.emoji in negativeemojis:
+                    downvotes = downvotes + items.count
+                else:
+                    upvotes = upvotes + items.count
         return (upvotes - downvotes) * 20  # set weight change to 20 for each vote
 
     def add_message(self, guid, trigger_word, noun):
