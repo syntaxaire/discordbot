@@ -245,8 +245,8 @@ class Vacuum:
         dph = self.db.do_query(
             "select T.player, COALESCE(D.deaths, 0) / (sum(T.timedelta)/60/60) as deaths_per_hour FROM "
             "ligyptto_minecraft.progress_playertracker_v2 as T left join (SELECT count(D.player) as deaths, D.player"
-            " from ligyptto_minecraft.progress_deaths D where player='%s' GROUP BY D.player) D"
-            " ON T.player = D.player where T.player='%s' group by T.player" % (player, player))
+            " from ligyptto_minecraft.progress_deaths D where player=%s GROUP BY D.player) D"
+            " ON T.player = D.player where T.player=%s group by T.player", (player, player))
         self.db.close()
 
         try:
