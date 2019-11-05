@@ -10,7 +10,7 @@ class ButtConfig:
         try:
             self.guild_guid = conf.split("/")[1][:-4]
         except IndexError:
-            #we are loading a test config file, not a real one.
+            # we are loading a test config file, not a real one.
             self.guild_guid = conf[:-4]
 
     def get(self, section, key):
@@ -21,8 +21,12 @@ class ButtConfig:
         # passthrough function for backwards compatibility
         return self.config_file.getboolean(section, key)
 
-    def _process_list_from_configparser(self, section, key):
-        return self.get(section, key).split(",")
+    def _process_list_from_configparser(self, section, key, return_type="string"):
+        # discord.py 1.2.4 makes guid type integer, we need to know now what type to avoid issues
+        if return_type == "integer":
+            return [int(i) for i in self.get(section, key).split(",") if i]
+        else:
+            return [str(i) for i in self.get(section, key).split(",") if i]
 
     def get_guild_guid(self):
         return str(self.guild_guid)
@@ -37,6 +41,9 @@ class ButtConfig:
     def get_all_allowed_bots(self):
         return self._process_list_from_configparser('discordbot', 'whitelisted_bots')
 
+    def get_allowed_channels(self):
+        return self._process_list_from_configparser('allowed_channels', 'channels', "integer")
+
     def get_all_emojis(self):
         return self._process_list_from_configparser('discordbot', 'butt_response_emojis')
 
@@ -47,12 +54,16 @@ class ButtConfig:
         return self._process_list_from_configparser('wordreplacer', 'stop_processing_phrases')
 
     def add_channel_to_allowed_channel_list(self, channel):
+        # channel comes as an integer in discord.py 1.2.4, let's cast
+        channel = str(channel)
         if channel not in self.config_file.get("allowed_channels", "channels"):
             self.config_file.set("allowed_channels", "channels",
                                  "%s,%s" % (self.config_file.get("allowed_channels", "channels"), channel))
             self.save_config()
 
     def remove_channel_from_allowed_channel_list(self, channel):
+        # channel comes as an integer in discord.py 1.2.4, let's cast
+        channel = str(channel)
         channels = self.config_file.get("allowed_channels", "channels").split(",")
         try:
             channels.remove(channel)
@@ -88,12 +99,16 @@ class ButtConfig:
         self.save_config()
 
     def add_always_ignore(self, user_guid):
+        # guid comes as an integer in discord.py 1.2.4, let's cast
+        user_guid = str(user_guid)
         if user_guid not in self.config_file.get("discordbot", "always_ignore"):
             self.config_file.set("discordbot", "always_ignore",
                                  "%s,%s" % (self.config_file.get("discordbot", "always_ignore"), user_guid))
             self.save_config()
 
     def remove_always_ignore(self, user_guid):
+        # guid comes as an integer in discord.py 1.2.4, let's cast
+        user_guid = str(user_guid)
         users = self.config_file.get("discordbot", "always_ignore").split(",")
         try:
             users.remove(user_guid)
@@ -104,12 +119,16 @@ class ButtConfig:
             pass
 
     def add_whitelisted_bots(self, user_guid):
+        # guid comes as an integer in discord.py 1.2.4, let's cast
+        user_guid = str(user_guid)
         if user_guid not in self.config_file.get("discordbot", "whitelisted_bots"):
             self.config_file.set("discordbot", "whitelisted_bots",
                                  "%s,%s" % (self.config_file.get("discordbot", "whitelisted_bots"), user_guid))
             self.save_config()
 
     def remove_whitelisted_bots(self, user_guid):
+        # guid comes as an integer in discord.py 1.2.4, let's cast
+        user_guid = str(user_guid)
         users = self.config_file.get("discordbot", "whitelisted_bots").split(",")
         try:
             users.remove(user_guid)

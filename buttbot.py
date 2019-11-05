@@ -36,10 +36,10 @@ class ButtBot:
             self.discordBot.loop.create_task(self.my_background_task())
 
     async def do_security_log(self, message):
-        await self.comm.do_send_message(self.discordBot.get_channel("505226379487346690"), self.discordBot, message, 0)
+        await self.comm.do_send_message(self.discordBot.get_channel(505226379487346690), message)
 
     async def do_info_log(self, message):
-        await self.comm.do_send_message(self.discordBot.get_channel("505226325511110658"), self.discordBot, message, 0)
+        await self.comm.do_send_message(self.discordBot.get_channel(505226325511110658), message)
 
     async def my_background_task(self):
         await self.discordBot.wait_until_ready()
@@ -57,17 +57,17 @@ class ButtBot:
             self.check_stored_reactions()
 
     def configure_buttbot_instance(self):
-        self.config.set_plain_language_name(self.discordBot.get_server("507477640375042049"))
+        self.config.set_plain_language_name(self.discordBot.get_server(507477640375042049))
 
     # noinspection PyUnusedLocal
     async def do_leave(self, message, arguments):
         if (str(message.author) in self.config.get('discordbot', 'bot_admin')) and str(self.discordBot.user) in str(
                 message.content):
-            await self.discordBot.leave_server(message.server)
+            await self.discordBot.leave_server(message.guild)
         else:
             await self.docomms('fuck you youre not my real dad', message.channel)
             await self.do_security_log("%s tried do_leave in server %s (%s)" %
-                                       (message.author.name, message.server.name, message.server.id))
+                                       (message.author.name, message.guild.name, message.guild.id))
 
     async def do_config(self, message, arg):
         arguments, junk, guid = arg.partition(' ')
@@ -81,7 +81,7 @@ class ButtBot:
                     message.channel)
                 await self.do_security_log("%s did permit in %s (%s) in server %s (%s)" %
                                            (message.author, message.channel, str(message.channel.id),
-                                            message.server.name, str(message.server.id)))
+                                            message.guild.name, str(message.guild.id)))
             else:
                 # person does not have manage messages in this channel
                 await self.docomms(
@@ -90,7 +90,7 @@ class ButtBot:
                     message.channel)
                 await self.do_security_log("%s tried to permit in %s (%s) in server %s (%s), but no permissions" %
                                            (message.author, message.channel, str(message.channel.id),
-                                            message.server.name, str(message.server.id)))
+                                            message.guild.name, str(message.guild.id)))
         if arguments == "remove":
             if message.channel.permissions_for(message.author).manage_messages:
                 await self.docomms(
@@ -100,7 +100,7 @@ class ButtBot:
                 # actually sends it
                 await self.do_security_log("%s removed in %s (%s) in server %s (%s)" %
                                            (message.author, message.channel, str(message.channel.id),
-                                            message.server.name, str(message.server.id)))
+                                            message.guild.name, str(message.guild.id)))
             else:
                 # person does not have manage messages in this channel
                 await self.docomms(
@@ -109,7 +109,7 @@ class ButtBot:
                     message.channel)
                 await self.do_security_log("%s tried to remove in %s (%s) in server %s (%s), but no permissions" %
                                            (message.author, message.channel, str(message.channel.id),
-                                            message.server.name, str(message.server.id)))
+                                            message.guild.name, str(message.guild.id)))
         if arguments == "botallow":
             if message.channel.permissions_for(message.author).manage_messages:
                 await self.docomms(
@@ -118,7 +118,7 @@ class ButtBot:
                 self.config.add_whitelisted_bots(guid)  # change execution order so it
                 # actually sends it
                 await self.do_security_log("%s added bot %s in server %s (%s)" %
-                                           (message.author, guid, message.server.name, str(message.server.id)))
+                                           (message.author, guid, message.guild.name, str(message.guild.id)))
             else:
                 # person does not have manage messages in this channel
                 await self.docomms(
@@ -126,7 +126,7 @@ class ButtBot:
                         "You do not have permission to run this command in this channel"),
                     message.channel)
                 await self.do_security_log("%s tried to add bot %s in server %s (%s), but no permissions" %
-                                           (message.author, guid, message.server.name, str(message.server.id)))
+                                           (message.author, guid, message.guild.name, str(message.guild.id)))
 
         if arguments == "botremove":
             if message.channel.permissions_for(message.author).manage_messages:
@@ -136,7 +136,7 @@ class ButtBot:
                 self.config.remove_whitelisted_bots(guid)  # change execution order so it
                 # actually sends it
                 await self.do_security_log("%s removed bot %s in server %s (%s)" %
-                                           (message.author, guid, message.server.name, str(message.server.id)))
+                                           (message.author, guid, message.guild.name, str(message.guild.id)))
             else:
                 # person does not have manage messages in this channel
                 await self.docomms(
@@ -144,7 +144,7 @@ class ButtBot:
                         "You do not have permission to run this command in this channel"),
                     message.channel)
                 await self.do_security_log("%s tried to remove bot %s in server %s (%s), but no permissions" %
-                                           (message.author, guid, message.server.name, str(message.server.id)))
+                                           (message.author, guid, message.guild.name, str(message.guild.id)))
 
     def pick_correct_module(self, command):
         # this returns the module that contains the command ran by the user.  The module must support the command and
@@ -202,13 +202,13 @@ class ButtBot:
 
     async def docomms(self, message, channel):
         if self.allowed_in_channel(channel):
-            msg = await self.comm.do_send_message(channel, self.discordBot, message)
+            msg = await self.comm.do_send_message(channel, message)
             return msg  # returns the message object of the message that was sent to discord
 
     async def doreact(self, message, channel, emojis):
         if self.allowed_in_channel(channel):
             self.stats.message_store(message.channel.id)
-            self.stats.disposition_store(message.server.id, message.channel.id,
+            self.stats.disposition_store(message.guild.id, message.channel.id,
                                          "React", emojis, message.content)
             await self.comm.do_react(message, self.discordBot, emojis)
 
@@ -257,7 +257,7 @@ class ButtBot:
             await self._process_all_other_messages(message)
 
     def allowed_in_channel(self, channel):
-        allowed_channels = self.config.get("allowed_channels", "channels").split(",")
+        allowed_channels = self.config.get_allowed_channels()
         if channel.id in allowed_channels:
             return True
         else:
@@ -289,25 +289,25 @@ class ButtBot:
             if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'RIP'):
                 self.stats.message_store(message.channel.id)
                 if self.timer_module.check_timeout('rip', 'shitpost'):
-                    self.stats.disposition_store(message.server.id, message.channel.id,
+                    self.stats.disposition_store(message.guild.id, message.channel.id,
                                                  "RIP", "RIP")
                     if random.randint(1, 20) == 5:
                         await self.docomms('Ya, butts', message.channel)
                     else:
                         await self.docomms('Ya, RIP', message.channel)
                 else:
-                    self.stats.disposition_store(message.server.id, message.channel.id,
+                    self.stats.disposition_store(message.guild.id, message.channel.id,
                                                  "RIP cooldown", "RIP cooldown")
 
     async def _process_f_message(self, message):
         if self.allowed_in_channel(message.channel) and self.config.getboolean('discordbot', 'F'):
             self.stats.message_store(message.channel.id)
             if self.timer_module.check_timeout('f', 'shitpost'):
-                self.stats.disposition_store(message.server.id, message.channel.id,
+                self.stats.disposition_store(message.guild.id, message.channel.id,
                                              "F", "F")
                 await self.docomms('Ya, F', message.channel)
             else:
-                self.stats.disposition_store(message.server.id, message.channel.id,
+                self.stats.disposition_store(message.guild.id, message.channel.id,
                                              "F cooldown", "F cooldown")
                 if random.randint(1, 100) == 44:
                     await self.docomms('suck my dick F under cooldown', message.channel)
@@ -319,11 +319,11 @@ class ButtBot:
                 if self.timer_module.check_timeout('rsp', 'shitpost'):
                     rshitpost = self.shitpost.rspeval(message.content)
                     if rshitpost:
-                        self.stats.disposition_store(message.server.id, message.channel.id,
+                        self.stats.disposition_store(message.guild.id, message.channel.id,
                                                      "RSP", "RSP", message.content)
                         await self.docomms(rshitpost, message.channel)
                 else:
-                    self.stats.disposition_store(message.server.id, message.channel.id,
+                    self.stats.disposition_store(message.guild.id, message.channel.id,
                                                  "RSP cooldown", "RSP cooldown")
             elif random.randint(1, 3) == 3:
                 if self.timer_module.check_timeout('rsp_emoji', 'shitpost'):
@@ -355,6 +355,6 @@ class ButtBot:
                                                             self.shitpost.get_noun())
             else:
                 if self.test_environment:
-                    #send to shitpost module for testing.
+                    # send to shitpost module for testing.
                     self.shitpost.perform_text_to_butt(message)
                     self.shitpost.print_debug_message()
