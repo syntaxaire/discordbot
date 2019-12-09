@@ -69,3 +69,12 @@ class PhraseWeights:
 
     def remove_message(self, _time, guid, trigger_word, noun):
         self.messages.remove([_time, guid, trigger_word, noun])
+
+    def get_word_average_weight(self, word_to_search):
+        weights = 0
+        occurrences = 0
+        for word, weight in self.phrases.items():
+            if word_to_search in word:
+                weights += weight
+                occurrences += 1
+        return occurrences/weights

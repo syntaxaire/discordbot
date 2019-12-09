@@ -80,13 +80,15 @@ async def on_message(message):
             send_to_butt_instance = command_channels[message.guild.id].command_dispatch
             await send_to_butt_instance(message)
             return
+    except KeyError:
+        #command sent from a channel that we dont have a bot loaded for
+        pass
 
     try:
         send_to_butt_instance = command_channels[message.guild.id].chat_dispatch
         await send_to_butt_instance(message)
     except KeyError:
-        # no chat dispatcher for this so we are going to default to the 💩💩 channel
-        # send_to_butt_instance = default_channel.chat_dispatch
+        #command sent from a channel that we dont have a bot loaded for
         pass
 
 

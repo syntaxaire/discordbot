@@ -4,9 +4,11 @@ from random import *
 import nltk
 import nltk.data
 import nltk.tag
+import spacy
 from nltk.stem import WordNetLemmatizer
 
 import butt_library as buttlib
+from butt_chunk import ButtChunk
 
 
 class WordReplacer:
@@ -34,6 +36,11 @@ class WordReplacer:
         self._sentence_contains_stop_words = False
         self._selected_noun_pair_to_butt = []
         self.butted_sentence = ""
+        self._spacy_nouns = []
+        self._message_author = ""
+        self._spacy_tagged_sentence = ""
+
+        self.nlp = spacy.load('en_core_web_lg')
 
     def __state_reset(self):
         self.should_we_butt = False  # this is the state variable that means butting should continue
@@ -48,6 +55,9 @@ class WordReplacer:
         self._sentence_contains_stop_words = False
         self._selected_noun_pair_to_butt = []
         self.butted_sentence = ""
+        self._spacy_nouns = []
+        self._message_author = ""
+        self._spacy_tagged_sentence = ""
 
     def __set_max_sentence_length(self, length):
         # DPT requested feature
@@ -102,7 +112,7 @@ class WordReplacer:
             return False
 
     def print_debug_message(self):
-        print("--------------------------------------------------------------------------------------------------")
+        print("--------------------------------------------------------------------------------------------")
         print("Original message: %s" % self._original_sentence)
         print("Message contain stop phrase? %s" % str(self.__does_message_contain_stop_phrases()))
         print("Message meet length requirement? (server setting: %i) %s" % (
@@ -110,10 +120,12 @@ class WordReplacer:
         print("Tagged sentence: %s" % self._tagged_sentence)
         print("Prioritized noun pair(s): %s" % self._priority_nouns)
         print("Non-Prioritized noun pair(s): %s" % self._non_priority_nouns)
+        print("Spacy noun chunk(s): %s" % self._spacy_nouns)
+        print("Spacy processed chunk(s): %s " % self._spacy_processed_nouns)
         print("Selected noun pair: %s" % str(self._selected_noun_pair_to_butt))
         print("Passes weight minimum? %s" % str(self.__check_if_picked_phrase_weight_passes_minimum()))
         print("Butted sentence: %s" % self.butted_sentence)
-        print("--------------------------------------------------------------------------------------------------")
+        print("--------------------------------------------------------------------------------------------")
 
     def __does_message_contain_stop_phrases(self):
         if not any(v for v in self.__config.get_all_stop_phrases() if v in self._original_sentence) and \
@@ -131,7 +143,8 @@ class WordReplacer:
         # we are going to manipulate this version of the message before sending it to the processing functions.
         # we remove stuff that we dont want to be processed (banned phrases, banned people, banned bots)
         self.__state_reset()
-        self._original_sentence = str(messageobject.content)
+        self._original_sentence = messageobject.content
+        self._message_author = str(messageobject.author)
         if not buttlib.detect_code_block(self._original_sentence):
             # passes code block test
             if not self.__does_message_contain_stop_phrases():
@@ -141,13 +154,14 @@ class WordReplacer:
                 else:
                     self.__tag_sentence()
                 if self._tagged_sentence and self.__check_length_of_sentence_to_butt():
+                    # TODO: modify the above two functions for spacy
                     # message is below length limit set on a per-guild basis
                     self.__get_word_pairs_from_all_sources()
                     self.__pick_word_pair_to_butt()
                     if self.__check_if_picked_phrase_weight_passes_minimum():
                         # let's butt
                         self.__make_butted_sentence()
-                        self.print_debug_message()
+                        # self.print_debug_message()
 
     def do_butting_raw_sentence(self, message):
         """always makes butted sentence.  skip all sanity checks that perform_text_to_butt does."""
@@ -165,8 +179,19 @@ class WordReplacer:
         if split_for_bot:
             # message sender is allowed bot, we should separate the first word out of the message since that
             # is the user the bot is relaying for
-            self._tagged_sentence = self.__wordtagger(buttlib.strip_IRI(self._original_sentence.split(" ", 1)[1]))
+            # support for DPT Omnibot
+            if self._message_author == "Omnibot#0741":
+                self._spacy_tagged_sentence = self.nlp(buttlib.strip_IRI(self._original_sentence.split(" ", 3)[3]))
+                self._tagged_sentence = self.__wordtagger(buttlib.strip_IRI(self._original_sentence.split(" ", 3)[3]))
+
+                # TODO: remove old tagging system for production
+            else:
+                # TODO: remove old tagging system for production
+                self._spacy_tagged_sentence = self.nlp(buttlib.strip_IRI(self._original_sentence.split(" ", 1)[1]))
+                self._tagged_sentence = self.__wordtagger(buttlib.strip_IRI(self._original_sentence.split(" ", 1)[1]))
         else:
+            # TODO: remove old tagging system for production
+            self._spacy_tagged_sentence = self.nlp(buttlib.strip_IRI(self._original_sentence))
             self._tagged_sentence = self.__wordtagger(buttlib.strip_IRI(self._original_sentence))
 
     def __check_if_picked_phrase_weight_passes_minimum(self):
@@ -179,10 +204,30 @@ class WordReplacer:
                     return False
             return True
 
+    # noinspection PyUnresolvedReferences
+    # im setting the type of the variable to str when we start so it will not have the noun_chunks reference that
+    # belongs to spacy
     def __get_word_pairs_from_all_sources(self):
+        self._spacy_processed_nouns = []
+        self._spacy_nouns = []
+        for chunk in self._spacy_tagged_sentence.noun_chunks:
+            w = ButtChunk(self._spacy_tagged_sentence,chunk)
+            print("sentenece: %s" % self._spacy_tagged_sentence)
+            print("chunk: %s" % chunk)
+            print("returned chunk: %s" % w.chunk)
+            print("tags: %s" % w.chunk_tags)
+
+
+        #if chunks.get_status():
+         #   pass
+            # :thunk:
+            #for i in chunks:
+            #    print(i)
         if self.__does_message_have_prioritized_parts_of_speech():
             self._priority_nouns = self.__find_weighted_nouns_by_previous_tag(True)
         self._non_priority_nouns = self.__find_weighted_nouns_by_previous_tag(False)
+
+    # def _construct_spacy_noun_chunks(self):
 
     def __pick_word_pair_to_butt(self):
         """randomly selects a word pair to be the target of replacement."""
@@ -298,7 +343,7 @@ class WordReplacer:
 
     def __make_butted_sentence(self):
         self.__check_if_words_are_plural(self._selected_noun_pair_to_butt[1])
-        if self.word_is_plural is True:
+        if self._word_is_plural is True:
             # the lemmatizer thinks that this is a plural
             self.butted_sentence = self.__replace_an_to_a_in_sentence(
                 self._original_sentence.replace(self._selected_noun_pair_to_butt[1],
