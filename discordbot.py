@@ -93,7 +93,7 @@ async def on_message(message):
 async def serialize_stats():
     await client.wait_until_ready()
     await asyncio.sleep(5)
-    while not client.is_closed:
+    while not client.is_closed():
         stat_module.serialize_all_stats_to_disk()
         await asyncio.sleep(120)
 
@@ -101,7 +101,7 @@ async def serialize_stats():
 async def send_stats_to_db():
     await client.wait_until_ready()
     await asyncio.sleep(5)
-    while not client.is_closed:
+    while not client.is_closed():
         stat_module.send_stats_to_db()
         await asyncio.sleep(300)
 
@@ -109,7 +109,7 @@ async def send_stats_to_db():
 async def serialize_weights():
     await client.wait_until_ready()
     await asyncio.sleep(5)
-    while not client.is_closed:
+    while not client.is_closed():
         weights.save_to_file()
         if test_environment:
             await asyncio.sleep(10)

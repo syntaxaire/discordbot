@@ -43,13 +43,13 @@ class ButtBot:
 
     async def my_background_task(self):
         await self.discordBot.wait_until_ready()
-        while not self.discordBot.is_closed:
+        while not self.discordBot.is_closed():
             await asyncio.sleep(10)
             self.vacuum.playtime_scraper()
 
     async def butt_message_processing(self):
         await self.discordBot.wait_until_ready()
-        while not self.discordBot.is_closed:
+        while not self.discordBot.is_closed():
             if self.test_environment:
                 await asyncio.sleep(10)
             else:
