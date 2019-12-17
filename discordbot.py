@@ -31,6 +31,8 @@ async def on_ready():
                                                        stat_module, weights, True)
         command_channels[199981748098957312] = ButtBot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
                                                        stat_module, weights, True)
+        command_channels[154337182717444096] = ButtBot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
+                                                       stat_module, weights, True)
     else:
         for i in channel_configs:
             command_channels[int(i.split("/")[1][:-4])] = ButtBot(client, i, db_, db_secrets[0], db_secrets[1],

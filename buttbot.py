@@ -333,7 +333,12 @@ class ButtBot:
         # here's where im going to evaluate all other sentences for shitposting
         if is_word_in_text("left the game", message.content) or is_word_in_text("joined the game", message.content):
             # this is a join or part message and we are going to ignore it
-            pass
+            #welcome to progress
+            if message.author.id == 249966240787988480 and is_word_in_text("joined the game", message.content):
+                player = message.content.split(" ")[0]
+                times_seen = self.vacuum.have_we_seen_player(player)
+                if times_seen == 0:
+                    await self.docomms("welcome to progress %s" % player, message.channel)
         else:
             if self.allowed_in_channel(message.channel):
                 # do not send to shitpost module if we aren't allowed to talk in the channel in question.

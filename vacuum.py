@@ -117,6 +117,8 @@ class Vacuum:
                 insult = ". go outside you fuckin nerd"
             elif h > 30:
                 insult = ". don't you have something better to do with your time?"
+            elif h < 25:
+                insult = ". weak"
 
             return "Estimated playtime for %s: %d hours %d minutes in %s sessions%s" % (player, h, m, sessions, insult)
         else:
@@ -347,6 +349,14 @@ class Vacuum:
             return self.sort(result, 'message', 'count')
         else:
             pass
+
+    def have_we_seen_player(self, player):
+        result = self.db.do_query(
+            "select count(datetime) from progress_playertracker_v2 where player=%s", player)
+        self.db.close()
+        if result:
+            return result[0]['count(datetime)']
+
 
     @staticmethod
     def sort(target, t1, t2):
