@@ -1,6 +1,7 @@
 import asyncio
 import random
 import time
+import datetime
 
 from discord.utils import get
 
@@ -30,6 +31,7 @@ class ButtBot:
         self.phrase_weights = phrase_weights
         self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment)
         self.mojang = mj.Mojang()
+        self._played_time_loop_last_ran = datetime.datetime.utcnow()
         self.discordBot.loop.create_task(self.butt_message_processing())
         if self.config.getboolean('vacuum', 'enabled') is True:
             self.vacuum.update_url(self.config.get('vacuum', 'vacuum_update_json_url'))
@@ -45,7 +47,17 @@ class ButtBot:
         await self.discordBot.wait_until_ready()
         while not self.discordBot.is_closed():
             await asyncio.sleep(10)
+            self._played_time_loop_last_ran = datetime.datetime.utcnow()
             self.vacuum.playtime_scraper()
+
+    def is_played_time_loop_running(self):
+        if self.config.getboolean('vacuum', 'enabled') is True:
+            d = self._played_time_loop_last_ran - datetime.datetime.utcnow()
+            d = abs(int(d.total_seconds()))
+            if d > 30:
+                #has not run in 30 or more seconds
+                self.do_info_log("I'm a broken piece of shit and had to reboot the background task")
+                self.discordBot.loop.create_task(self.my_background_task())
 
     async def butt_message_processing(self):
         await self.discordBot.wait_until_ready()
@@ -165,6 +177,7 @@ class ButtBot:
         return module
 
     async def command_dispatch(self, message):
+        self.is_played_time_loop_running() #garbage hack
         if not self.should_i_reply_to_user(message):
             # user is either a bot not on whitelist or is a user on the ignore list
             return
@@ -336,9 +349,10 @@ class ButtBot:
             #welcome to progress
             if message.author.id == 249966240787988480 and is_word_in_text("joined the game", message.content):
                 player = message.content.split(" ")[0]
-                times_seen = self.vacuum.have_we_seen_player(player)
-                if times_seen == 0:
-                    await self.docomms("welcome to progress %s" % player, message.channel)
+                hwsp = self.vacuum.have_we_seen_player(player)
+                if hwsp:
+                    await self.docomms(hwsp, message.channel)
+
         else:
             if self.allowed_in_channel(message.channel):
                 # do not send to shitpost module if we aren't allowed to talk in the channel in question.
