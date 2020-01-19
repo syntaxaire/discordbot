@@ -3,6 +3,7 @@ import http.client
 import json
 import urllib.error
 import urllib.request
+import random
 
 from dateutil.parser import parse
 
@@ -164,7 +165,7 @@ class Vacuum:
                     # person is still logged in. we do not need to do anything at this time.
                 else:
                     # log that they logged out
-                    self.playtime_player_record(e[0], self.playtime_player_deltaseconds(e[1]))
+                    self.playtime_player_record(e[0], self.playtime_deltaseconds(e[1]))
                     self.playtime_player_removeplayer(e)
         except TypeError:
             # something went wrong with variable initialization.
@@ -172,7 +173,7 @@ class Vacuum:
             self.playtime_player_checkplayers(players)
 
     @staticmethod
-    def playtime_player_deltaseconds(starttime):
+    def playtime_deltaseconds(starttime):
         d = starttime - datetime.datetime.utcnow()
         d = abs(int(d.total_seconds()))
         if d > 20:
@@ -181,7 +182,7 @@ class Vacuum:
 
     def playtime_player_saveall(self):
         for e in self.players:
-            self.playtime_player_record(e[0], self.playtime_player_deltaseconds(e[1]))
+            self.playtime_player_record(e[0], self.playtime_deltaseconds(e[1]))
             # remove player.
             self.playtime_player_removeplayer(e)
 
@@ -209,6 +210,27 @@ class Vacuum:
             # the self.players variable is empty.  This can happen when the bot first turns on or when a player joins
             # and no one else is logged in.
             return False
+
+    def playtime_player_started_current_session(self, player):
+        if self.playtime_player_active(player):
+            for p in self.players:
+                if p[0] == player:
+                    return p[1]
+        else:
+            return 0
+
+    def playtime_current_session_timedelta(self, player):
+        if self.playtime_player_active(player):
+            return self.playtime_deltaseconds(self.playtime_player_started_current_session(player))
+        else:
+            return 0
+
+    def deaths_per_hour_current_session(self, player):
+        session_start = self.playtime_player_started_current_session(player)
+        played_this_session_hours = self.playtime_current_session_timedelta(player) / 60 / 60
+        deaths_this_session = self.db.do_query("SELECT count(player) as deaths FROM `progress_deaths` WHERE"
+                                               " player = %s and datetime > %s", (player, session_start))[0]['deaths']
+        return deaths_this_session / played_this_session_hours
 
     def playtime_serialize(self):
         with open('players.txt', 'w') as f:
@@ -255,16 +277,50 @@ class Vacuum:
             if dph[0]['deaths_per_hour'] > 0:
                 # good return
                 if dph[0]['deaths_per_hour'] > 5:
-                    insult = "my hero"
+                    insults = [
+                        "my hero",
+                        "a true gaming legend"
+                    ]
+                    insult = insults[random.randrange(0, len(insults) - 1)]
+
                 else:
                     insult = "you should try harder"
-                return "deaths per hour for %s is %s. %s" % (player, str(dph[0]['deaths_per_hour']), insult)
+                try:
+                    dph_session = int(self.deaths_per_hour_current_session(player))
+                except ZeroDivisionError:
+                    #no deaths on current session
+                    dph_session = 0
+                if dph_session > 0:
+                    dph_ses = " (% s deaths per hour this session)" % str(dph_session)
+                else:
+                    dph_ses = ""
+                return "deaths per hour for %s is %s%s. %s" % \
+                       (player,
+                        str(dph[0]['deaths_per_hour']),
+                        dph_ses,
+                        insult)
             else:
-                return "%s is the most boring person on the server" % player
+                comments = [
+                    "%s is the most boring person on the server",
+                    "actually, %s is just a gaming god",
+                    "persistence is key for %s",
+                    "%s is a god among mortals"
+                ]
+                return comments[random.randrange(0, len(comments)) - 1] % player
         except IndexError:
             return "%s doesnt play" % player
 
         # noinspection PyBroadException
+
+    def deathsperhour_list(self):
+        dph = self.db.do_query(
+            "select T.player, COALESCE(D.deaths, 0) / (sum(T.timedelta) / 60 / 60) as deaths_per_hour"
+            "FROM ligyptto_minecraft.progress_playertracker_v2 as T left join(SELECT count(D.player) as deaths, "
+            "D.player from ligyptto_minecraft.progress_deaths D GROUP BY D.player) D ON T.player = D.player group by"
+            "T.player ORDER BY deaths_per_hour DESC LIMIT 10"
+        )
+        if dph:
+            return self.sort(dph, 'player', 'deaths_per_hour')
 
     def get_player_coords(self, player):
         try:
@@ -351,12 +407,24 @@ class Vacuum:
             pass
 
     def have_we_seen_player(self, player):
-        result = self.db.do_query(
+        current_server_result = self.db.do_query(
             "select count(datetime) from progress_playertracker_v2 where player=%s", player)
+        previous_server_result = self.db.do_query(
+            "select count(datetime) from progress_playertracker_v2_old where player=%s", player)
         self.db.close()
-        if result:
-            return result[0]['count(datetime)']
-
+        if current_server_result[0]['count(datetime)'] == 0:
+            # new player
+            if previous_server_result[0]['count(datetime)'] > 0:
+                comments = [
+                    "welcome back to progress, %s",
+                    "fuck, %s is back",
+                    "who let %s back in?",
+                    "who gave %s the new IP address?",
+                    "%s is back to top ouchies!"
+                ]
+                return random.randrange(0, len(comments) - 1) % player
+            else:
+                return "welcome to progress %s" % player
 
     @staticmethod
     def sort(target, t1, t2):
