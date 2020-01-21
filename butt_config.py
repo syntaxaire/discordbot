@@ -38,6 +38,9 @@ class ButtConfig:
         self.config_file.set('discordbot', 'plain_language_name', str(pla))
         self.save_config()
 
+    def get_db(self):
+        return self._process_list_from_configparser('database', 'database')
+
     def get_all_allowed_bots(self):
         return self._process_list_from_configparser('discordbot', 'whitelisted_bots')
 
