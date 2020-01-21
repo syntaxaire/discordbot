@@ -24,8 +24,8 @@ class ButtBot:
         self.test_environment = test_environment
         self.stats = stat_module
         self.timer_module = butt_timeout.Timeout(self.config)
-        self.db = Db(db_, db_user, db_pass, test_environment)
         if bool(self.config.get('vacuum', 'enabled')):
+            self.db = Db(self.config.get_db())
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.DiscordComms()
         self.phrase_weights = phrase_weights
@@ -69,7 +69,8 @@ class ButtBot:
             self.check_stored_reactions()
 
     def configure_buttbot_instance(self):
-        self.config.set_plain_language_name(self.discordBot.get_server(507477640375042049))
+        pass
+        #self.config.set_plain_language_name(self.discordBot.get_server(507477640375042049))
 
     # noinspection PyUnusedLocal
     async def do_leave(self, message, arguments):

@@ -39,7 +39,7 @@ class ButtConfig:
         self.save_config()
 
     def get_db(self):
-        return self._process_list_from_configparser('database', 'database')
+        return self._process_list_from_configparser('vacuum', 'database')[0]
 
     def get_all_allowed_bots(self):
         return self._process_list_from_configparser('discordbot', 'whitelisted_bots')
