@@ -44,14 +44,11 @@ class Vacuum:
             return "who am i looking for?"
 
     def do_playtime(self, player):
-        try:
-            if player:
-                returnz = self.playtime_insult(player)
-                if returnz:
-                    return returnz
-            else:
-                return self.playtime_global()
-        except IndexError:
+        if player:
+            returnz = self.playtime_insult(player)
+            if returnz:
+                return returnz
+        else:
             return self.playtime_global()
 
     def do_howchies(self, message):
@@ -80,13 +77,10 @@ class Vacuum:
     def playtime_global(self):
         players = self.db.do_query(
             "select abs(sum(timedelta)) as seconds, count(timedelta)"
-            " as sessions, player from progress_playertracker_v2 group by player")
+            " as sessions, player from progress_playertracker_v2")
         self.db.close()
-        total_seconds = 0
-        total_sessions = 0
-        for p in players:
-            total_seconds = total_seconds + int(p['seconds'])
-            total_sessions = total_sessions + p['sessions']
+        total_seconds = players[0][0]
+        total_sessions = players[0][1]
         days, remainder = divmod(total_seconds, 86400)
         hours, remainder = divmod(remainder, 3600)
         return ("These fucking nerds have played %s days, %s hours worth of meincraft over %s sessions" % (
@@ -95,15 +89,17 @@ class Vacuum:
     def playtime_single(self, player):
         time = self.db.do_query(
             "select sum(timedelta) as seconds, count(timedelta) as"
-            " sessions from progress_playertracker_v2 where player=%s",
-            player)
+            " sessions from progress_playertracker_v2 where player=?",
+            (player,))
         self.db.close()
-        return [time[0]['seconds'], time[0]['sessions']]
+        print("TIME: %s" % time)
+        return [time[0][0], time[0][1]]
 
     def playtime_insult(self, player):
         a = self.playtime_single(player)
         totaltime = a[0]
         sessions = a[1]
+        print("totaltime: %s and sessions: %s" % (str(totaltime), str(sessions)))
         if not totaltime == 0:
             m, s = divmod(totaltime, 60)
             h, m = divmod(m, 60)
@@ -132,6 +128,20 @@ class Vacuum:
                 pl = data['players']
                 players = []
                 for p in pl:
+                    #tracking module data collection
+                    self.db.do_insert("INSERT INTO `progress_NSA_module`"
+                                      "(`datetime`, `player`, `dimension`, `x`, `y`, `z`) "
+                                      "VALUES (?, ?, ?, ?, ?, ?)",
+                                      (
+                                          datetime.datetime.utcnow(),
+                                          p['name'],
+                                          p['world'],
+                                          p['x'],
+                                          p['y'],
+                                          p['z']
+                                      )
+                                      )
+                    #end tracking module
                     p = p['name']
                     players.append(p)
                     # we start by checking to see if the player is currently active
@@ -188,7 +198,7 @@ class Vacuum:
 
     def playtime_player_record(self, player, deltatime):
         print("going to do query: user is %s and timedetla is %s" % (player, deltatime))
-        self.db.do_insert("INSERT into `progress_playertracker_v2` (`player`,`timedelta`,`datetime`) values (%s,%s,%s)",
+        self.db.do_insert("INSERT into `progress_playertracker_v2` (`player`,`timedelta`,`datetime`) values (?,?,?)",
                           (player, deltatime, datetime.datetime.utcnow()))
         self.db.close()
 
@@ -226,10 +236,11 @@ class Vacuum:
             return 0
 
     def deaths_per_hour_current_session(self, player):
+        #todo: update for new db
         session_start = self.playtime_player_started_current_session(player)
         played_this_session_hours = self.playtime_current_session_timedelta(player) / 60 / 60
         deaths_this_session = self.db.do_query("SELECT count(player) as deaths FROM `progress_deaths` WHERE"
-                                               " player = %s and datetime > %s", (player, session_start))[0]['deaths']
+                                               " player = ? and datetime > ?", (player, session_start))[0]['deaths']
         return deaths_this_session / played_this_session_hours
 
     def playtime_serialize(self):
@@ -248,7 +259,7 @@ class Vacuum:
 
     def lastseen(self, player):
         lastseen = self.db.do_query(
-            "select datetime from progress_playertracker_v2 where player=%s order by datetime desc limit 1", player)
+            "select datetime from progress_playertracker_v2 where player=? order by datetime desc limit 1", (player,))
         self.db.close()
         try:
             lastseen = lastseen[0]['datetime']
@@ -268,9 +279,9 @@ class Vacuum:
     def deathsperhour(self, player):
         dph = self.db.do_query(
             "select T.player, COALESCE(D.deaths, 0) / (sum(T.timedelta)/60/60) as deaths_per_hour FROM "
-            "ligyptto_minecraft.progress_playertracker_v2 as T left join (SELECT count(D.player) as deaths, D.player"
-            " from ligyptto_minecraft.progress_deaths D where player=%s GROUP BY D.player) D"
-            " ON T.player = D.player where T.player=%s group by T.player", (player, player))
+            "progress_playertracker_v2 as T left join (SELECT count(D.player) as deaths, D.player"
+            " from progress_deaths D where player=? GROUP BY D.player) D"
+            " ON T.player = D.player where T.player=? group by T.player", (player, player))
         self.db.close()
 
         try:
@@ -286,7 +297,9 @@ class Vacuum:
                 else:
                     insult = "you should try harder"
                 try:
-                    dph_session = int(self.deaths_per_hour_current_session(player))
+                    dph_session=0
+                    #TODO: revert on full db changeover
+                    #dph_session = int(self.deaths_per_hour_current_session(player))
                 except ZeroDivisionError:
                     #no deaths on current session
                     dph_session = 0
@@ -315,12 +328,13 @@ class Vacuum:
     def deathsperhour_list(self):
         dph = self.db.do_query(
             "select T.player, COALESCE(D.deaths, 0) / (sum(T.timedelta) / 60 / 60) as deaths_per_hour"
-            "FROM ligyptto_minecraft.progress_playertracker_v2 as T left join(SELECT count(D.player) as deaths, "
-            "D.player from ligyptto_minecraft.progress_deaths D GROUP BY D.player) D ON T.player = D.player group by"
+            "FROM progress_playertracker_v2 as T left join(SELECT count(D.player) as deaths, "
+            "D.player from progress_deaths D GROUP BY D.player) D ON T.player = D.player group by"
             "T.player ORDER BY deaths_per_hour DESC LIMIT 10"
         )
         if dph:
-            return self.sort(dph, 'player', 'deaths_per_hour')
+            return self.sort(dph, 0, 1)
+
 
     def get_player_coords(self, player):
         try:
@@ -352,13 +366,13 @@ class Vacuum:
         try:
             self.db.do_insert(
                 "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`)"
-                "VALUES(%s, %s, %s, %s, %s, %s, %s);",
+                "VALUES(?, ?, ?, ?, ?, ?, ?);",
                 (m[1], dmsg, coords['world'], coords['x'], coords['y'], coords['z'], datetime.datetime.utcnow()))
         except TypeError:
             # catch this error, something that i dont believe should be possible with how this is set up but?????
             self.db.do_insert(
                 "INSERT INTO `progress_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`)"
-                "VALUES(%s, %s, %s, %s, %s, %s, %s);",
+                "VALUES(?, ?, ?, ?, ?, ?, ?);",
                 (m[1], dmsg, "Exception Handling", 0, 0, 0, datetime.datetime.utcnow()))
         self.db.close()
 
@@ -369,29 +383,29 @@ class Vacuum:
             '')
         self.db.close()
         if result:
-            return self.sort(result, 'player', 'count')
+            return self.sort(result, 0, 1)
         else:
             pass
 
     def howchies_profile(self, message):
         result = self.db.do_query(
-            "SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (%s)"
+            "SELECT player, count(*) as `count` FROM `progress_deaths` where match(message) against (?)"
             "GROUP BY player ORDER by count DESC",
-            message)
+            (message,))
         self.db.close()
         if result:
-            return self.sort(result, 'player', 'count')
+            return self.sort(result, 0, 1)
         else:
             return 'No deaths recorded'
 
     def ouchies_profile(self, player):
         result = self.db.do_query(
-            "SELECT message,count(*) as `count` FROM `progress_deaths` WHERE player=%s"
+            "SELECT message,count(*) as `count` FROM `progress_deaths` WHERE player=?"
             " GROUP BY message ORDER BY count DESC",
-            player)
+            (player,))
         self.db.close()
         if result:
-            return self.sort(result, 'message', 'count')
+            return self.sort(result, 0, 1)
         else:
             return 'No deaths recorded'
 
@@ -402,15 +416,15 @@ class Vacuum:
             '')
         self.db.close()
         if result:
-            return self.sort(result, 'message', 'count')
+            return self.sort(result, 0, 1)
         else:
             pass
 
     def have_we_seen_player(self, player):
         current_server_result = self.db.do_query(
-            "select count(datetime) from progress_playertracker_v2 where player=%s", player)
+            "select count(datetime) from progress_playertracker_v2 where player=?", (player,))
         previous_server_result = self.db.do_query(
-            "select count(datetime) from progress_playertracker_v2_old where player=%s", player)
+            "select count(datetime) from progress_playertracker_v2_old where player=?", (player,))
         self.db.close()
         if current_server_result[0]['count(datetime)'] == 0:
             # new player
