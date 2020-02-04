@@ -10,7 +10,7 @@ class Db:
 
     def build(self):
         try:
-            self.connection = pymysql.connect(host='fartcannon.com', user=self.user, password=self.passw,
+            self.connection = pymysql.connect(host='127.0.0.1', user=self.user, password=self.passw,
                                               db=self._db, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
         except pymysql.err.OperationalError:
             if self.test_environment:
