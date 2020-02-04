@@ -24,8 +24,8 @@ class ButtBot:
         self.test_environment = test_environment
         self.stats = stat_module
         self.timer_module = butt_timeout.Timeout(self.config)
+        self.db = Db(db_, db_user, db_pass, test_environment)
         if bool(self.config.get('vacuum', 'enabled')):
-            self.db = Db(self.config.get_db())
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.DiscordComms()
         self.phrase_weights = phrase_weights

@@ -7,19 +7,21 @@ from butt_database import Db
 class ButtStatistics:
 
     def __init__(self, database, db_user, db_pass, test_environment):
-        self.database = Db(database, db_user, db_pass, test_environment)
+        #self.database = Db(database, db_user, db_pass, test_environment)
         self.dispositions = []
         self.messages = []
         self.disposition_load()
         self.message_load()
 
     def serialize_all_stats_to_disk(self):
-        self.message_serialize()
-        self.disposition_serialize()
+        pass
+        #self.message_serialize()
+        #self.disposition_serialize()
 
     def send_stats_to_db(self):
-        self._dispositions_build_insert_query()
-        self._messages_build_insert_query()
+        pass
+        #self._dispositions_build_insert_query()
+        #self._messages_build_insert_query()
 
     def _dispositions_build_insert_query(self):
         query = 'INSERT into dispositions (`date_time`, ' \
