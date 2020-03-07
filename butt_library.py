@@ -19,16 +19,16 @@ def is_word_in_text(word, text):
     return bool(matches)
 
 
-def strip_IRI(text):
-    words = text.split(" ")
-    for w in words:
+def strip_IRI(sentence: str) -> str:
+    text = sentence.split(" ")
+    for w in text:
         try:
             if parse(w, rule="IRI"):
-                words.remove(w)
+                text.remove(w)
         except ValueError:
             # we expect this to happen when the text is not an IRI, so we can ignore this
             pass
-    return " ".join(words)
+    return " ".join(text)
 
 
 def detect_code_block(text):
