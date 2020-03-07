@@ -1,32 +1,49 @@
 from butt_chunk import ButtChunk
+from FinalizedButtChunk import FinalizedButtChunk
 
 
 class ButtClassifier:
-    def __init__(self, message, phraseweights):
-        self.message = message
+    def __init__(self, phraseweights, nlp):
+        self.message = ""
         self.weights = phraseweights
+        self._starting_chunks = []
+        self._chunks_to_investigate = []
+        self._nouns = []
+        self._nouns_previous_word_tag = []
+        self._vectorized_weight = []
+        self.nouns = []
+        self._spacy = nlp
+        self._similarities = {}
+
+    def classify_butts(self, message):
+        self.message = message
         self._starting_chunks = message.noun_chunks
         self._chunks_to_investigate = []
-        self.classify_butts()
         self._nouns = []
         self._nouns_previous_word_tag = []
         self._vectorized_weight = []
         self.nouns = []
-
-    def classify_butts(self):
-        self._nouns = []
-        self._nouns_previous_word_tag = []
-        self._vectorized_weight = []
+        self._similarities = {}
         self._extract_nouns_from_chunker()
-        self.nouns = []
-        if self._nouns:
-            for i in range(len(self._nouns)):
-                weight = self._get_word_weight(self._nouns[i], self._nouns_previous_word_tag[i])
-                self.nouns.append((self._nouns[i], weight))
 
-    def _process_nouns(self):
-        print("LOOK HERE: %s" % self._nouns)
-        print("previous word tag is %s" % self._nouns_previous_word_tag)
+        if self._nouns:
+            i = 0
+            for x in self._nouns:
+                weight = self._get_word_weight(self._nouns[i], self._nouns_previous_word_tag[i])
+                self.nouns.append(FinalizedButtChunk(self._nouns[i], weight, self._nouns_previous_word_tag[i],
+                                  self._similarities[x]))
+                i += 1
+
+    def get_nouns(self):
+        return self.nouns
+
+    def get_pretty_noun_format(self):
+        tags = []
+        nouns = []
+        for a in self._chunks_to_investigate:
+            tags.append(a.tag)
+            nouns.append(a.text)
+        return "%s (%s)" % (nouns, tags)
 
     def _extract_nouns_from_chunker(self):
         # retrieve the nouns from the chunker, and nuke the bad chunks found.
@@ -41,15 +58,12 @@ class ButtClassifier:
                     i = 0
                     for x in a.tag:
                         if x in noun_tags:
-                            self._nouns.append(a.text[i])
+                            self._nouns.append(a.original_spacy_object[i])
                             try:
                                 self._nouns_previous_word_tag.append(a.tag[i - 1])
                             except IndexError:
                                 self._nouns_previous_word_tag.append(None)
                         i += 1
-                else:
-                    if a.text and a.tag:
-                        print("no good: %s has tag %s" % (a.text, a.tag))
             else:
                 if a.tag in noun_tags:
                     # chunk word count is less than 1. we need to account for this for some phrases
@@ -58,20 +72,22 @@ class ButtClassifier:
     def _butt_vector_analyser(self, word):
         """check noun vector similarity to spatially funny objects/words/concepts."""
         # TODO: consider reducing weight value for not funny words/objects/concepts
-        spatially_funny_objects = ["animal", "people", "structure", "machine", "car"]
-        not_funny_objects = ["time", ]
-        starting_weight = self.weights.return_weight(word)
+        spatially_funny_objects = self._spacy("animal people structure machine car")
+        #not_funny_objects = ["time", ]
+        starting_weight = self.weights.return_weight(word.text)
         working_weight = starting_weight
+        self._similarities[word] = []
         for s in spatially_funny_objects:
-            similarity = word.similarity(s)
+            similarity = s.similarity(word)
             if similarity > .4:
+                self._similarities[word].append("%s: %f" % (s, similarity))
                 working_weight = working_weight + starting_weight * similarity
         return working_weight
 
     def _get_word_weight(self, word, previous_tag):
         """combine vector analysis with posessive part-of-speeh increase if the sentence has it"""
         weight = self._butt_vector_analyser(word)
-        posessive_POS = ["PRP$"]
-        if previous_tag in posessive_POS:
-            weight = weight * 25000
+        posessive_pos_tag = ["PRP$"]
+        if previous_tag in posessive_pos_tag:
+            weight = weight * 25
         return weight

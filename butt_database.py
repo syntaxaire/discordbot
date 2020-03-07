@@ -1,4 +1,5 @@
-import pymysql.cursors
+import MySQLdb
+from MySQLdb.cursors import DictCursor
 
 
 class Db:
@@ -9,16 +10,8 @@ class Db:
         self.test_environment = test_environment
 
     def build(self):
-        try:
-            self.connection = pymysql.connect(host='fartcannon.com', user=self.user, password=self.passw,
-                                              db=self._db, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
-        except pymysql.err.OperationalError:
-            if self.test_environment:
-                #bot was loaded with test environment enabled, ignore this error
-                raise
-            else:
-                #TODO: handle connection recovery when we can't connect.
-                raise
+        self.connection = MySQLdb.connect(host='127.0.0.1', user=self.user, passwd=self.passw, db=self._db,
+                                          cursorclass=DictCursor)
 
     def do_query(self, query, args=''):
         self.build()

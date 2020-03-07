@@ -1,45 +1,43 @@
-import json
 import time
+from butt_database import Db
 
 
 class PhraseWeights:
-    def __init__(self):
+    def __init__(self, db_, db_user, db_pass, test_environment):
         # weighted phrases
-        self.phrases = self.load_from_file()
         # butted messages we need to store
         self.messages = []
+        self.db = Db(db_, db_user, db_pass, test_environment)
 
-    @staticmethod
-    def load_from_file():
-        try:
-            with open('phrase_weight_list.txt') as f:
-                return json.load(f)
-        except IOError:
-            pass
-
-    def save_to_file(self):
-        with open('phrase_weight_list.txt', 'w') as f:
-            json.dump(self.phrases, f, ensure_ascii=False, default=str)
-
-    def add(self, phrase, weight):
-        self.phrases[phrase.lower()] = weight
+    def add(self, word, weight):
+        self.db.do_insert("INSERT into phraseweights (word, weight) VALUES (%s, %s)", (word, weight))
 
     def adjust_weight(self, phrase, weight):
-        try:
-            self.phrases[phrase.lower()] = self.phrases[phrase.lower()] + weight
-            if self.phrases[phrase.lower()] <= 0:
-                # minimum of 1
-                self.phrases[phrase.lower()] = 1
-        except KeyError:
-            # no stored weight for this phrase so we will add it
-            self.add(phrase, 1000 + weight)
+        self.db.do_insert(
+            "INSERT into phraseweights (word, weight) VALUES (%s, %s) ON DUPLICATE KEY UPDATE weight = weight + %s",
+            (phrase, weight, weight))
 
-    def return_weight(self, phrase_to_search):
+    def return_weight(self, phrase):
+        # TODO: remove when we no longer need backwards compatibility with existing NLTK implementation
         try:
-            return self.phrases[phrase_to_search.lower()]
-        except KeyError:
-            # no stored weight for this phrase so we will use the default weight
+            phrase_ = phrase.split(" ")
+            if len(phrase_) > 1:
+                phrase = phrase_[1]
+        except AttributeError:
+            # single word sent
+            pass
+        # end delete this
+        try:
+            db_weight = self.db.do_query("select weight from phraseweights where word=%s", (phrase,))[0]["weight"]
+        except IndexError:
+            # not in db
+            db_weight = 1000
+        if not db_weight:
             return 1000
+        elif db_weight < 0:
+            return 1
+        else:
+            return db_weight
 
     @staticmethod
     def process_reactions(reactions):
@@ -54,7 +52,7 @@ class PhraseWeights:
                 else:
                     upvotes = upvotes + items.count
             except AttributeError:
-                #items.emoji.id not defined
+                # items.emoji.id not defined
                 if items.emoji in negativeemojis:
                     downvotes = downvotes + items.count
                 else:
@@ -69,12 +67,3 @@ class PhraseWeights:
 
     def remove_message(self, _time, guid, trigger_word, noun):
         self.messages.remove([_time, guid, trigger_word, noun])
-
-    def get_word_average_weight(self, word_to_search):
-        weights = 0
-        occurrences = 0
-        for word, weight in self.phrases.items():
-            if word_to_search in word:
-                weights += weight
-                occurrences += 1
-        return occurrences/weights

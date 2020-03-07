@@ -7,11 +7,8 @@ class ButtChunk:
         self.tag = []
         self.lemma = []
         self.shape = []
-        self.vector = []
+        self.original_spacy_object = []
         self.build_chunk_word_list(chunk)
-
-    def __repr__(self):
-        return "%s (%s)" % (self.text, self.tag)
 
     def build_chunk_word_list(self, chunk):
         characters_to_strip = ['"', "'"]
@@ -32,6 +29,6 @@ class ButtChunk:
                         self.tag.append(self._original_sentence[i].tag_)
                         self.lemma.append(self._original_sentence[i].lemma_)
                         self.shape.append(self._original_sentence[i].shape_)
-                        self.vector.append(self._original_sentence[i].vector)
+                        self.original_spacy_object.append(self._original_sentence[i])
             except IndexError:
                 pass
