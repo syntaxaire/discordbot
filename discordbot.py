@@ -9,7 +9,7 @@ from buttbot import ButtBot
 from config import *
 from phraseweights import PhraseWeights
 
-weights = PhraseWeights()
+weights = PhraseWeights(discordbot_db, db_secrets[0], db_secrets[1], test_environment)
 stat_module = ButtStatistics(stat_db, db_secrets[0], db_secrets[1], test_environment)
 
 client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
@@ -82,28 +82,22 @@ async def on_message(message):
             send_to_butt_instance = command_channels[message.guild.id].command_dispatch
             await send_to_butt_instance(message)
             return
+    except KeyError:
+        # command sent from a channel that we dont have a bot loaded for
+        pass
 
     try:
         send_to_butt_instance = command_channels[message.guild.id].chat_dispatch
         await send_to_butt_instance(message)
     except KeyError:
-        # no chat dispatcher for this so we are going to default to the 💩💩 channel
-        # send_to_butt_instance = default_channel.chat_dispatch
+        # command sent from a channel that we dont have a bot loaded for
         pass
-
-
-async def serialize_stats():
-    await client.wait_until_ready()
-    await asyncio.sleep(5)
-    while not client.is_closed():
-        stat_module.serialize_all_stats_to_disk()
-        await asyncio.sleep(120)
 
 
 async def send_stats_to_db():
     await client.wait_until_ready()
     await asyncio.sleep(5)
-    while not client.is_closed():
+    while not client.is_closed:
         stat_module.send_stats_to_db()
         await asyncio.sleep(300)
 
@@ -111,15 +105,13 @@ async def send_stats_to_db():
 async def serialize_weights():
     await client.wait_until_ready()
     await asyncio.sleep(5)
-    while not client.is_closed():
-        weights.save_to_file()
+    while not client.is_closed:
         if test_environment:
             await asyncio.sleep(10)
         else:
             await asyncio.sleep(300)
 
 
-client.loop.create_task(serialize_stats())
 client.loop.create_task(send_stats_to_db())
 client.loop.create_task(serialize_weights())
 client.run(secretkey)
