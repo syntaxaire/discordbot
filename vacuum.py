@@ -96,7 +96,7 @@ class Vacuum:
         time = self.db.do_query(
             "select sum(timedelta) as seconds, count(timedelta) as"
             " sessions from progress_playertracker_v2 where player=%s",
-            player)
+            (player,))
         self.db.close()
         return [time[0]['seconds'], time[0]['sessions']]
 
