@@ -9,13 +9,20 @@ class PhraseWeights:
         self.messages = []
         self.db = Db(db_, db_user, db_pass, test_environment)
 
-    def add(self, word, weight):
-        self.db.do_insert("INSERT into phraseweights (word, weight) VALUES (%s, %s)", (word, weight))
-
-    def adjust_weight(self, phrase, weight):
-        self.db.do_insert(
-            "INSERT into phraseweights (word, weight) VALUES (%s, %s) ON DUPLICATE KEY UPDATE weight = weight + %s",
-            (phrase, weight, weight))
+    def adjust_weight(self, word, weight):
+        if weight == 0:
+            # no further processing.
+            print("word %s: not adjusting weight since voted weight is %d" %
+                  (word, weight)
+                  )
+            pass
+        else:
+            db_word_weight = self.return_weight(word)
+            weight = db_word_weight + weight
+            print("word %s is getting weight %d adjusted to %d" % (word, db_word_weight, weight))
+            self.db.do_insert(
+                "INSERT into phraseweights (word, weight) VALUES (%s, %s) ON DUPLICATE KEY UPDATE weight = weight + %s",
+                (word, weight, weight))
 
     def return_weight(self, phrase):
         # TODO: remove when we no longer need backwards compatibility with existing NLTK implementation
@@ -45,25 +52,33 @@ class PhraseWeights:
         negative_emoji_guid = ['504537001845063680']
         downvotes = 0
         upvotes = 0
+        print("processing reactions")
+        print(reactions)
         for items in reactions:
+            print("new reaction")
+            print(items.emoji)
             try:
                 if items.emoji in negativeemojis or items.emoji.id in negative_emoji_guid:
+                    print("downdoot")
                     downvotes = downvotes + items.count
                 else:
+                    print("updoot")
                     upvotes = upvotes + items.count
             except AttributeError:
                 # items.emoji.id not defined
                 if items.emoji in negativeemojis:
+                    print("downdoot and also it blew up")
                     downvotes = downvotes + items.count
                 else:
+                    print("updoot and also it blew up")
                     upvotes = upvotes + items.count
         return (upvotes - downvotes) * 20  # set weight change to 20 for each vote
 
-    def add_message(self, guid, noun):
-        self.messages.append([time.time(), guid, noun])
+    def add_message(self, message, noun):
+        self.messages.append([time.time(), message, noun])
 
     def get_messages(self):
         return self.messages
 
-    def remove_message(self, _time, guid, noun):
-        self.messages.remove([_time, guid, noun])
+    def remove_message(self, _time, message, noun):
+        self.messages.remove([_time, message, noun])

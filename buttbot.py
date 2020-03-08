@@ -3,8 +3,6 @@ import random
 import time
 import datetime
 
-from discord.utils import get
-
 import butt_config
 import butt_timeout
 import discord_comms
@@ -66,7 +64,7 @@ class ButtBot:
                 await asyncio.sleep(10)
             else:
                 await asyncio.sleep(120)
-            self.check_stored_reactions()
+            await self.check_stored_reactions()
 
     def configure_buttbot_instance(self):
         pass
@@ -277,22 +275,24 @@ class ButtBot:
         else:
             return False
 
-    def process_cached_reaction_message(self, guid, trigger_word, noun):
+    async def process_cached_reaction_message(self, message, noun):
+        #i know this looks dumb as hell but trust me on this one
+        message = await message.channel.fetch_message(message.id)
         if self.test_environment:
-            print("running on id %s" % guid)
-        phrase = "%s %s" % (trigger_word, noun)
-        msg_ = get(self.discordBot.messages, id=guid)
-        votes = self.phrase_weights.process_reactions(msg_.reactions)
-        self.phrase_weights.adjust_weight(phrase, votes)
+            print("running on id %s" % message.id)
+        print(message.reactions)
+        votes = self.phrase_weights.process_reactions(message.reactions)
+        print("votes tallied to %d" % votes)
+        self.phrase_weights.adjust_weight(noun, votes)
 
-    def check_stored_reactions(self):
+    async def check_stored_reactions(self):
         for items in self.phrase_weights.get_messages():
             check_timer = 300
             if self.test_environment:
                 check_timer = 15
             if time.time() - items[0] > check_timer:
-                self.process_cached_reaction_message(items[1], items[2], items[3])
-                self.phrase_weights.remove_message(items[0], items[1], items[2], items[3])
+                await self.process_cached_reaction_message(items[1], items[2])
+                self.phrase_weights.remove_message(items[0], items[1], items[2])
 
     async def _process_rip_message(self, message):
         if (str(message.author) == 'Progress#6064' and message.content[:4] == 'RIP:') or (
@@ -371,7 +371,7 @@ class ButtBot:
                         if self.shitpost.successful_butting():
                             # passes butt check
                             msg = await self.docomms(self.shitpost.butted_sentence, message.channel)
-                            self.phrase_weights.add_message(msg.id, self.shitpost.get_noun())
+                            self.phrase_weights.add_message(message, self.shitpost.get_noun())
             else:
                 if self.test_environment:
                     # send to shitpost module for testing.
@@ -382,3 +382,4 @@ class ButtBot:
                         # blow this one up
                         if self.shitpost.successful_butting():
                             msg = await self.docomms(self.shitpost.butted_sentence, message.channel, True)
+                            self.phrase_weights.add_message(msg, self.shitpost.get_noun())
