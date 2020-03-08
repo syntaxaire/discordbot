@@ -16,7 +16,7 @@ from wordreplacer import WordReplacer
 
 
 class ButtBot:
-    def __init__(self, bot_object, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment):
+    def __init__(self, bot_object, conf, db_, db_user, db_pass, stat_module, phrase_weights, test_environment, nlp_):
         self.discordBot = bot_object
         self.config = butt_config.ButtConfig(conf)
         if not self.config.get_plain_language_name():
@@ -29,7 +29,7 @@ class ButtBot:
             self.vacuum = Vacuum(self.db)
         self.comm = discord_comms.DiscordComms()
         self.phrase_weights = phrase_weights
-        self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment)
+        self.shitpost = WordReplacer(self.config, self.stats, self.timer_module, phrase_weights, test_environment, nlp_)
         self.mojang = mj.Mojang()
         self._played_time_loop_last_ran = datetime.datetime.utcnow()
         self.discordBot.loop.create_task(self.butt_message_processing())

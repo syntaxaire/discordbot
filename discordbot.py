@@ -1,4 +1,5 @@
 import asyncio
+import spacy
 from shutil import copyfile
 
 from discord.ext.commands import Bot
@@ -16,28 +17,28 @@ client = Bot(description="a bot for farts", command_prefix="", pm_help=False)
 
 channel_configs = butt_library.load_all_config_files()  # global that will hold channel IDs that have configs
 command_channels = {}
-
+nlp_ = spacy.load('en_core_web_lg')
 
 @client.event
 async def on_ready():
     print('Use this link to invite {}:'.format(client.user.name))
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     print('--------')
-    print('You are running FartBot V4.3.00')
+    print('You are running FartBot V6.0.00')
     print('Created by Poop Poop')
     print('--------')
     if test_environment:
         command_channels[408168696834424832] = ButtBot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
-                                                       stat_module, weights, True)
+                                                       stat_module, weights, True, nlp_)
         command_channels[199981748098957312] = ButtBot(client, "DPT_document.ini", db_, db_secrets[0], db_secrets[1],
-                                                       stat_module, weights, True)
+                                                       stat_module, weights, True, nlp_)
         command_channels[154337182717444096] = ButtBot(client, "development.ini", db_, db_secrets[0], db_secrets[1],
-                                                       stat_module, weights, True)
+                                                       stat_module, weights, True, nlp_)
     else:
         for i in channel_configs:
             command_channels[int(i.split("/")[1][:-4])] = ButtBot(client, i, db_, db_secrets[0], db_secrets[1],
                                                                   stat_module,
-                                                                  weights, False)
+                                                                  weights, False, nlp_)
             print("started on guild GUID %s" % i.split("/")[1][:-4])
 
 

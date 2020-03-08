@@ -9,7 +9,7 @@ from ButtClassifier import ButtClassifier
 
 class WordReplacer:
 
-    def __init__(self, config, stat_module, timer_module, phrase_weights, test_environment):
+    def __init__(self, config, stat_module, timer_module, phrase_weights, test_environment, nlp_):
         self.__config = config
         self.__timer_module = timer_module
         self.__stats = stat_module
@@ -35,7 +35,7 @@ class WordReplacer:
         self._spacy_nouns = []
         self._message_author = ""
         self._spacy_tagged_sentence = ""
-        self.nlp = spacy.load('en_core_web_lg')
+        self.nlp = nlp_
         self.butt_classifier = ButtClassifier(self.__phraseweights, self.nlp)
         self._spacy_finalized_nouns = []
         self._spacy_finalized_weights = []
