@@ -87,6 +87,8 @@ class WordReplacer:
     ################################################################################
     #                               end commands                                   #
     ################################################################################
+    def get_noun(self):
+        return self._selected_noun_pair_to_butt.text
 
     def __save(self):
         with open('wordlist.txt', 'w') as f:

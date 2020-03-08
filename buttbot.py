@@ -55,7 +55,7 @@ class ButtBot:
             d = self._played_time_loop_last_ran - datetime.datetime.utcnow()
             d = abs(int(d.total_seconds()))
             if d > 30:
-                #has not run in 30 or more seconds
+                # has not run in 30 or more seconds
                 self.do_info_log("I'm a broken piece of shit and had to reboot the background task")
                 self.discordBot.loop.create_task(self.my_background_task())
 
@@ -70,7 +70,7 @@ class ButtBot:
 
     def configure_buttbot_instance(self):
         pass
-        #self.config.set_plain_language_name(self.discordBot.get_server(507477640375042049))
+        # self.config.set_plain_language_name(self.discordBot.get_server(507477640375042049))
 
     # noinspection PyUnusedLocal
     async def do_leave(self, message, arguments):
@@ -178,7 +178,7 @@ class ButtBot:
         return module
 
     async def command_dispatch(self, message):
-        self.is_played_time_loop_running() #garbage hack
+        self.is_played_time_loop_running()  # garbage hack
         if not self.should_i_reply_to_user(message):
             # user is either a bot not on whitelist or is a user on the ignore list
             return
@@ -214,8 +214,8 @@ class ButtBot:
                 # todo: maybe default return option here too?
                 pass
 
-    async def docomms(self, message, channel):
-        if self.allowed_in_channel(channel):
+    async def docomms(self, message, channel, bypass_for_test=False):
+        if self.allowed_in_channel(channel) or bypass_for_test is True:
             msg = await self.comm.do_send_message(channel, message)
             return msg  # returns the message object of the message that was sent to discord
 
@@ -347,7 +347,7 @@ class ButtBot:
         # here's where im going to evaluate all other sentences for shitposting
         if is_word_in_text("left the game", message.content) or is_word_in_text("joined the game", message.content):
             # this is a join or part message and we are going to ignore it
-            #welcome to progress
+            # welcome to progress
             if message.author.id == 249966240787988480 and is_word_in_text("joined the game", message.content):
                 player = message.content.split(" ")[0]
                 hwsp = self.vacuum.have_we_seen_player(player)
@@ -371,10 +371,14 @@ class ButtBot:
                         if self.shitpost.successful_butting():
                             # passes butt check
                             msg = await self.docomms(self.shitpost.butted_sentence, message.channel)
-                            self.phrase_weights.add_message(msg.id, self.shitpost.get_trigger_word(),
-                                                            self.shitpost.get_noun())
+                            self.phrase_weights.add_message(msg.id, self.shitpost.get_noun())
             else:
                 if self.test_environment:
                     # send to shitpost module for testing.
+                    # we don't want to talk at all except in my test channel
                     self.shitpost.perform_text_to_butt(message)
                     self.shitpost.print_debug_message()
+                    if message.channel.id == 435348744016494592:
+                        # blow this one up
+                        if self.shitpost.successful_butting():
+                            msg = await self.docomms(self.shitpost.butted_sentence, message.channel, True)

@@ -59,11 +59,11 @@ class PhraseWeights:
                     upvotes = upvotes + items.count
         return (upvotes - downvotes) * 20  # set weight change to 20 for each vote
 
-    def add_message(self, guid, trigger_word, noun):
-        self.messages.append([time.time(), guid, trigger_word, noun])
+    def add_message(self, guid, noun):
+        self.messages.append([time.time(), guid, noun])
 
     def get_messages(self):
         return self.messages
 
-    def remove_message(self, _time, guid, trigger_word, noun):
-        self.messages.remove([_time, guid, trigger_word, noun])
+    def remove_message(self, _time, guid, noun):
+        self.messages.remove([_time, guid, noun])
