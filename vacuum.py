@@ -420,9 +420,9 @@ class Vacuum:
 
     def have_we_seen_player(self, player):
         current_server_result = self.db.do_query(
-            "select count(datetime) from progress_playertracker_v2 where player=%s", player)
+            "select count(datetime) from progress_playertracker_v2 where player=%s", (player,))
         previous_server_result = self.db.do_query(
-            "select count(datetime) from progress_playertracker_v2_old where player=%s", player)
+            "select count(datetime) from progress_playertracker_v2_old where player=%s", (player,))
         self.db.close()
         if current_server_result[0]['count(datetime)'] == 0:
             # new player
