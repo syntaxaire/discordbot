@@ -167,9 +167,10 @@ class Vacuum:
                                           p['z']
                                       )
                                       )
-                    players.append(p['name'])
+                    if not p['name'] in players:
+                        players.append(p['name'])
                     # we start by checking to see if the player is currently active
-                    if self.playtime_player_active(p):
+                    if self.playtime_player_active(p['name']):
                         pass
                         # player was logged in, and is still logged in
                         # we do not need to do anything for this player at this time.
