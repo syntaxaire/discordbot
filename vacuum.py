@@ -147,12 +147,14 @@ class Vacuum:
         return deaths_this_session / played_this_session_hours
 
     def playtime_scraper(self):
+        print("running scraper")
         try:
             with urllib.request.urlopen(self.updateurl) as url:
                 data = json.loads(url.read().decode())
                 pl = data['players']
                 players = []
                 for p in pl:
+                    print("found player %s" % p['name'])
                     self.db.do_insert("INSERT INTO `progress_NSA_module`"
                                       "(`datetime`, `player`, `dimension`, `x`, `y`, `z`) "
                                       "VALUES (%s, %s, %s, %s, %s, %s)",
@@ -165,8 +167,7 @@ class Vacuum:
                                           p['z']
                                       )
                                       )
-                    p = p['name']
-                    players.append(p)
+                    players.append(p['name'])
                     # we start by checking to see if the player is currently active
                     if self.playtime_player_active(p):
                         pass
@@ -182,10 +183,12 @@ class Vacuum:
         except urllib.error.URLError:
             # minecraft server is offline and buttbot is still online
             self.playtime_player_saveall()
+            print("urllib.error.urlerror")
 
         except http.client.RemoteDisconnected:
             # we are going to save all data here too
             self.playtime_player_saveall()
+            print("http.client.remotedisconnected")
 
         finally:
             pass
