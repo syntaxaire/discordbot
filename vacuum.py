@@ -174,9 +174,9 @@ class Vacuum:
                         # player was logged in, and is still logged in
                         # we do not need to do anything for this player at this time.
                     else:
-                        print("adding player %s since they have logged in" % p)
+                        print("adding player %s since they have logged in" % p['name'])
                         # player was not logged in, but is logged in now.
-                        self.playtime_player_addplayer(p)
+                        self.playtime_player_addplayer(p['name'])
                 # now we are going to find players that have logged out since the last check
                 self.playtime_player_checkplayers(players)
 

@@ -43,13 +43,16 @@ class ButtBot:
 
     async def my_background_task(self):
         await self.discordBot.wait_until_ready()
+        print("starting scraper task")
         while not self.discordBot.is_closed():
             await asyncio.sleep(10)
+            print("scraping")
             self._played_time_loop_last_ran = datetime.datetime.utcnow()
             self.vacuum.playtime_scraper()
 
     def is_played_time_loop_running(self):
         if self.config.getboolean('vacuum', 'enabled') is True:
+            print("")
             d = self._played_time_loop_last_ran - datetime.datetime.utcnow()
             d = abs(int(d.total_seconds()))
             if d > 30:
