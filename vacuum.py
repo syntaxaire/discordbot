@@ -284,8 +284,8 @@ class Vacuum:
     def deathsperhour_list(self):
         dph = self.db.do_query(
             "select T.player, COALESCE(D.deaths, 0) / (sum(T.timedelta) / 60 / 60) as deaths_per_hour"
-            "FROM ligyptto_minecraft.progress_playertracker_v2 as T left join(SELECT count(D.player) as deaths, "
-            "D.player from ligyptto_minecraft.progress_deaths D GROUP BY D.player) D ON T.player = D.player group by"
+            "FROM progress.progress_playertracker_v2 as T left join(SELECT count(D.player) as deaths, "
+            "D.player from progress.progress_deaths D GROUP BY D.player) D ON T.player = D.player group by"
             "T.player ORDER BY deaths_per_hour DESC LIMIT 10"
         )
         if dph:
@@ -294,8 +294,8 @@ class Vacuum:
     def deathsperhour(self, player):
         dph = self.db.do_query(
             "select T.player, COALESCE(D.deaths, 0) / (sum(T.timedelta)/60/60) as deaths_per_hour FROM "
-            "ligyptto_minecraft.progress_playertracker_v2 as T left join (SELECT count(D.player) as deaths, D.player"
-            " from ligyptto_minecraft.progress_deaths D where player=%s GROUP BY D.player) D"
+            "progress.progress_playertracker_v2 as T left join (SELECT count(D.player) as deaths, D.player"
+            " from progress.progress_deaths D where player=%s GROUP BY D.player) D"
             " ON T.player = D.player where T.player=%s group by T.player", (player, player))
         self.db.close()
 
