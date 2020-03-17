@@ -404,7 +404,7 @@ class Vacuum:
         result = self.db.do_query(
             "SELECT message,count(*) as `count` FROM `progress_deaths` WHERE player=%s"
             " GROUP BY message ORDER BY count DESC",
-            player)
+            (player,))
         self.db.close()
         if result:
             return self.sort(result, 'message', 'count')
