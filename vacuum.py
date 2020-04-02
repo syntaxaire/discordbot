@@ -264,7 +264,7 @@ class Vacuum:
 
     def lastseen(self, player):
         lastseen = self.db.do_query(
-            "select datetime from progress_playertracker_v2 where player=%s order by datetime desc limit 1", player)
+            "select datetime from progress_playertracker_v2 where player=%s order by datetime desc limit 1", (player,))
         self.db.close()
         try:
             lastseen = lastseen[0]['datetime']
