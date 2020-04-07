@@ -279,7 +279,7 @@ class ButtBot:
             return False
 
     async def process_cached_reaction_message(self, message, noun):
-        #i know this looks dumb as hell but trust me on this one
+        # i know this looks dumb as hell but trust me on this one
         message = await message.channel.fetch_message(message.id)
         if self.test_environment:
             print("running on id %s" % message.id)
@@ -346,13 +346,32 @@ class ButtBot:
                 if self.timer_module.check_timeout('rsp_emoji', 'shitpost'):
                     await self.doreact(message, message.channel, random.choice(self.config.get_all_emojis()))
 
+    async def record_player_guid(self, player):
+        self.db.build()
+        players = self.db.do_query(
+            "select count(player_name) as c from progress.minecraft_players where player_name = %s",
+            (player,)
+        )
+        print("HEY: %s" % players[0]['c'])
+        if players[0]['c'] == 0:
+            # we dont see this player in the db, let's record the guid
+            self.db.do_insert("insert into progress.minecraft_players "
+                              "(player_name, player_guid)"
+                              "VALUES (%s, %s)",
+                              (player, self.mojang.mojang_user_to_uuid(player)))
+        else:
+            # we see this player name in the db, no need to record guid
+            pass
+        self.db.close()
+
     async def _process_all_other_messages(self, message):
         # here's where im going to evaluate all other sentences for shitposting
         if is_word_in_text("left the game", message.content) or is_word_in_text("joined the game", message.content):
+            player = message.content.split(" ")[0]
+            await self.record_player_guid(player)
             # this is a join or part message and we are going to ignore it
             # welcome to progress
             if message.author.id == 249966240787988480 and is_word_in_text("joined the game", message.content):
-                player = message.content.split(" ")[0]
                 hwsp = self.vacuum.have_we_seen_player(player)
                 if hwsp:
                     await self.docomms(hwsp, message.channel)
