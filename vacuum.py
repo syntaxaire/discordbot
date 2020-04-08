@@ -94,10 +94,10 @@ class Vacuum:
 
     def playtime_single(self, player):
         time = self.db.do_query(
-            "select sum(progress_playertracker_v2.timedelta) as seconds,"
-            "count(progress_playertracker_v2.timedelta) as sessions"
-            "from progress.progress_playertracker_v2 where player in"
-            "(select player_name from progress.minecraft_players"
+            "select sum(progress_playertracker_v2.timedelta) as seconds, "
+            "count(progress_playertracker_v2.timedelta) as sessions "
+            "from progress.progress_playertracker_v2 where player in "
+            "(select player_name from progress.minecraft_players "
             "where player_guid = (select player_guid as guid from progress.minecraft_players where player_name = %s))",
             (player,))
         self.db.close()
