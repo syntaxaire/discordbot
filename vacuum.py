@@ -75,9 +75,9 @@ class Vacuum:
         if len(names) == 0:
             return "I dont think i've ever seen that butt"
         elif len(names) == 1:
-            return "I've only seen this jerk as %s" % names
+            return "I've only seen this jerk as %s" % names[0]
         else:
-            return "I've seen this jerk as %s" % ", ".join(names)
+            return "I've seen this jerk play as %s" % ", ".join(names)
 
     ################################################################################
     #                               end commands                                   #
