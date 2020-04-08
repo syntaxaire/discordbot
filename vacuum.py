@@ -14,7 +14,7 @@ class Vacuum:
         self.playtime_load()
         self.db = db
         self.command = {'lastseen': 'vacuum', 'playtime': 'vacuum', 'howchies': 'vacuum', 'ouchies': 'vacuum',
-                        'deathsperhour': 'vacuum'}
+                        'deathsperhour': 'vacuum', 'alias': 'vacuum'}
         self.updateurl = ""
         self.config = ""
 
@@ -69,9 +69,28 @@ class Vacuum:
     def do_deathsperhour(self, message):
         return self.deathsperhour(message)
 
+    def do_alias(self, player):
+        names = self.player_alias(player)
+
+        if len(names) == 0:
+            return "I dont think i've ever seen that butt"
+        elif len(names) == 1:
+            return "I've only seen this jerk as %s" % names
+        else:
+            return "I've seen this jerk as %s" % ", ".join(names)
+
     ################################################################################
     #                               end commands                                   #
     ################################################################################
+    def player_alias(self, player):
+        self.db.build()
+        r = self.db.do_query("select player_name from minecraft_players where player_guid ="
+                             " (select player_guid as guid from minecraft_players where player_name = %s)", (player,))
+        names = []
+        for re in r:
+            names.append(re['player_name'])
+
+        return names
 
     def config(self, url, mode):
         self.updateurl = url
