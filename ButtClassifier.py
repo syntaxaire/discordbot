@@ -79,9 +79,9 @@ class ButtClassifier:
         self._similarities[word] = []
         for s in spatially_funny_objects:
             similarity = s.similarity(word)
-            if similarity > .4:
+            if similarity > .43:
                 self._similarities[word].append("%s: %f" % (s, similarity))
-                working_weight = working_weight + starting_weight * similarity
+                working_weight = int(working_weight + starting_weight * similarity)
         return working_weight
 
     def _get_word_weight(self, word, previous_tag):

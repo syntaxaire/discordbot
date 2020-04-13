@@ -352,7 +352,6 @@ class ButtBot:
             "select count(player_name) as c from progress.minecraft_players where player_name = %s",
             (player,)
         )
-        print("HEY: %s" % players[0]['c'])
         if players[0]['c'] == 0:
             # we dont see this player in the db, let's record the guid
             self.db.do_insert("insert into progress.minecraft_players "
