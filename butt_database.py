@@ -3,11 +3,10 @@ from MySQLdb.cursors import DictCursor
 
 
 class Db:
-    def __init__(self, _db, username, password, test_environment):
+    def __init__(self, _db, username, password, ):
         self._db = _db
         self.user = username
         self.passw = password
-        self.test_environment = test_environment
 
     def build(self):
         self.connection = MySQLdb.connect(host='127.0.0.1', user=self.user, passwd=self.passw, db=self._db,
