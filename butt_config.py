@@ -1,172 +1,109 @@
-import configparser
-import butt_library
-from shutil import copyfile
+from shared import db
+import logging
+
+log = logging.getLogger('discordbot.' + __name__)
 
 
 class ButtConfig:
 
-    def __init__(self, conf: str):
-        self.config_file_name = conf
-        self.config_file = configparser.ConfigParser()
-        self.config_file.read_file(open(conf))
-        try:
-            self.guild_guid = conf.split("/")[1][:-4]
-        except IndexError:
-            # we are loading a test config file, not a real one.
-            self.guild_guid = conf[:-4]
+    def __init__(self, guid: int):
+        log.debug("Loading config for guid %d" % guid)
+        db["buttbot"].build()
+        self.guid = guid
+        self.allowed_channels_query = db["buttbot"].do_query("select channel_guid "
+                                                             "from allowed_channels ac "
+                                                             "inner join config "
+                                                             "on config.guid = ac.guid "
+                                                             "where guid = %d", (guid,))
+        self.stop_phrases_query = db["buttbot"].do_query("select phrase "
+                                                         "from stop_processing_phrases spp "
+                                                         "inner join config "
+                                                         "on config.guid = spp.guid "
+                                                         "where guid = %d", (guid,))
+        self.allowed_bots_query = db["buttbot"].do_query("select bot_guid "
+                                                         "from whitelisted_bots wb "
+                                                         "inner join config "
+                                                         "on config.guid = wb.guid "
+                                                         "where guid = %d", (guid,))
+        self.conf = db["buttbot"].do_query("select config.* from config where guid = %d", (guid,))[0]
+        log.debug("config loaded for guid %d" % guid)
 
-    def get(self, section: str, key: str):
-        # passthrough function for backwards compatibility
-        return self.config_file.get(section, key)
+    def update_property(self, prop: str, value):
+        db["buttbot"].build()
+        log.debug('running query: "update config set {0} = {1} where guid = {2}"', (prop, value, self.guid))
+        db["buttbot"].do_query("update config set {0} = {1} where guid = {2}", (prop, value, self.guid))
 
-    def getboolean(self, section: str, key: str) -> bool:
-        # passthrough function for backwards compatibility
-        return self.config_file.getboolean(section, key)
+    def insert_new_value(self, tab: str, row: str, val):
+        db["buttbot"].build()
+        log.debug("running query: \"insert into {0} ('{1}', guid) values('{2}', {3})", (tab, row, val, self.guid))
+        db["buttbot"].do_query("insert into {0} ('{1}', guid) values('{2}', {3})", (tab, row, val, self.guid))
 
-    def _process_list_from_configparser(self, section: str, key: str, return_type="string") -> list:
-        # discord.py 1.2.4 makes guid type integer, we need to know now what type to avoid issues
-        if return_type == "integer":
-            return [int(i) for i in self.get(section, key).split(",") if i]
-        else:
-            return [str(i) for i in self.get(section, key).split(",") if i]
-
-    @property
-    def guid(self):
-        return str(self.guild_guid)
+    def delete_value(self, tab: str, row: str, val):
+        db["buttbot"].build()
+        log.debug("running query: \"delete from {0} where {1} = {2} and guid = {3}", (tab, row, val, self.guid))
+        db["buttbot"].do_query("delete from {0} where {1} = {2} and guid = {3}", (tab, row, val, self.guid))
 
     @property
     def name(self) -> str:
-        return self.get('discordbot', 'plain_language_name')
+        return self.conf["guild_name"]
 
     @name.setter
     def name(self, pla: str):
-        self.config_file.set('discordbot', 'plain_language_name', str(pla))
-        self.save_config()
-
-    @property
-    def db(self) -> str:
-        return self._process_list_from_configparser('vacuum', 'database')[0]
+        self.update_property("guild_name", pla)
 
     @property
     def allowed_bots(self) -> list:
-        return self._process_list_from_configparser('discordbot', 'whitelisted_bots')
+        return self.allowed_bots_query
 
     @property
     def allowed_channels(self) -> list:
-        return self._process_list_from_configparser('allowed_channels', 'channels', "integer")
+        return self.allowed_channels_query
 
     @property
     def emojis(self) -> list:
-        return self._process_list_from_configparser('discordbot', 'butt_response_emojis')
+        return self.conf["butt_response_emojis"]
 
     @property
     def banned_users(self) -> list:
-        return self._process_list_from_configparser('discordbot', 'always_ignore')
+        # TODO: need table
+        pass
 
     @property
     def stop_phrases(self) -> list:
-        return self._process_list_from_configparser('wordreplacer', 'stop_processing_phrases')
+        return self.stop_phrases_query
 
     def add_channel_to_allowed_channel_list(self, channel: int):
-        # channel comes as an integer in discord.py 1.2.4, let's cast
-        channel = str(channel)
-        if channel not in self.config_file.get("allowed_channels", "channels"):
-            self.config_file.set("allowed_channels", "channels",
-                                 "%s,%s" % (self.config_file.get("allowed_channels", "channels"), channel))
-            self.save_config()
+        self.insert_new_value("allowed_channels", "channel_guid", channel)
 
     def remove_channel_from_allowed_channel_list(self, channel: int):
-        # channel comes as an integer in discord.py 1.2.4, let's cast
-        channel = str(channel)
-        channels = self.config_file.get("allowed_channels", "channels").split(",")
-        try:
-            channels.remove(channel)
-            self.config_file.set("allowed_channels", "channels", ",".join(channels))
-            self.save_config()
-        except ValueError:
-            # channel provided not in list
-            pass
-
-    def save_config(self):
-        with open(self.config_file_name, 'w') as fp:
-            self.config_file.write(fp)
+        self.delete_value("allowed_channels", "channel_guid", channel)
 
     @property
     def rip(self) -> bool:
-        return self.getboolean('discordbot', 'rip')
+        return self.conf["rip"]
 
     @rip.setter
     def rip(self, setting):
-        self.config_file.set('discordbot', 'rip', bool(setting))
-        self.save_config()
+        self.update_property("rip", setting)
 
     @property
     def f(self) -> bool:
-        return self.getboolean('discordbot', 'rip')
+        return self.conf["f"]
 
     @f.setter
     def f(self, setting: bool):
-        self.config_file.set('discordbot', 'rip', bool(setting))
-        self.save_config()
+        self.update_property("f", setting)
 
     def add_always_ignore(self, user_guid: int):
-        # guid comes as an integer in discord.py 1.2.4, let's cast
-        user_guid = str(user_guid)
-        if user_guid not in self.config_file.get("discordbot", "always_ignore"):
-            self.config_file.set("discordbot", "always_ignore",
-                                 "%s,%s" % (self.config_file.get("discordbot", "always_ignore"), user_guid))
-            self.save_config()
+        # todo: need table
+        pass
 
     def remove_always_ignore(self, user_guid: int):
-        # guid comes as an integer in discord.py 1.2.4, let's cast
-        user_guid = str(user_guid)
-        users = self.config_file.get("discordbot", "always_ignore").split(",")
-        try:
-            users.remove(user_guid)
-            self.config_file.set("discordbot", "always_ignore", ",".join(users))
-            self.save_config()
-        except ValueError:
-            # user provided not in list
-            pass
+        # todo: need table
+        pass
 
     def add_whitelisted_bots(self, user_guid: int):
-        # guid comes as an integer in discord.py 1.2.4, let's cast
-        user_guid = str(user_guid)
-        if user_guid not in self.config_file.get("discordbot", "whitelisted_bots"):
-            self.config_file.set("discordbot", "whitelisted_bots",
-                                 "%s,%s" % (self.config_file.get("discordbot", "whitelisted_bots"), user_guid))
-            self.save_config()
+        self.insert_new_value("whitelisted_bots", "bot_guid", user_guid)
 
     def remove_whitelisted_bots(self, user_guid: int):
-        # guid comes as an integer in discord.py 1.2.4, let's cast
-        user_guid = str(user_guid)
-        users = self.config_file.get("discordbot", "whitelisted_bots").split(",")
-        try:
-            users.remove(user_guid)
-            self.config_file.set("discordbot", "whitelisted_bots", ",".join(users))
-            self.save_config()
-        except ValueError:
-            # user provided not in list
-            pass
-
-
-class Config:
-
-    def __init__(self):
-        self.loaded_configs = {}
-        channel_configs = butt_library.load_all_config_files()
-        for i in channel_configs:
-            self.loaded_configs[int(i.split("/")[1][:-4])] = ButtConfig(i)
-
-    def config(self, guid: int) -> ButtConfig:
-        try:
-            return self.loaded_configs[guid]
-        except ValueError:
-            # not currently loaded, let's return it
-            self.create_config(guid)
-            self.loaded_configs[guid] = ButtConfig("config/%d.ini" % guid)
-            return self.loaded_configs[guid]
-
-    @staticmethod
-    def create_config(guid: int):
-        copyfile("config/_config_template", "config/%d.ini" % guid)
+        self.delete_value("whitelisted_bots", "bot_guid", user_guid)
