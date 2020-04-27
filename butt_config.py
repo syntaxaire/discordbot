@@ -1,7 +1,7 @@
 from shared import db
 import logging
 
-log = logging.getLogger('discordbot.' + __name__)
+log = logging.getLogger('bot.' + __name__)
 
 
 class ButtConfig:
@@ -14,38 +14,49 @@ class ButtConfig:
                                                              "from allowed_channels ac "
                                                              "inner join config "
                                                              "on config.guid = ac.guid "
-                                                             "where guid = %d", (guid,))
+                                                             "where ac.guid = %s", (guid,))
         self.stop_phrases_query = db["buttbot"].do_query("select phrase "
                                                          "from stop_processing_phrases spp "
                                                          "inner join config "
                                                          "on config.guid = spp.guid "
-                                                         "where guid = %d", (guid,))
+                                                         "where spp.guid = %s", (guid,))
         self.allowed_bots_query = db["buttbot"].do_query("select bot_guid "
                                                          "from whitelisted_bots wb "
                                                          "inner join config "
                                                          "on config.guid = wb.guid "
-                                                         "where guid = %d", (guid,))
-        self.conf = db["buttbot"].do_query("select config.* from config where guid = %d", (guid,))[0]
+                                                         "where wb.guid = %s", (guid,))
+        self.conf = db["buttbot"].do_query("select config.* from config where guid = %s", (guid,))[0]
         log.debug("config loaded for guid %d" % guid)
 
-    def update_property(self, prop: str, value):
+    @staticmethod
+    def do_query(query: str, args=()):
         db["buttbot"].build()
-        log.debug('running query: "update config set {0} = {1} where guid = {2}"', (prop, value, self.guid))
-        db["buttbot"].do_query("update config set {0} = {1} where guid = {2}", (prop, value, self.guid))
+        log.debug('running query: %s' % query)
+        if args:
+            db["buttbot"].do_query(query, args)
+        else:
+            db["buttbot"].do_query(query)
+
+    def update_property(self, prop: str, value):
+        query = "update config set {0} = %s where guid = %d".format(prop)
+        db["buttbot"].do_query(query, (value, self.guid))
 
     def insert_new_value(self, tab: str, row: str, val):
-        db["buttbot"].build()
-        log.debug("running query: \"insert into {0} ('{1}', guid) values('{2}', {3})", (tab, row, val, self.guid))
-        db["buttbot"].do_query("insert into {0} ('{1}', guid) values('{2}', {3})", (tab, row, val, self.guid))
+        query = "insert into {0} ('{1}', guid) values('%s', %d)".format(tab, row)
+        self.do_query(query, (val, self.guid))
 
     def delete_value(self, tab: str, row: str, val):
-        db["buttbot"].build()
-        log.debug("running query: \"delete from {0} where {1} = {2} and guid = {3}", (tab, row, val, self.guid))
-        db["buttbot"].do_query("delete from {0} where {1} = {2} and guid = {3}", (tab, row, val, self.guid))
+        query = "delete from {0} where {1} = %s and guid = %d".format(tab, row)
+        self.do_query(query, (val, self.guid))
 
     @property
     def name(self) -> str:
         return self.conf["guild_name"]
+
+    @staticmethod
+    @property
+    def exists() -> bool:
+        return True
 
     @name.setter
     def name(self, pla: str):
@@ -107,3 +118,45 @@ class ButtConfig:
 
     def remove_whitelisted_bots(self, user_guid: int):
         self.delete_value("whitelisted_bots", "bot_guid", user_guid)
+
+    @property
+    def max_sentence_length(self):
+        return self.conf["wordreplacer_max_sentence_length"]
+
+    @property
+    def wordreplacer(self):
+        return self.conf["wordreplacer"]
+
+
+class Config(dict):
+    def __init__(self):
+        super().__init__()
+        self.configs = {}
+        self.load_config_for_startup()
+
+    def __getattr__(self, attr):
+        return self[attr]
+
+    def load_config(self, guid: int):
+        does_config_exist = db["buttbot"].do_query("select count(%s) as count", (guid,))[0]
+        print(does_config_exist)
+        if does_config_exist['count'] > 0:
+            self.configs[guid] = ButtConfig(guid)
+        else:
+            # no
+            self.create_config(guid)
+
+    def create_config(self, guid: int):
+        log.info("creating configuration for guild %d" % guid)
+        db["buttbot"].do_insert("INSERT INTO config (wordreplacer,wordreplacer_max_sentence_length,"
+                                "vacuum,command_call_freq,shitpost_call_freq,butt_response_emojis,rip,f, guid) "
+                                "select wordreplacer,wordreplacer_max_sentence_length,vacuum,command_call_freq, "
+                                "shitpost_call_freq,butt_response_emojis,rip,f, %s as guid "
+                                "from config where guid = 101)", (guid,))
+        self.configs[guid] = ButtConfig(guid)
+
+    def load_config_for_startup(self):
+        guids = db["buttbot"].do_query("select guid from config where 1")
+        for g in guids:
+            log.debug("found config for %d, building config" % g['guid'])
+            self.configs[g['guid']] = ButtConfig(g['guid'])
