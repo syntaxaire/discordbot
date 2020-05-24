@@ -1,8 +1,9 @@
-import json
-import urllib.request
-from PIL import Image
 import base64
+import json
 import logging
+import urllib.request
+
+from PIL import Image
 
 log = logging.getLogger('bot.' + __name__)
 

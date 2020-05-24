@@ -1,18 +1,17 @@
-import wordreplacer
-import butt_timeout
-import discord_comms
-import butt_database
-from phraseweights import PhraseWeights
-from butt_statistics import ButtStatistics
-from config import *
-import butt_config
 import logging
-import vacuum
 
 import aiohttp
-import asyncio
-
 import spacy
+
+import butt_config
+import butt_database
+import butt_timeout
+import discord_comms
+import vacuum
+import wordreplacer
+from butt_statistics import ButtStatistics
+from config import *
+from phraseweights import PhraseWeights
 
 log = logging.getLogger('bot.' + __name__)
 

@@ -1,15 +1,16 @@
 import datetime
 import http.client
 import json
+import logging
+import random
+import time
 import urllib.error
 import urllib.request
-import random
-import logging
-import time
-from butt_config import ButtConfig
 
 from dateutil.parser import parse
+
 import shared
+from butt_config import ButtConfig
 
 log = logging.getLogger('bot.' + __name__)
 

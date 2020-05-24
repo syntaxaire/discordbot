@@ -1,6 +1,6 @@
 import logging
-import asyncio
-from discord.ext.commands import Bot, Cog, Context, command, has_permissions, CheckFailure
+
+from discord.ext.commands import Bot, Cog, Context, command, has_permissions
 
 log = logging.getLogger('bot.' + __name__)
 

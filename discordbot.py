@@ -1,14 +1,15 @@
 import asyncio
-from pathlib import Path
 import datetime
+from pathlib import Path
+
 import aiohttp
 from discord.ext.commands import Bot
+
+from buttbot import ButtBot
 from cogs.bot import BotCommands
 from cogs.botconfig import BotConfig
-from buttbot import ButtBot
-from shared import guild_configs
-
 from config import *
+from shared import guild_configs
 
 LOGDIR = Path('logs')
 bot = Bot(description="a bot for farts", command_prefix="$", pm_help=False)
@@ -46,7 +47,6 @@ async def on_ready():
     log.info('You are running FartBot V7.0.00')
     log.info('Created by Poop Poop')
     log.info('--------')
-
 
 
 @bot.event

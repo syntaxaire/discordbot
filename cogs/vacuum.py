@@ -1,8 +1,10 @@
-import logging
-from discord.ext.commands import Bot, Cog, Context, command
-from shared import guild_configs, db
 import datetime
+import logging
 import random
+
+from discord.ext.commands import Bot, Cog, Context, command
+
+from shared import db
 
 log = logging.getLogger('bot.' + __name__)
 

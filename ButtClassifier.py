@@ -1,6 +1,6 @@
-from butt_chunk import ButtChunk
-from FinalizedButtChunk import FinalizedButtChunk
 import shared
+from FinalizedButtChunk import FinalizedButtChunk
+from butt_chunk import ButtChunk
 
 
 class ButtClassifier:
@@ -32,7 +32,7 @@ class ButtClassifier:
             for x in self._nouns:
                 weight = self._get_word_weight(self._nouns[i], self._nouns_previous_word_tag[i])
                 self.nouns.append(FinalizedButtChunk(self._nouns[i], weight, self._nouns_previous_word_tag[i],
-                                  self._similarities[x]))
+                                                     self._similarities[x]))
                 i += 1
 
     def get_nouns(self):
@@ -75,7 +75,7 @@ class ButtClassifier:
         """check noun vector similarity to spatially funny objects/words/concepts."""
         # TODO: consider reducing weight value for not funny words/objects/concepts
         spatially_funny_objects = self._spacy("animal people structure machine car")
-        #not_funny_objects = ["time", ]
+        # not_funny_objects = ["time", ]
         starting_weight = shared.phrase_weights.return_weight(word.text)
         working_weight = starting_weight
         self._similarities[word] = []

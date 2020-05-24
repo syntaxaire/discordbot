@@ -1,5 +1,6 @@
 import time
 
+
 class PhraseWeights():
     def __init__(self, db):
         # weighted phrases

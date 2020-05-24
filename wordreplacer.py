@@ -1,11 +1,10 @@
 import json
 from random import *
-import spacy
-from FinalizedButtChunk import FinalizedButtChunk
 
 import butt_library as buttlib
-from ButtClassifier import ButtClassifier
 import shared
+from ButtClassifier import ButtClassifier
+from FinalizedButtChunk import FinalizedButtChunk
 
 
 class WordReplacer:

@@ -1,7 +1,9 @@
 import logging
+
 from discord.ext.commands import Bot, Cog, Context, command, has_permissions
-from shared import shitpost
+
 from shared import guild_configs
+from shared import shitpost
 
 log = logging.getLogger('bot.' + __name__)
 

@@ -1,5 +1,6 @@
-import shared
 import logging
+
+import shared
 
 log = logging.getLogger('bot.' + __name__)
 

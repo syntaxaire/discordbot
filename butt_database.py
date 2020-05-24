@@ -1,6 +1,7 @@
+import logging
+
 import MySQLdb
 from MySQLdb.cursors import DictCursor
-import logging
 
 log = logging.getLogger('bot.' + __name__)
 

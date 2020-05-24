@@ -1,13 +1,12 @@
 import asyncio
+import logging
 import random
 import time
-import datetime
-import logging
+
+from discord import Message
 
 import mojang as mj
 from butt_library import is_word_in_text
-from discord import Message
-
 from shared import guild_configs, test_environment, phrase_weights, shitpost, comms_instance, \
     timer_instance as timer_module, vacuum_instance
 
