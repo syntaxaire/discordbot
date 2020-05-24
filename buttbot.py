@@ -91,10 +91,7 @@ class ButtBot:
     @staticmethod
     def allowed_in_channel(message: Message):
         try:
-            if message.channel.id in guild_configs[message.guild.id].allowed_channels:
-                return True
-            else:
-                return False
+            return message.channel.id in guild_configs[message.guild.id].allowed_channels
         except IndexError:
             # todo: probably shouldnt happen but we might want to load a config here
             print("didnt find config loaded for channel %d in guild %d" % (message.channel.id, message.guild.id))
@@ -103,10 +100,7 @@ class ButtBot:
     @staticmethod
     def allowed_in_channel_direct(guild: int, channel: int):
         try:
-            if channel in guild_configs[guild].allowed_channels:
-                return True
-            else:
-                return False
+            return channel in guild_configs[guild].allowed_channels
         except IndexError:
             # todo: probably shouldnt happen but we might want to load a config here
             print("didnt find config loaded for channel %d in guild %d" % (channel, guild))

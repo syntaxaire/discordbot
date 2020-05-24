@@ -129,10 +129,7 @@ class Vacuum:
 
     def playtime_player_active(self, player):
         try:
-            if any(e[0] == player for e in self.players):
-                return True
-            else:
-                return False
+            return any(e[0] == player for e in self.players)
         except AttributeError:
             # the self.players variable is empty.  This can happen when the bot first turns on or when a player joins
             # and no one else is logged in.

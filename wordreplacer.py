@@ -107,12 +107,6 @@ class WordReplacer:
     def __get_phrase_weight(self, phrase):
         return self.__phraseweights.return_weight(phrase)
 
-    def __is_user_an_allowed_bot(self, author):
-        if author in self.__config.get_all_allowed_bots():
-            return True
-        else:
-            return False
-
     def print_debug_message(self):
         print("--------------------------------------------------------------------------------------------")
         print("Original message: %s" % self._original_sentence)
@@ -135,13 +129,10 @@ class WordReplacer:
         print("--------------------------------------------------------------------------------------------")
 
     def __does_message_contain_stop_phrases(self):
-        if not any(
+        return any(
                 v for v in shared.guild_configs[self._message_channel].stop_phrases if
                 v in self._original_sentence) and not (
-                self._original_sentence.startswith("*") and self._original_sentence.endswith("*")):
-            return False
-        else:
-            return True
+                self._original_sentence.startswith("*") and self._original_sentence.endswith("*"))
 
     def successful_butting(self):
         return self.__check_if_picked_phrase_weight_passes_minimum()
@@ -198,11 +189,7 @@ class WordReplacer:
 
     def __check_if_picked_phrase_weight_passes_minimum(self):
         try:
-            if self._selected_noun_pair_to_butt.weight <= 501:
-                # dont send anything, this word probably sucks
-                return False
-            else:
-                return True
+            return self._selected_noun_pair_to_butt.weight > 501
         except AttributeError:
             # selected nouns to butt is empty
             return False
@@ -250,27 +237,18 @@ class WordReplacer:
         """checks to see if selected word passes stopword check - eliminates common crappy words and internet slang
          that are tagged as nouns but either aren't funny to replace or aren't nouns."""
         stopwords = ['gon', 'dont', 'lol', 'yeah', 'tho', 'lmao', 'yes', 'way']
-        if len(word) < 2 or word in stopwords:
-            return False
-        else:
-            return True
+        return word not in stopwords and len(word) >= 2
 
     def __does_message_have_prioritized_parts_of_speech(self):
         """takes a tagged sentence and checks if it contains a personal posessive pronoun - we want to specially
         target that for funny replaces like "my butt" """
         wordtagstocheckprioritized = ['PRP$']  # posessive personal pronoun
-        if any(t for t in self._tagged_sentence if t[1] in wordtagstocheckprioritized):
-            return True
-        else:
-            return False
+        return any(t for t in self._tagged_sentence if t[1] in wordtagstocheckprioritized)
 
     def __check_length_of_sentence_to_butt(self, message_guid: int):
         """checks to see if the tagged message length is lower than the limit set in the guild configuration file.
         this feature was originally requested by DPT."""
-        if len(self._original_sentence) > shared.guild_configs[message_guid].max_sentence_length:
-            return False
-        else:
-            return True
+        return len(self._original_sentence) <= shared.guild_configs[message_guid].max_sentence_length
 
     @staticmethod
     def __replace_an_to_a_in_sentence(message, butt_word):
