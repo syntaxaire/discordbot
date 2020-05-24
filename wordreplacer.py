@@ -5,18 +5,16 @@ from FinalizedButtChunk import FinalizedButtChunk
 
 import butt_library as buttlib
 from ButtClassifier import ButtClassifier
+import shared
 
 
 class WordReplacer:
 
-    def __init__(self, config, stat_module, timer_module, phrase_weights, test_environment, nlp_):
+    def __init__(self, config, stat_module, phrase_weights, nlp_):
         self.__config = config
-        self.__timer_module = timer_module
         self.__stats = stat_module
         self.__wlist = self.__load_word_list()
-        self.__set_max_sentence_length(int(self.__config.get('wordreplacer', 'max_sentence_length')))
         self.__command = {"nltk": 'wordreplacer'}
-        self.__test_environment = test_environment
         self.__phraseweights = phrase_weights
 
         # state variables
@@ -39,6 +37,7 @@ class WordReplacer:
         self.butt_classifier = ButtClassifier(self.__phraseweights, self.nlp)
         self._spacy_finalized_nouns = []
         self._spacy_finalized_weights = []
+        self._message_channel = 0
 
     def __state_reset(self):
         self.should_we_butt = False  # this is the state variable that means butting should continue
@@ -58,6 +57,7 @@ class WordReplacer:
         self._spacy_tagged_sentence = ""
         self._spacy_finalized_nouns = []
         self._spacy_finalized_weights = []
+        self._message_channel = 0
 
     def __set_max_sentence_length(self, length):
         # DPT requested feature
@@ -119,7 +119,8 @@ class WordReplacer:
         print("Original message: %s" % self._original_sentence)
         print("Message contain stop phrase? %s" % str(self.__does_message_contain_stop_phrases()))
         print("Message meet length requirement? (server setting: %i) %s" % (
-            self._sentence_max_length, self.__check_length_of_sentence_to_butt()))
+            shared.guild_configs[self._message_channel].max_sentence_length,
+            self.__check_length_of_sentence_to_butt(self._message_channel)))
         print("Spacy noun chunk(s): %s" % self._spacy_nouns)
         try:
             print("Spacy processed chunk(s): %s " % self._spacy_processed_nouns)
@@ -135,8 +136,10 @@ class WordReplacer:
         print("--------------------------------------------------------------------------------------------")
 
     def __does_message_contain_stop_phrases(self):
-        if not any(v for v in self.__config.get_all_stop_phrases() if v in self._original_sentence) and \
-                not (self._original_sentence.startswith("*") and self._original_sentence.endswith("*")):
+        if not any(
+                v for v in shared.guild_configs[self._message_channel].stop_phrases if
+                v in self._original_sentence) and not (
+                self._original_sentence.startswith("*") and self._original_sentence.endswith("*")):
             return False
         else:
             return True
@@ -152,6 +155,7 @@ class WordReplacer:
         self.__state_reset()
         self._original_sentence = messageobject.content
         self._message_author = str(messageobject.author)
+        self._message_channel = messageobject.channel.id
         if not buttlib.detect_code_block(self._original_sentence):
             # passes code block test
             if not self.__does_message_contain_stop_phrases():
@@ -160,7 +164,7 @@ class WordReplacer:
                     self.__tag_sentence(True)
                 else:
                     self.__tag_sentence()
-                if self._tagged_sentence and self.__check_length_of_sentence_to_butt():
+                if self._tagged_sentence and self.__check_length_of_sentence_to_butt(messageobject.guild.id):
                     # TODO: modify the above two functions for spacy
                     # message is below length limit set on a per-guild basis
                     self.__get_word_pairs_from_all_sources()
@@ -261,10 +265,10 @@ class WordReplacer:
         else:
             return False
 
-    def __check_length_of_sentence_to_butt(self):
+    def __check_length_of_sentence_to_butt(self, message_guid: int):
         """checks to see if the tagged message length is lower than the limit set in the guild configuration file.
         this feature was originally requested by DPT."""
-        if len(self._original_sentence) > self._sentence_max_length:
+        if len(self._original_sentence) > shared.guild_configs[message_guid].max_sentence_length:
             return False
         else:
             return True

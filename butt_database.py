@@ -1,9 +1,12 @@
 import MySQLdb
 from MySQLdb.cursors import DictCursor
+import logging
+
+log = logging.getLogger('bot.' + __name__)
 
 
 class Db:
-    def __init__(self, _db, username, password, ):
+    def __init__(self, _db: str, username: str, password: str):
         self._db = _db
         self.user = username
         self.passw = password
@@ -32,6 +35,17 @@ class Db:
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(query, args)
+                self.connection.commit()
+                cursor.close()
+        finally:
+            pass
+
+    def do_insert_no_args(self, query):
+        self.build()
+        try:
+            with self.connection.cursor() as cursor:
+                log.info("running query: %s" % str(query))
+                cursor.execute(query)
                 self.connection.commit()
                 cursor.close()
         finally:

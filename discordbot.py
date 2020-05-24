@@ -5,7 +5,8 @@ import aiohttp
 from discord.ext.commands import Bot
 from cogs.bot import BotCommands
 from cogs.botconfig import BotConfig
-from butt_config import Config
+from buttbot import ButtBot
+from shared import guild_configs
 
 from config import *
 
@@ -33,7 +34,8 @@ def setup_logger() -> logging.Logger:
 
 
 log = setup_logger()
-guild_configs = Config()
+buttbot = ButtBot(bot)
+bot.aiohttp_session = aiohttp.ClientSession()
 
 
 @bot.event
@@ -44,7 +46,7 @@ async def on_ready():
     log.info('You are running FartBot V7.0.00')
     log.info('Created by Poop Poop')
     log.info('--------')
-    bot.aiohttp_session = aiohttp.ClientSession()
+
 
 
 @bot.event
@@ -74,9 +76,10 @@ async def on_message(message):
             await bot.process_commands(message)
         else:
             # send to butterizer
-            pass
+            await buttbot.chat_dispatch(message)
     except IndexError:
-        print(message)
+        # send these too
+        await buttbot.chat_dispatch(message)
 
 
 # async def send_stats_to_db():

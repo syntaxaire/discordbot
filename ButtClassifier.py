@@ -1,5 +1,6 @@
 from butt_chunk import ButtChunk
 from FinalizedButtChunk import FinalizedButtChunk
+import shared
 
 
 class ButtClassifier:
@@ -57,7 +58,8 @@ class ButtClassifier:
                     self._chunks_to_investigate.append(a)
                     i = 0
                     for x in a.tag:
-                        if x in noun_tags:
+                        # fix:  for some reason i didnt originally check if the length of the noun was greater than 1.
+                        if x in noun_tags and len(a.text) > 1:
                             self._nouns.append(a.original_spacy_object[i])
                             try:
                                 self._nouns_previous_word_tag.append(a.tag[i - 1])
@@ -74,7 +76,7 @@ class ButtClassifier:
         # TODO: consider reducing weight value for not funny words/objects/concepts
         spatially_funny_objects = self._spacy("animal people structure machine car")
         #not_funny_objects = ["time", ]
-        starting_weight = self.weights.return_weight(word.text)
+        starting_weight = shared.phrase_weights.return_weight(word.text)
         working_weight = starting_weight
         self._similarities[word] = []
         for s in spatially_funny_objects:

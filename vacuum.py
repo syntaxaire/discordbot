@@ -6,20 +6,22 @@ import urllib.request
 import random
 import logging
 import time
+from butt_config import ButtConfig
 
 from dateutil.parser import parse
-from shared import db
+import shared
 
 log = logging.getLogger('bot.' + __name__)
 
 
 class Vacuum:
-    def __init__(self, table_prefix: str):
+    def __init__(self, config: ButtConfig):
         self.players = []
         self.playtime_load()
         self.updateurl = ""
         self.config = ""
-        self.table_prefix = table_prefix
+        self.table_prefix = config.table_prefix
+        self.NSA_module = config.nsa_module
 
         try:
             if self.players:
@@ -35,20 +37,18 @@ class Vacuum:
                 data = json.loads(url.read().decode())
                 pl = data['players']
                 players = []
+                query_data = list()
                 for p in pl:
                     log.debug("found player %s" % p['name'])
-                    db["minecraft"].do_insert("INSERT INTO `{}_NSA_module`"
-                                              "(`datetime`, `player`, `dimension`, `x`, `y`, `z`) "
-                                              "VALUES (%s, %s, %s, %s, %s, %s)".format(self.table_prefix),
-                                              (
-                                                  datetime.datetime.utcnow(),
-                                                  p['name'],
-                                                  p['world'],
-                                                  p['x'],
-                                                  p['y'],
-                                                  p['z']
-                                              )
-                                              )
+                    if self.NSA_module:
+                        query_data.append((
+                            datetime.datetime.utcnow(),
+                            p['name'],
+                            p['world'],
+                            p['x'],
+                            p['y'],
+                            p['z']
+                        ))
                     if not p['name'] in players:
                         players.append(p['name'])
                     # we start by checking to see if the player is currently active
@@ -61,17 +61,22 @@ class Vacuum:
                         # player was not logged in, but is logged in now.
                         self.playtime_player_addplayer(p['name'])
                 # now we are going to find players that have logged out since the last check
+                if self.NSA_module:
+                    shared.db['minecraft'].do_insertmany("INSERT INTO `{}_NSA_module`"
+                                                         "(`datetime`, `player`, `dimension`, `x`, `y`, `z`) "
+                                                         "VALUES (%s, %s, %s, %s, %s, %s)".format(self.table_prefix),
+                                                         query_data)
                 self.playtime_player_checkplayers(players)
 
         except urllib.error.URLError:
             # minecraft server is offline and buttbot is still online
             self.playtime_player_saveall()
-            log.warning("scraper lost connection with minecraft server.")
+            log.warning("scraper lost connection with minecraft server")
 
         except http.client.RemoteDisconnected:
             # we are going to save all data here too
             self.playtime_player_saveall()
-            log.warning("scraper lost connection with minecraft server.")
+            log.warning("scraper lost connection with minecraft server")
 
         finally:
             pass
@@ -106,10 +111,10 @@ class Vacuum:
             self.playtime_player_removeplayer(e)
 
     def playtime_player_record(self, player, deltatime):
-        db["minecraft"].do_insert("INSERT into `{}_playertracker_v2`(`player`, `timedelta`, `datetime`)"
-                                  " values( % s, % s, % s)".format(self.table_prefix),
-                                  (player, deltatime, datetime.datetime.utcnow()))
-        db["minecraft"].close()
+        shared.db["minecraft"].do_insert("INSERT into `{}_playertracker_v2`(`player`, `timedelta`, `datetime`)"
+                                         " values( % s, % s, % s)".format(self.table_prefix),
+                                         (player, deltatime, datetime.datetime.utcnow()))
+        shared.db["minecraft"].close()
 
     def playtime_player_addplayer(self, player):
         log.debug("  adding player %s to serialized player list" % player)
@@ -175,24 +180,24 @@ class Vacuum:
                 dmsg = dmsg + " " + i
         dmsg = dmsg.strip()
         try:
-            db["minecraft"].do_insert(
+            shared.db["minecraft"].do_insert(
                 "INSERT INTO `{}_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`)"
                 "VALUES(%s, %s, %s, %s, %s, %s, %s);".format(self.table_prefix),
                 (m[1], dmsg, coords['world'], coords['x'], coords['y'], coords['z'], datetime.datetime.utcnow()))
         except TypeError:
             # catch this error, something that i dont believe should be possible with how this is set up but?????
-            db["minecraft"].do_insert(
+            shared.db["minecraft"].do_insert(
                 "INSERT INTO `{}_deaths` (`player`,`message`,`world`,`x`,`y`,`z`,`datetime`)"
                 "VALUES(%s, %s, %s, %s, %s, %s, %s);".format(self.table_prefix),
                 (m[1], dmsg, "Exception Handling", 0, 0, 0, datetime.datetime.utcnow()))
-        db["minecraft"].close()
+        shared.db["minecraft"].close()
 
     def have_we_seen_player(self, player):
-        current_server_result = db["minecraft"].do_query(
+        current_server_result = shared.db["minecraft"].do_query(
             "select count(datetime) from {}_playertracker_v2 where player=%s".format(self.table_prefix), (player,))
-        previous_server_result = db["minecraft"].do_query(
+        previous_server_result = shared.db["minecraft"].do_query(
             "select count(datetime) from {}_playertracker_v2_old where player=%s".format(self.table_prefix), (player,))
-        db["minecraft"].close()
+        shared.db["minecraft"].close()
         if current_server_result[0]['count(datetime)'] == 0:
             # new player
             if previous_server_result[0]['count(datetime)'] > 0:
@@ -207,3 +212,23 @@ class Vacuum:
                 return message % player
             else:
                 return "welcome to progress %s" % player
+
+
+class VacuumManager(dict):
+    def __init__(self):
+        super().__init__()
+        self.instances = {}
+
+    def __getitem__(self, attr: int):
+        try:
+            return self.instances[attr]
+        except KeyError:
+            log.warning("attempted load vacuum manager on a non-subscribed channel")
+
+    def subscribe(self, config: ButtConfig):
+        log.info("new vacuum subscription started for guid %d. table prefix is %s" % (config.guid, config.table_prefix))
+        self.instances[config.guid] = Vacuum(config)
+
+    def unsubscribe(self, guild_guid):
+        log.info("unsubscribing subscription for guid %d" % guild_guid)
+        self.instances.pop(guild_guid)

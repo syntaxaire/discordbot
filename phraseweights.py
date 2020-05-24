@@ -1,13 +1,11 @@
 import time
-from butt_database import Db
 
-
-class PhraseWeights:
-    def __init__(self, db_, db_user, db_pass, test_environment):
+class PhraseWeights():
+    def __init__(self, db):
         # weighted phrases
         # butted messages we need to store
         self.messages = []
-        self.db = Db(db_, db_user, db_pass, test_environment)
+        self.db = db
 
     def adjust_weight(self, word, weight):
         if weight == 0:
